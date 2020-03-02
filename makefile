@@ -10,15 +10,19 @@ TE_efile=bin/treeEnumerator_$(size)
 all: $(TE_efile)
 
 run: $(TE_efile)
+	if [ ! -d results ]; then mkdir results; fi
 	./$(TE_efile) results/results_$(size).txt
 
 $(TE_efile): $(ST_ofile) $(TE_ofile)
+	if [ ! -d obj ]; then mkdir obj; fi
 	g++ -DSIZE=$(size) -pthread -O3 $(ST_ofile) $(TE_ofile) -o $(TE_efile)
 
 $(ST_ofile): subTree.cpp subTree.hpp
+	if [ ! -d obj ]; then mkdir obj; fi
 	g++ -DSIZE=$(size) -pthread -O3 -c subTree.cpp -o $(ST_ofile)
 
 $(TE_ofile): treeEnumerator_threaded.cpp
+	if [ ! -d bin ]; then mkdir bin; fi
 	g++ -DSIZE=$(size) -pthread -O3 -c treeEnumerator_threaded.cpp -o $(TE_ofile)
 
 clean:
