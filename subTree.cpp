@@ -49,7 +49,7 @@ bool onOuterShell(vertexID i)
 
 Graph::Graph()
 {
-	for (unsigned i = 0; i < numVertices; i++)
+	for (vertexID i = 0; i < numVertices; i++)
 	{
 		vertices[i].neighbors[WEST ] = _west (i);
 		vertices[i].neighbors[EAST ] = _east (i);
@@ -63,38 +63,30 @@ Graph::Graph()
 }
 
 bool Subtree::add(vertexID i)
-{
-	bool flag = false;
-	
+{	
 	vertices[i].induced = true;
 	
-	++numInduced;
-	/*
+	// This should have one neighbor, we need to validate the neighbor
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (x == EMPTY) continue;
-		
-		++vertices[x].effectiveDegree;
-		
-		// Validate the only neighbor
-		if (vertices[x].induced) flag = validate(x);
+		if (vertices[x].induced)
+		{
+			if (validate(x)) break;
+			else
+			{
+				vertices[i].induced = false;
+				return false;
+			}
+		}
 	}
-	*/
-	vertexID index;
 	
-	if ((index = _west (i)) != EMPTY) ++vertices[index].effectiveDegree;
-	if ((index = _east (i)) != EMPTY) ++vertices[index].effectiveDegree;
-	
-	if ((index = _south(i)) != EMPTY) ++vertices[index].effectiveDegree;
-	if ((index = _north(i)) != EMPTY) ++vertices[index].effectiveDegree;
+	++numInduced;
 
-	if ((index = _down (i)) != EMPTY) ++vertices[index].effectiveDegree;
-	if ((index = _up   (i)) != EMPTY) ++vertices[index].effectiveDegree;
-
+	for (const vertexID x : G.vertices[i].neighbors)
+	{
+		if (x != EMPTY) ++vertices[x].effectiveDegree;
+	}
 	return true;
-	
-	
-	//return flag;
 }
 
 void Subtree::rem(vertexID i)
@@ -105,27 +97,14 @@ void Subtree::rem(vertexID i)
 	
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (x == EMPTY) continue;
-		
-		--vertices[x].effectiveDegree;
+		if (x != EMPTY) --vertices[x].effectiveDegree;
 	}
-	/*
-	vertexID index;
-	if ((index = _west (i)) != EMPTY) --vertices[index].effectiveDegree;
-	if ((index = _east (i)) != EMPTY) --vertices[index].effectiveDegree;
-	
-	if ((index = _south(i)) != EMPTY) --vertices[index].effectiveDegree;
-	if ((index = _north(i)) != EMPTY) --vertices[index].effectiveDegree;
-
-	if ((index = _down (i)) != EMPTY) --vertices[index].effectiveDegree;
-	if ((index = _up   (i)) != EMPTY) --vertices[index].effectiveDegree;
-	*/
 }
 
 void Subtree::print() const
 {
 	std::cout << "Subgraph: ";
-	for (unsigned x = 0; x < numVertices; x++)
+	for (vertexID x = 0; x < numVertices; x++)
 	{
 		if (has(x)) std::cout << x << ' ';
 	}
@@ -145,12 +124,12 @@ void Subtree::writeToFile(std::string filename) const
 		{
 			for (unsigned k = 0; k < SIZE; k++)
 			{
-				file << (vertices[x++].induced ? BLOCK_PRESENT : BLOCK_MISSING); 
+				file << (vertices[x++].induced ? BLOCK_PRESENT : BLOCK_MISSING);
 			}
 			file << std::endl;
 		}
 		file << std::endl;
-	} 
+	}
 }
 
 Subtree::Subtree(vertexID r) : numInduced(0), root(r), vertices()
@@ -168,14 +147,14 @@ Subtree::Subtree(const Subtree& S)
 
 bool Subtree::validate(vertexID i) const
 {
-	if (vertices[i].effectiveDegree != 4)
-		return vertices[i].effectiveDegree < 4;
+	if (cnt(i) != 4)
+		return cnt(i) < 4;
 	
 	// Ensure all axis have at least one neighbor
 	return
-		(exists(_west (i)) || exists(_east (i))) &&
-		(exists(_north(i)) || exists(_south(i))) &&
-		(exists(_down (i)) || exists(_up   (i)));
+		( exists(_west (i)) || exists(_east (i)) ) &&
+		( exists(_north(i)) || exists(_south(i)) ) &&
+		( exists(_down (i)) || exists(_up   (i)) );
 }
 
 bool Subtree::hasEnclosedSpace() const
