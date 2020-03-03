@@ -88,17 +88,17 @@ void update(Subtree& S, std::list<vertexID>& border,
 		// to do the opposite action to reverse.
 		if (S.cnt(y) > 1)
 		{
-			// Minor todo: optimize the removal of the element
-			
-			unsigned old_size = border.size();
-			border.remove(y);
-			
-			// If the element actually got removed, record that
-			if (border.size() != old_size)
+			// border.remove(y), slighly optimized
+			const auto end = border.end();
+			for (auto iter = border.begin(); iter != end; ++iter)
 			{
-				previous_actions.push({rem,y});
+				if (y == *iter)
+				{
+					border.erase(iter);
+					previous_actions.push({rem,y});
+					break;
+				}
 			}
-			
 		}
 		else if (y > S.root && !S.has(y))
 		{
