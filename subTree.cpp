@@ -122,6 +122,9 @@ bool Subtree::add(vertexID i)
 			}
 		}
 	}
+	
+	// This shouldn't happen, but exists just to make the compiler happy.
+	return true;
 }
 
 void Subtree::rem(vertexID i)

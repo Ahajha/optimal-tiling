@@ -13,7 +13,7 @@
 #include <thread>
 #include <mutex>
 
-#define NUM_THREADS 16
+#define NUM_THREADS (std::thread::hardware_concurrency())
 
 enum action_type
 {
