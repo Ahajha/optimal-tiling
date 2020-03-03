@@ -63,7 +63,8 @@ Graph::Graph()
 }
 
 bool Subtree::add(vertexID i)
-{	
+{
+	/*
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
@@ -71,9 +72,13 @@ bool Subtree::add(vertexID i)
 	{
 		if (vertices[x].induced)
 		{
+			++vertices[x].effectiveDegree;
+			
 			if (validate(x)) break;
 			else
 			{
+				// Undo changes made and report that this is invalid
+				--vertices[x].effectiveDegree;
 				vertices[i].induced = false;
 				return false;
 			}
@@ -84,9 +89,39 @@ bool Subtree::add(vertexID i)
 
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (x != EMPTY) ++vertices[x].effectiveDegree;
+		// Ignore the induced vertex, its degree has already been increased.
+		if (x != EMPTY && vertices[x].induced)
+			++vertices[x].effectiveDegree;
 	}
 	return true;
+	*/
+	
+	/* This is a simpler implementation, though may not be as fast */
+	
+	vertices[i].induced = true;
+	
+	++numInduced;
+	
+	for (const vertexID x : G.vertices[i].neighbors)
+	{
+		if (x != EMPTY) ++vertices[x].effectiveDegree;
+	}
+	
+	for (const vertexID x : G.vertices[i].neighbors)
+	{
+		if (exists(x))
+		{
+			if (validate(x))
+			{
+				return true;
+			}
+			else
+			{
+				rem(i);
+				return false;
+			}
+		}
+	}
 }
 
 void Subtree::rem(vertexID i)
