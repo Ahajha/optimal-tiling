@@ -13,7 +13,7 @@
 #include <thread>
 #include <mutex>
 
-#define NUM_THREADS 15
+#define NUM_THREADS 16
 
 enum action_type
 {
@@ -165,10 +165,6 @@ void checkCandidate(Subtree S)
 	mutex.unlock();
 }
 
-// Forward declaration, since this and branch are mutually recursive
-void spawn_thread(int id,Subtree S, std::list<vertexID> border,
-	std::stack<action> previous_actions);
-
 void branch(int id, Subtree& S, std::list<vertexID>& border,
 	std::stack<action>& previous_actions)
 {
@@ -200,11 +196,7 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 				
 				if (pool.n_idle() != 0)
 				{
-					Subtree S_copy(S);
-					std::list<vertexID> border_copy(border);
-					std::stack<action> prev_actions_copy(previous_actions);
-					
-					pool.push(spawn_thread,S_copy,border_copy,prev_actions_copy);
+					pool.push(branch,S,border,previous_actions);
 				}
 				else
 				{
@@ -222,29 +214,6 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 	}
 }
 
-// Problem:
-
-// Program does not use all threads given. One initial problem I noticed
-// is that the values passed by reference to the threads were local,
-// and thus were deleted potentially before the threads even saw them.
-
-// My thoughts are to create a global array of NUM_THREADS parameter sets,
-// and each time a thread is dispatched it is told what set of parameters to use.
-
-// TODO
-
-void spawn_thread(int id, Subtree S, std::list<vertexID> border,
-	std::stack<action> previous_actions)
-{
-	Subtree S_copy(S);
-	std::list<vertexID> border_copy(border);
-	std::stack<action> prev_actions_copy(previous_actions);
-	
-	//pool.push(branch,S,border,prev_actions_copy);
-	
-	branch(id,S,border,prev_actions_copy);
-}
-
 int main(int num_args, char** args)
 {
 	if (num_args != 2)
@@ -257,8 +226,6 @@ int main(int num_args, char** args)
 	
 	start_time = clock();
 	
-	//ctpl::thread_pool(NUM_THREADS);
-	
 	for (vertexID x = 0; x < numVertices; x++)
 	{
 		// Makes a subgraph with one vertex, its root.
@@ -270,17 +237,13 @@ int main(int num_args, char** args)
 		
 		update(S,border,x,previous_actions);
 		
-		//pool.push(branch,S,border,previous_actions);
-		
 		branch(-1,S,border,previous_actions);
 		
-		// Wait for all the threads to finish, to allow the current subtree
-		// of branch() to use all the threads.
-		pool.stop(true);
+		// Would like to make main wait for all threads to finish,
+		// but using pool.wait(true) disallows any future threads
+		// from spawning. For now, let the main continue as is.
 	}
 	
-	// Also divide by the number of threads here since clock() reports
-	// thread-seconds, instead of raw seconds.
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	
 	std::clog << "Largest size = " << largestTree << std::endl;
