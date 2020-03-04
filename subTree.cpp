@@ -23,18 +23,31 @@
 #define BLOCK_PRESENT 'X'
 #define BLOCK_MISSING '_'
 
-int get_x(int coord) { return coord % SIZE; }
-int get_y(int coord) { return (coord / SIZE) % SIZE; }
-int get_z(int coord) { return coord / size2; }
+/*
+coord = x + SIZEX * y + (SIZEX*SIZEY) * z
+      = SIZEX * (y + SIZEY * z) + x
+
+so x = coord mod SIZEX
+
+(coord div SIZEX) = y + SIZEY * z
+so y = (coord div SIZEX) mod SIZEY
+
+(coord div SIZEX) = y + SIZEY * z
+so z = (coord div SIZEX) div SIZEY = coord div (SIZEX*SIZEY)
+*/
+
+int get_x(int coord) { return coord % SIZEX; }
+int get_y(int coord) { return (coord / SIZEX) % SIZEY; }
+int get_z(int coord) { return coord / (SIZEX*SIZEY); }
 
 // Returns the index of the vertex to a
 // given direction of it, or EMPTY if it does not exist.
-int _west (int i) { return (get_x(i) == 0)        ? EMPTY : i - 1;     }
-int _east (int i) { return (get_x(i) == SIZE - 1) ? EMPTY : i + 1;     }
-int _south(int i) { return (get_y(i) == 0)        ? EMPTY : i - SIZE;  }
-int _north(int i) { return (get_y(i) == SIZE - 1) ? EMPTY : i + SIZE;  }
-int _down (int i) { return (get_z(i) == 0)        ? EMPTY : i - size2; }
-int _up   (int i) { return (get_z(i) == SIZE - 1) ? EMPTY : i + size2; }
+int _west (int i) { return (get_x(i) == 0)         ? EMPTY : i - 1;             }
+int _east (int i) { return (get_x(i) == SIZEX - 1) ? EMPTY : i + 1;             }
+int _south(int i) { return (get_y(i) == 0)         ? EMPTY : i - SIZEX;         }
+int _north(int i) { return (get_y(i) == SIZEY - 1) ? EMPTY : i + SIZEX;         }
+int _down (int i) { return (get_z(i) == 0)         ? EMPTY : i - (SIZEX*SIZEY); }
+int _up   (int i) { return (get_z(i) == SIZEZ - 1) ? EMPTY : i + (SIZEX*SIZEY); }
 
 bool onOuterShell(vertexID i)
 {
@@ -149,20 +162,25 @@ void Subtree::print() const
 	std::cout << std::endl;
 }
 
+vertexID index(unsigned x, unsigned y, unsigned z)
+{
+	return x + SIZEX * y + (SIZEX*SIZEY) * z;
+}
+
 void Subtree::writeToFile(std::string filename) const
 {
 	std::ofstream file(filename);
 
-	file << SIZE << std::endl << std::endl;
+	file << SIZEX << ' ' << SIZEY << ' ' << SIZEZ << std::endl << std::endl;
 	
 	vertexID x = 0;
-	for (unsigned i = 0; i < SIZE; i++)
+	for (unsigned i = 0; i < SIZEZ; i++)
 	{
-		for (unsigned j = 0; j < SIZE; j++)
+		for (unsigned j = 0; j < SIZEY; j++)
 		{
-			for (unsigned k = 0; k < SIZE; k++)
+			for (unsigned k = 0; k < SIZEX; k++)
 			{
-				file << (vertices[x++].induced ? BLOCK_PRESENT : BLOCK_MISSING);
+				file << (vertices[index(k,j,i)].induced ? BLOCK_PRESENT : BLOCK_MISSING);
 			}
 			file << std::endl;
 		}

@@ -8,8 +8,7 @@
 typedef int vertexID;
 #define EMPTY -1
 
-constexpr unsigned size2       = SIZE*SIZE;
-constexpr unsigned numVertices = SIZE*SIZE*SIZE;
+constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
 
 struct graphVertex
 {

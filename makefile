@@ -1,29 +1,43 @@
-# This is a 'default' of sorts, for testing.
-# Use make run size=x for any other size
-size=4
+# make run size=s
+# OR
+# make run sizeX=x sizeY=y sizeZ=z
 
-ST_ofile=obj/subTree_$(size).o
-TE_ofile=obj/treeEnumerator_$(size).o
+# If only size is defined, then define the individual side
+# lengths to be that size.
+ifdef size
 
-TE_efile=bin/treeEnumerator_$(size)
+sizeX=$(size)
+sizeY=$(size)
+sizeZ=$(size)
+
+endif
+
+sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
+
+ST_ofile=obj/subTree_$(sizeString).o
+TE_ofile=obj/treeEnumerator_$(sizeString).o
+
+TE_efile=bin/treeEnumerator_$(sizeString)
+
+CFLAGS= --std=c++11 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3
 
 all: $(TE_efile)
 
 run: $(TE_efile)
 	if [ ! -d results ]; then mkdir results; fi
-	./$(TE_efile) results/results_$(size).txt
+	./$(TE_efile) results/results_$(sizeString).txt
 
 $(TE_efile): $(ST_ofile) $(TE_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
-	g++ -DSIZE=$(size) -pthread -O3 $(ST_ofile) $(TE_ofile) -o $(TE_efile)
+	g++ $(CFLAGS) $(ST_ofile) $(TE_ofile) -o $(TE_efile)
 
 $(ST_ofile): subTree.cpp subTree.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
-	g++ -DSIZE=$(size) -pthread -O3 -c subTree.cpp -o $(ST_ofile)
+	g++ $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
 
 $(TE_ofile): treeEnumerator_threaded.cpp
 	if [ ! -d bin ]; then mkdir bin; fi
-	g++ -DSIZE=$(size) -pthread -O3 -c treeEnumerator_threaded.cpp -o $(TE_ofile)
+	g++ $(CFLAGS) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
 
 clean:
 	rm -f $(ST_ofile) $(TE_ofile) $(TE_efile)
