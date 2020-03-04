@@ -4,7 +4,7 @@
 // IN THAT ORDER
 
 #include "subTree.hpp"
-#include "CTPL-master/ctpl_stl.h"
+#include "CTPL/ctpl_stl.h"
 
 #include <list>
 #include <stack>
