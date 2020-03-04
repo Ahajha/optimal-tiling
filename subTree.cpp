@@ -162,11 +162,6 @@ void Subtree::print() const
 	std::cout << std::endl;
 }
 
-vertexID index(unsigned x, unsigned y, unsigned z)
-{
-	return x + SIZEX * y + (SIZEX*SIZEY) * z;
-}
-
 void Subtree::writeToFile(std::string filename) const
 {
 	std::ofstream file(filename);
@@ -180,7 +175,7 @@ void Subtree::writeToFile(std::string filename) const
 		{
 			for (unsigned k = 0; k < SIZEX; k++)
 			{
-				file << (vertices[index(k,j,i)].induced ? BLOCK_PRESENT : BLOCK_MISSING);
+				file << (vertices[x++].induced ? BLOCK_PRESENT : BLOCK_MISSING);
 			}
 			file << std::endl;
 		}
