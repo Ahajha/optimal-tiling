@@ -1,6 +1,8 @@
 # make run size=s
 # OR
 # make run sizeX=x sizeY=y sizeZ=z
+# OR
+# make analyze file=<infile>
 
 # If only size is defined, then define the individual side
 # lengths to be that size.
@@ -38,6 +40,12 @@ $(ST_ofile): subTree.cpp subTree.hpp
 $(TE_ofile): treeEnumerator_threaded.cpp
 	if [ ! -d bin ]; then mkdir bin; fi
 	g++ $(CFLAGS) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
+
+analyze: bin/analyze
+	./analyze $(file)
+
+bin/analyze: analyzer.cpp
+	g++ --std=c++11 -O3 analyzer.cpp -o /bin/analyzer
 
 clean:
 	rm -f $(ST_ofile) $(TE_ofile) $(TE_efile)
