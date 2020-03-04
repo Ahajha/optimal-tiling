@@ -237,17 +237,17 @@ int main(int num_args, char** args)
 		
 		update(S,border,x,previous_actions);
 		
-		branch(-1,S,border,previous_actions);
+		pool.push(branch,S,border,previous_actions);
 		
 		// Would like to make main wait for all threads to finish,
 		// but using pool.wait(true) disallows any future threads
 		// from spawning. For now, let the main continue as is.
-	}
-	
-	// This is not the most elegant solution, but it will work for now
-	while (pool.n_idle() < NUM_THREADS)
-	{
-		std::this_thread::sleep_for (std::chrono::seconds(1));
+		
+		// This is not the most elegant solution, but it will work for now
+		while (pool.n_idle() < NUM_THREADS)
+		{
+			std::this_thread::sleep_for (std::chrono::seconds(1));
+		}
 	}
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
