@@ -244,6 +244,12 @@ int main(int num_args, char** args)
 		// from spawning. For now, let the main continue as is.
 	}
 	
+	// This is not the most elegant solution, but it will work for now
+	while (pool.n_idle() < NUM_THREADS)
+	{
+		std::this_thread::sleep_for (std::chrono::seconds(1));
+	}
+	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	
 	std::clog << "Largest size = " << largestTree << std::endl;
