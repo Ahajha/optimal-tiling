@@ -29,6 +29,10 @@ run: $(TE_efile)
 	if [ ! -d results ]; then mkdir results; fi
 	./$(TE_efile) results/results_$(sizeString).txt
 
+perf: $(TE_efile)
+	if [ ! -d results ]; then mkdir results; fi
+	perf record ./$(TE_efile) results/results_$(sizeString).txt
+
 $(TE_efile): $(ST_ofile) $(TE_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
 	g++ $(CFLAGS) $(ST_ofile) $(TE_ofile) -o $(TE_efile)
