@@ -42,6 +42,8 @@ std::string outfile;
 
 clock_t start_time;
 
+std::vector<std::array<std::list<vertexID>, numVertices>> lists(NUM_THREADS);
+
 // Returns the number of thread-seconds since the start of the program.
 float threadSeconds()
 {
@@ -179,14 +181,12 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 	}
 	else
 	{
-		std::list<vertexID> border_copy;
-	
 		do
 		{
 			// Get and remove the first element
 			vertexID x = border.front();
 			border.pop_front();
-			border_copy.push_back(x);
+			lists[id][S.numInduced].push_back(x);
 			
 			// Ensure the addition would be valid
 			if(S.add(x))
@@ -210,7 +210,7 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 		}
 		while (!border.empty());
 		
-		std::swap(border, border_copy);
+		std::swap(border, lists[id][S.numInduced]);
 	}
 }
 
