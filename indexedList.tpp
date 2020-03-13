@@ -30,7 +30,14 @@ void indexedList<N>::push_front(int x)
 	list[x].next = head;
 	list[x].prev = EMPTY;
 	
-	list[head].prev = x;
+	if (head == EMPTY)
+	{
+		tail = x;
+	}
+	else
+	{
+		list[head].prev = x;
+	}
 	
 	head = x;
 }
@@ -42,7 +49,14 @@ void indexedList<N>::push_back(int x)
 	list[x].next = EMPTY;
 	list[x].prev = tail;
 	
-	list[tail].next = x;
+	if (tail == EMPTY)
+	{
+		head = x;
+	}
+	else
+	{
+		list[tail].next = x;
+	}
 	
 	tail = x;
 }
