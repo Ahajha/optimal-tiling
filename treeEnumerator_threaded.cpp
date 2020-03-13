@@ -4,9 +4,10 @@
 // IN THAT ORDER
 
 #include "subTree.hpp"
+#include "indexedList.hpp"
 #include "CTPL/ctpl_stl.h"
 
-#include <list>
+//#include <list>
 #include <stack>
 #include <iostream>
 #include <ctime>
@@ -42,14 +43,14 @@ std::string outfile;
 
 clock_t start_time;
 
-std::vector<std::array<std::list<vertexID>, numVertices>> lists(NUM_THREADS);
+std::vector<std::array<indexedList<numVertices>, numVertices>> lists(NUM_THREADS);
 
 // Returns the number of thread-seconds since the start of the program.
 float threadSeconds()
 {
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }
-
+/*
 void printBorder(std::list<vertexID> border)
 {
 	std::cout << "Border:";
@@ -59,7 +60,7 @@ void printBorder(std::list<vertexID> border)
 	}
 	std::cout << std::endl;
 }
-
+*/
 void printStack(std::stack<action> previous_actions)
 {
 	std::stack<action> temp(previous_actions);
@@ -79,7 +80,7 @@ void printStack(std::stack<action> previous_actions)
 }
 
 
-void update(Subtree& S, std::list<vertexID>& border,
+void update(Subtree& S, indexedList<numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
 {
 	for (vertexID y : G.vertices[x].neighbors)
@@ -90,7 +91,11 @@ void update(Subtree& S, std::list<vertexID>& border,
 		// to do the opposite action to reverse.
 		if (S.cnt(y) > 1)
 		{
-			// border.remove(y), slighly optimized
+			if (border.remove(y))
+			{
+				previous_actions.push({rem,y});
+			}
+			/*
 			const auto end = border.end();
 			for (auto iter = border.begin(); iter != end; ++iter)
 			{
@@ -98,10 +103,10 @@ void update(Subtree& S, std::list<vertexID>& border,
 				{
 					border.erase(iter);
 					previous_actions.push({rem,y});
-					++S.numExcluded;
 					break;
 				}
 			}
+			*/
 		}
 		else if (y > S.root && !S.has(y))
 		{
@@ -111,7 +116,7 @@ void update(Subtree& S, std::list<vertexID>& border,
 	}
 }
 
-void restore(Subtree& S, std::list<vertexID>& border,
+void restore(Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
 {
 	while (true)
@@ -131,7 +136,6 @@ void restore(Subtree& S, std::list<vertexID>& border,
 		else /* act.type == rem */
 		{
 			border.push_front(act.v);
-			--S.numExcluded;
 		}
 	}
 }
@@ -169,7 +173,7 @@ void checkCandidate(Subtree S)
 	mutex.unlock();
 }
 
-void branch(int id, Subtree& S, std::list<vertexID>& border,
+void branch(int id, Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
 {
 	// We only consider subtrees without children to be good candidates,
@@ -183,13 +187,11 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 	}
 	else
 	{
-		unsigned minExcluded = numVertices;
-	
 		do
 		{
 			// Get and remove the first element
-			vertexID x = border.front();
-			border.pop_front();
+			//vertexID x = border.front();
+			vertexID x = border.pop_front();
 			lists[id][S.numInduced].push_back(x);
 			
 			// Ensure the addition would be valid
@@ -198,45 +200,13 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 				previous_actions.push({stop,0});
 				update(S,border,x,previous_actions);
 				
-				if (S.numExcluded < minExcluded)
+				if (pool.n_idle() != 0)
 				{
-					minExcluded = S.numExcluded;
+					pool.push(branch,S,border,previous_actions);
 				}
-				
-				restore(S,border,previous_actions);
-				
-				S.rem(x);
-			}
-		}
-		while (!border.empty());
-		
-		std::swap(border, lists[id][S.numInduced]);
-		
-		//std::cout << "NV = " << S.numInduced << ", minExcluded = " << minExcluded << std::endl;
-		
-		do
-		{
-			// Get and remove the first element
-			vertexID x = border.front();
-			border.pop_front();
-			lists[id][S.numInduced].push_back(x);
-			
-			// Ensure the addition would be valid
-			if(S.add(x))
-			{
-				previous_actions.push({stop,0});
-				update(S,border,x,previous_actions);
-				
-				if (S.numExcluded == minExcluded)
+				else
 				{
-				//	if (pool.n_idle() != 0)
-				//	{
-						//pool.push(branch,S,border,previous_actions);
-					//}
-					//else
-					//{
-						branch(id,S,border,previous_actions);
-					//}
+					branch(id,S,border,previous_actions);
 				}
 				
 				restore(S,border,previous_actions);
@@ -267,15 +237,28 @@ int main(int num_args, char** args)
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
 		
-		std::list<vertexID> border;
+		//std::list<vertexID> border;
 		
+		indexedList<numVertices> border;
+		/*
+		bor.push_front(1);
+		bor.push_back(2);
+		
+		bor.pop_front();
+		bor.pop_back();
+		
+		bor.empty();
+		
+		bor.push_front(0);
+		bor.remove(0);
+		*/
 		std::stack<action> previous_actions = std::stack<action>();
 		
 		update(S,border,x,previous_actions);
 		
-		//pool.push(branch,S,border,previous_actions);
+		pool.push(branch,S,border,previous_actions);
 		
-		branch(0,S,border,previous_actions);
+		//branch(0,S,border,previous_actions);
 		
 		// Would like to make main wait for all threads to finish,
 		// but using pool.wait(true) disallows any future threads
@@ -286,6 +269,11 @@ int main(int num_args, char** args)
 		//{
 		//	std::this_thread::sleep_for (std::chrono::seconds(1));
 		//}
+	}
+	
+	while (pool.n_idle() < NUM_THREADS)
+	{
+		std::this_thread::sleep_for (std::chrono::seconds(1));
 	}
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
