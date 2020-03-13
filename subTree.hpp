@@ -6,8 +6,8 @@
 #include <iostream>
 
 typedef int vertexID;
-#define EMPTY -1
 
+constexpr vertexID EMPTY = -1; 
 constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
 
 struct graphVertex
@@ -42,8 +42,6 @@ struct Subtree
 	unsigned numInduced;
 	
 	vertexID root;
-	
-	unsigned numExcluded;
 	
 	std::array<subTreeVertex, numVertices> vertices;
 	
