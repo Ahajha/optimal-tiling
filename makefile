@@ -19,6 +19,8 @@ sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
 ST_ofile=obj/subTree_$(sizeString).o
 TE_ofile=obj/treeEnumerator_$(sizeString).o
 
+IL_files=indexedList.hpp indexedList.tpp
+
 TE_efile=bin/treeEnumerator_$(sizeString)
 
 CFLAGS= --std=c++11 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3
@@ -43,7 +45,7 @@ $(ST_ofile): subTree.cpp subTree.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
 
-$(TE_ofile): treeEnumerator_threaded.cpp
+$(TE_ofile): treeEnumerator_threaded.cpp $(IL_files)
 	if [ ! -d bin ]; then mkdir bin; fi
 	$(CC) $(CFLAGS) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
 
