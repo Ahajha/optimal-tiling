@@ -7,7 +7,6 @@
 #include "indexedList.hpp"
 #include "CTPL/ctpl_stl.h"
 
-//#include <list>
 #include <stack>
 #include <iostream>
 #include <ctime>
@@ -50,17 +49,7 @@ float threadSeconds()
 {
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }
-/*
-void printBorder(std::list<vertexID> border)
-{
-	std::cout << "Border:";
-	for (vertexID i : border)
-	{
-		std::cout << ' ' << i;
-	}
-	std::cout << std::endl;
-}
-*/
+
 void printStack(std::stack<action> previous_actions)
 {
 	std::stack<action> temp(previous_actions);
@@ -95,18 +84,6 @@ void update(Subtree& S, indexedList<numVertices>& border,
 			{
 				previous_actions.push({rem,y});
 			}
-			/*
-			const auto end = border.end();
-			for (auto iter = border.begin(); iter != end; ++iter)
-			{
-				if (y == *iter)
-				{
-					border.erase(iter);
-					previous_actions.push({rem,y});
-					break;
-				}
-			}
-			*/
 		}
 		else if (y > S.root && !S.has(y))
 		{
@@ -237,40 +214,16 @@ int main(int num_args, char** args)
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
 		
-		//std::list<vertexID> border;
-		
 		indexedList<numVertices> border;
-		/*
-		bor.push_front(1);
-		bor.push_back(2);
 		
-		bor.pop_front();
-		bor.pop_back();
-		
-		bor.empty();
-		
-		bor.push_front(0);
-		bor.remove(0);
-		*/
 		std::stack<action> previous_actions = std::stack<action>();
 		
 		update(S,border,x,previous_actions);
 		
 		pool.push(branch,S,border,previous_actions);
-		
-		//branch(0,S,border,previous_actions);
-		
-		// Would like to make main wait for all threads to finish,
-		// but using pool.wait(true) disallows any future threads
-		// from spawning. For now, let the main continue as is.
-		
-		// This is not the most elegant solution, but it will work for now
-		//while (pool.n_idle() < NUM_THREADS)
-		//{
-		//	std::this_thread::sleep_for (std::chrono::seconds(1));
-		//}
 	}
 	
+	// Wait for all threads to finish
 	while (pool.n_idle() < NUM_THREADS)
 	{
 		std::this_thread::sleep_for (std::chrono::seconds(1));
