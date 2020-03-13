@@ -43,6 +43,8 @@ struct Subtree
 	
 	vertexID root;
 	
+	unsigned numExcluded;
+	
 	std::array<subTreeVertex, numVertices> vertices;
 	
 	Subtree(vertexID r);

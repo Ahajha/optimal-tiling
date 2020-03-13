@@ -98,6 +98,7 @@ void update(Subtree& S, std::list<vertexID>& border,
 				{
 					border.erase(iter);
 					previous_actions.push({rem,y});
+					++S.numExcluded;
 					break;
 				}
 			}
@@ -110,7 +111,7 @@ void update(Subtree& S, std::list<vertexID>& border,
 	}
 }
 
-void restore(std::list<vertexID>& border,
+void restore(Subtree& S, std::list<vertexID>& border,
 	std::stack<action>& previous_actions)
 {
 	while (true)
@@ -130,6 +131,7 @@ void restore(std::list<vertexID>& border,
 		else /* act.type == rem */
 		{
 			border.push_front(act.v);
+			--S.numExcluded;
 		}
 	}
 }
@@ -181,6 +183,8 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 	}
 	else
 	{
+		unsigned minExcluded = numVertices;
+	
 		do
 		{
 			// Get and remove the first element
@@ -194,16 +198,48 @@ void branch(int id, Subtree& S, std::list<vertexID>& border,
 				previous_actions.push({stop,0});
 				update(S,border,x,previous_actions);
 				
-				if (pool.n_idle() != 0)
+				if (S.numExcluded < minExcluded)
 				{
-					pool.push(branch,S,border,previous_actions);
-				}
-				else
-				{
-					branch(id,S,border,previous_actions);
+					minExcluded = S.numExcluded;
 				}
 				
-				restore(border,previous_actions);
+				restore(S,border,previous_actions);
+				
+				S.rem(x);
+			}
+		}
+		while (!border.empty());
+		
+		std::swap(border, lists[id][S.numInduced]);
+		
+		//std::cout << "NV = " << S.numInduced << ", minExcluded = " << minExcluded << std::endl;
+		
+		do
+		{
+			// Get and remove the first element
+			vertexID x = border.front();
+			border.pop_front();
+			lists[id][S.numInduced].push_back(x);
+			
+			// Ensure the addition would be valid
+			if(S.add(x))
+			{
+				previous_actions.push({stop,0});
+				update(S,border,x,previous_actions);
+				
+				if (S.numExcluded == minExcluded)
+				{
+				//	if (pool.n_idle() != 0)
+				//	{
+						//pool.push(branch,S,border,previous_actions);
+					//}
+					//else
+					//{
+						branch(id,S,border,previous_actions);
+					//}
+				}
+				
+				restore(S,border,previous_actions);
 				
 				S.rem(x);
 			}
@@ -237,17 +273,19 @@ int main(int num_args, char** args)
 		
 		update(S,border,x,previous_actions);
 		
-		pool.push(branch,S,border,previous_actions);
+		//pool.push(branch,S,border,previous_actions);
+		
+		branch(0,S,border,previous_actions);
 		
 		// Would like to make main wait for all threads to finish,
 		// but using pool.wait(true) disallows any future threads
 		// from spawning. For now, let the main continue as is.
 		
 		// This is not the most elegant solution, but it will work for now
-		while (pool.n_idle() < NUM_THREADS)
-		{
-			std::this_thread::sleep_for (std::chrono::seconds(1));
-		}
+		//while (pool.n_idle() < NUM_THREADS)
+		//{
+		//	std::this_thread::sleep_for (std::chrono::seconds(1));
+		//}
 	}
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
