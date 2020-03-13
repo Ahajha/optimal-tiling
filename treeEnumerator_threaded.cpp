@@ -1,8 +1,3 @@
-// Step 1: Implement
-// Step 2: Optimize
-
-// IN THAT ORDER
-
 #include "subTree.hpp"
 #include "indexedList.hpp"
 #include "CTPL/ctpl_stl.h"
@@ -29,7 +24,7 @@ struct action
 };
 
 // Since there is only one base graph, we can let it be global.
-const Graph G = Graph();
+const Graph G;
 
 // Thread pool
 ctpl::thread_pool pool(NUM_THREADS);
@@ -40,8 +35,12 @@ unsigned largestTree = 0;
 // File to write the best graph seen so far to
 std::string outfile;
 
+// The start time of the program
 clock_t start_time;
 
+// Grid of indexedLists, used to store the border elements as they are removed,
+// then swapped back to restore. A call to branch can find the list it should
+// use by going to lists[id][S.numInduced].
 std::vector<std::array<indexedList<numVertices>, numVertices>> lists(NUM_THREADS);
 
 // Returns the number of thread-seconds since the start of the program.
@@ -50,25 +49,7 @@ float threadSeconds()
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }
 
-void printStack(std::stack<action> previous_actions)
-{
-	std::stack<action> temp(previous_actions);
-	
-	while(!temp.empty())
-	{
-		action act = temp.top();
-		if (act.type == stop)
-			std::cout << "stop ";
-		else
-			std::cout << "{" << ((act.type == rem) ? "rem" : "add")
-				<< "," << act.v << "} ";
-		
-		temp.pop();
-	}
-	std::cout << std::endl;
-}
-
-
+// Updates the border of S after adding x.
 void update(Subtree& S, indexedList<numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
 {
@@ -80,6 +61,8 @@ void update(Subtree& S, indexedList<numVertices>& border,
 		// to do the opposite action to reverse.
 		if (S.cnt(y) > 1)
 		{
+			// This is a fix for the base algorithm, it will
+			// not work without this.
 			if (border.remove(y))
 			{
 				previous_actions.push({rem,y});
@@ -93,7 +76,8 @@ void update(Subtree& S, indexedList<numVertices>& border,
 	}
 }
 
-void restore(Subtree& S, indexedList<numVertices>& border,
+// Restores the border of S after removing x.
+void restore(indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
 {
 	while (true)
@@ -121,7 +105,6 @@ void restore(Subtree& S, indexedList<numVertices>& border,
 // prints to clog If S does not have enclosed space, updates
 // largestTree and writes the result to outfile, does neither if S
 // does have enclosed space. Relies on the mutex below for thread safety.
-
 void checkCandidate(Subtree S)
 {
 	static std::mutex mutex;
@@ -150,6 +133,7 @@ void checkCandidate(Subtree S)
 	mutex.unlock();
 }
 
+// Performs the bulk of the algorithm described in the paper.
 void branch(int id, Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
 {
@@ -167,8 +151,11 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 		do
 		{
 			// Get and remove the first element
-			//vertexID x = border.front();
 			vertexID x = border.pop_front();
+			
+			// Push it onto a temporary list. This is a fix
+			// to the base algorithm, it will not work without this
+			// (along with the swap below)
 			lists[id][S.numInduced].push_back(x);
 			
 			// Ensure the addition would be valid
@@ -186,7 +173,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 					branch(id,S,border,previous_actions);
 				}
 				
-				restore(S,border,previous_actions);
+				restore(border,previous_actions);
 				
 				S.rem(x);
 			}
@@ -216,7 +203,7 @@ int main(int num_args, char** args)
 		
 		indexedList<numVertices> border;
 		
-		std::stack<action> previous_actions = std::stack<action>();
+		std::stack<action> previous_actions;
 		
 		update(S,border,x,previous_actions);
 		
