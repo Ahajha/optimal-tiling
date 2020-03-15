@@ -55,8 +55,6 @@ void update(Subtree& S, indexedList<numVertices>& border,
 {
 	for (vertexID y : G.vertices[x].neighbors)
 	{
-		if (y == EMPTY) continue;
-		
 		// Pushes the current action, will need
 		// to do the opposite action to reverse.
 		if (S.cnt(y) > 1)

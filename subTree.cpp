@@ -60,12 +60,12 @@ bool Subtree::add(vertexID i)
 	
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (x != EMPTY) ++vertices[x].effectiveDegree;
+		++vertices[x].effectiveDegree;
 	}
 	
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (exists(x))
+		if (has(x))
 		{
 			if (validate(x))
 			{
@@ -91,7 +91,7 @@ void Subtree::rem(vertexID i)
 	
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (x != EMPTY) --vertices[x].effectiveDegree;
+		--vertices[x].effectiveDegree;
 	}
 }
 
