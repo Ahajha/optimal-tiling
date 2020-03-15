@@ -9,17 +9,17 @@
 
 extern const Graph G;
 
-struct subTreeVertex
-{
-	bool induced;
-	unsigned effectiveDegree;
-	
-	subTreeVertex() : induced(false), effectiveDegree(0) {}
-};
-
 // Represents an induced subtree
 struct Subtree
 {
+	struct subTreeVertex
+	{
+		bool induced;
+		unsigned effectiveDegree;
+		
+		subTreeVertex() : induced(false), effectiveDegree(0) {}
+	};
+	
 	// Each index is either enabled or disabled, and includes its
 	// effective degree (which is cnt)
 	
@@ -30,9 +30,6 @@ struct Subtree
 	std::array<subTreeVertex, numVertices> vertices;
 	
 	Subtree(vertexID r);
-	
-	// Copy constructor
-	Subtree(const Subtree& S);
 	
 	unsigned cnt(vertexID i) const { return vertices[i].effectiveDegree; }
 	bool     has(vertexID i) const { return vertices[i].induced;         }

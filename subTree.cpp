@@ -99,9 +99,6 @@ Subtree::Subtree(vertexID r) : numInduced(0), root(r), vertices()
 	add(r);
 }
 
-Subtree::Subtree(const Subtree& S)
-	: numInduced(S.numInduced), root(S.root), vertices(S.vertices) {}
-
 bool Subtree::validate(vertexID i) const
 {
 	if (cnt(i) != 4)
