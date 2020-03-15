@@ -45,8 +45,7 @@ struct Subtree
 	
 	void writeToFile(std::string filename) const;
 	
-	// This currently isn't doing anything. Every vertex we add is of degree 1.
-	// We need to check its neighbor.
+	// Returns true iff i does not have 4 neighbors in any plane.
 	bool validate(vertexID i) const;
 	
 	// Returns true iff there is at least one block whose
