@@ -7,32 +7,6 @@
 #define BLOCK_PRESENT 'X'
 #define BLOCK_MISSING '_'
 
-/*
-coord = x + SIZEX * y + (SIZEX*SIZEY) * z
-      = SIZEX * (y + SIZEY * z) + x
-
-so x = coord mod SIZEX
-
-(coord div SIZEX) = y + SIZEY * z
-so y = (coord div SIZEX) mod SIZEY
-
-(coord div SIZEX) = y + SIZEY * z
-so z = (coord div SIZEX) div SIZEY = coord div (SIZEX*SIZEY)
-*/
-/*
-int get_x(int coord) { return coord % SIZEX; }
-int get_y(int coord) { return (coord / SIZEX) % SIZEY; }
-int get_z(int coord) { return coord / (SIZEX*SIZEY); }
-
-// Returns the index of the vertex to a
-// given direction of it, or EMPTY if it does not exist.
-int _west (int i) { return (get_x(i) == 0)         ? EMPTY : i - 1;             }
-int _east (int i) { return (get_x(i) == SIZEX - 1) ? EMPTY : i + 1;             }
-int _south(int i) { return (get_y(i) == 0)         ? EMPTY : i - SIZEX;         }
-int _north(int i) { return (get_y(i) == SIZEY - 1) ? EMPTY : i + SIZEX;         }
-int _down (int i) { return (get_z(i) == 0)         ? EMPTY : i - (SIZEX*SIZEY); }
-int _up   (int i) { return (get_z(i) == SIZEZ - 1) ? EMPTY : i + (SIZEX*SIZEY); }
-*/
 bool onOuterShell(vertexID i)
 {
 	// If i has an 'empty' neighbor, then it is
@@ -43,22 +17,7 @@ bool onOuterShell(vertexID i)
 	}
 	return false;
 }
-/*
-Graph::Graph()
-{
-	for (vertexID i = 0; i < numVertices; i++)
-	{
-		vertices[i].neighbors[WEST ] = _west (i);
-		vertices[i].neighbors[EAST ] = _east (i);
-		
-		vertices[i].neighbors[SOUTH] = _south(i);
-		vertices[i].neighbors[NORTH] = _north(i);
-		
-		vertices[i].neighbors[DOWN ] = _down (i);
-		vertices[i].neighbors[UP   ] = _up   (i);
-	}
-}
-*/
+
 bool Subtree::add(vertexID i)
 {
 	/*
@@ -169,11 +128,6 @@ void Subtree::writeToFile(std::string filename) const
 
 Subtree::Subtree(vertexID r) : numInduced(0), root(r), vertices()
 {
-	for (vertexID x = 0; x < numVertices; x++)
-	{
-		vertices[x].induced = false;
-		vertices[x].effectiveDegree = 0;
-	}
 	add(r);
 }
 
