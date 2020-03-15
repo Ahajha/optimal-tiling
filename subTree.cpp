@@ -20,13 +20,12 @@ bool onOuterShell(vertexID i)
 
 bool Subtree::add(vertexID i)
 {
-	/*
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
-		if (vertices[x].induced)
+		if (has(x))
 		{
 			++vertices[x].effectiveDegree;
 			
@@ -46,40 +45,9 @@ bool Subtree::add(vertexID i)
 	for (const vertexID x : G.vertices[i].neighbors)
 	{
 		// Ignore the induced vertex, its degree has already been increased.
-		if (x != EMPTY && vertices[x].induced)
+		if (!has(x))
 			++vertices[x].effectiveDegree;
 	}
-	return true;
-	*/
-	
-	/* This is a simpler implementation, though may not be as fast */
-	
-	vertices[i].induced = true;
-	
-	++numInduced;
-	
-	for (const vertexID x : G.vertices[i].neighbors)
-	{
-		++vertices[x].effectiveDegree;
-	}
-	
-	for (const vertexID x : G.vertices[i].neighbors)
-	{
-		if (has(x))
-		{
-			if (validate(x))
-			{
-				return true;
-			}
-			else
-			{
-				rem(i);
-				return false;
-			}
-		}
-	}
-	
-	// This shouldn't happen, but exists just to make the compiler happy.
 	return true;
 }
 
@@ -118,7 +86,7 @@ void Subtree::writeToFile(std::string filename) const
 		{
 			for (unsigned k = 0; k < SIZEX; k++)
 			{
-				file << (vertices[x++].induced ? BLOCK_PRESENT : BLOCK_MISSING);
+				file << (has(x++) ? BLOCK_PRESENT : BLOCK_MISSING);
 			}
 			file << std::endl;
 		}
