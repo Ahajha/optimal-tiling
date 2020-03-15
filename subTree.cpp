@@ -1,23 +1,7 @@
+#include "graph.hpp"
 #include "subTree.hpp"
 #include <fstream>
 #include <queue>
-
-// The maximum degree is 6 for a given
-// vertex, and the indexes of the array correspond to
-// the following directions.
-
-// These are not arbitrary, they are in order of ascending ID.
-
-// Up and down     : z axis
-// North and south : y axis
-// East and west   : x axis
-
-#define NORTH 4
-#define EAST  3
-#define UP    5
-#define SOUTH 1
-#define WEST  2
-#define DOWN  0
 
 // These are used to print to the file
 #define BLOCK_PRESENT 'X'
@@ -35,7 +19,7 @@ so y = (coord div SIZEX) mod SIZEY
 (coord div SIZEX) = y + SIZEY * z
 so z = (coord div SIZEX) div SIZEY = coord div (SIZEX*SIZEY)
 */
-
+/*
 int get_x(int coord) { return coord % SIZEX; }
 int get_y(int coord) { return (coord / SIZEX) % SIZEY; }
 int get_z(int coord) { return coord / (SIZEX*SIZEY); }
@@ -48,18 +32,18 @@ int _south(int i) { return (get_y(i) == 0)         ? EMPTY : i - SIZEX;         
 int _north(int i) { return (get_y(i) == SIZEY - 1) ? EMPTY : i + SIZEX;         }
 int _down (int i) { return (get_z(i) == 0)         ? EMPTY : i - (SIZEX*SIZEY); }
 int _up   (int i) { return (get_z(i) == SIZEZ - 1) ? EMPTY : i + (SIZEX*SIZEY); }
-
+*/
 bool onOuterShell(vertexID i)
 {
 	// If i has an 'empty' neighbor, then it is
 	// on the outer shell.
-	for (vertexID x : G.vertices[i].neighbors)
+	for (vertexID x : G.vertices[i].directions)
 	{
 		if (x == EMPTY) return true;
 	}
 	return false;
 }
-
+/*
 Graph::Graph()
 {
 	for (vertexID i = 0; i < numVertices; i++)
@@ -74,7 +58,7 @@ Graph::Graph()
 		vertices[i].neighbors[UP   ] = _up   (i);
 	}
 }
-
+*/
 bool Subtree::add(vertexID i)
 {
 	/*
@@ -201,11 +185,16 @@ bool Subtree::validate(vertexID i) const
 	if (cnt(i) != 4)
 		return cnt(i) < 4;
 	
+	auto& directions = G.vertices[i].directions;
+	
 	// Ensure all axis have at least one neighbor
 	return
-		( exists(_west (i)) || exists(_east (i)) ) &&
-		( exists(_north(i)) || exists(_south(i)) ) &&
-		( exists(_down (i)) || exists(_up   (i)) );
+		(exists(directions[Graph::WEST ]) ||
+		 exists(directions[Graph::EAST ])) &&
+		(exists(directions[Graph::NORTH]) || 
+		 exists(directions[Graph::SOUTH])) &&
+		(exists(directions[Graph::UP   ]) ||
+		 exists(directions[Graph::DOWN ]));
 }
 
 bool Subtree::hasEnclosedSpace() const

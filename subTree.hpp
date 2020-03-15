@@ -5,23 +5,7 @@
 #include <vector>
 #include <iostream>
 
-typedef int vertexID;
-
-constexpr vertexID EMPTY = -1; 
-constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
-
-struct graphVertex
-{
-	std::array<vertexID, 6> neighbors;
-};
-
-struct Graph
-{
-	// Index of a given vertex is its ID
-	std::array<graphVertex, numVertices> vertices;
-	
-	Graph();
-};
+#include "graph.hpp"
 
 extern const Graph G;
 

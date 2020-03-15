@@ -18,6 +18,7 @@ sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
 
 ST_ofile=obj/subTree_$(sizeString).o
 TE_ofile=obj/treeEnumerator_$(sizeString).o
+GH_ofile=obj/graph_$(sizeString).o
 
 IL_files=indexedList.hpp indexedList.tpp
 
@@ -39,11 +40,15 @@ perf: $(TE_efile)
 
 $(TE_efile): $(ST_ofile) $(TE_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
-	$(CC) $(CFLAGS) $(ST_ofile) $(TE_ofile) -o $(TE_efile)
+	$(CC) $(CFLAGS) $(ST_ofile) $(TE_ofile) $(GH_ofile) -o $(TE_efile)
 
-$(ST_ofile): subTree.cpp subTree.hpp
+$(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
+
+$(GH_ofile): graph.cpp graph.hpp
+	if [ ! -d obj ]; then mkdir obj; fi
+	$(CC) $(CFLAGS) -c graph.cpp -o $(GH_ofile)
 
 $(TE_ofile): treeEnumerator_threaded.cpp $(IL_files)
 	if [ ! -d bin ]; then mkdir bin; fi
