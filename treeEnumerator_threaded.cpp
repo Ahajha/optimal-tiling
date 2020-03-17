@@ -43,6 +43,9 @@ clock_t start_time;
 // use by going to lists[id][S.numInduced].
 std::vector<std::array<indexedList<numVertices>, numVertices>> lists(NUM_THREADS);
 
+std::vector<unsigned long long> numLeaves(NUM_THREADS);
+bool lastWasNew = false;
+
 // Returns the number of thread-seconds since the start of the program.
 float threadSeconds()
 {
@@ -103,14 +106,21 @@ void restore(indexedList<numVertices>& border,
 // prints to clog If S does not have enclosed space, updates
 // largestTree and writes the result to outfile, does neither if S
 // does have enclosed space. Relies on the mutex below for thread safety.
+
+std::mutex mutex;
+
 void checkCandidate(Subtree S)
-{
-	static std::mutex mutex;
-	
+{	
 	mutex.lock();
 	
 	if (S.numInduced > largestTree)
 	{
+		if (!lastWasNew)
+		{
+			std::cout << std::endl;
+			lastWasNew = true;
+		}
+		
 		if (S.hasEnclosedSpace())
 		{
 			std::clog << S.numInduced
@@ -143,6 +153,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 		{
 			checkCandidate(S);
 		}
+		++numLeaves[id];
 	}
 	else
 	{
@@ -212,6 +223,20 @@ int main(int num_args, char** args)
 	while (pool.n_idle() < NUM_THREADS)
 	{
 		std::this_thread::sleep_for (std::chrono::seconds(1));
+		
+		unsigned long long total = 0;
+		for (unsigned i = 0; i < NUM_THREADS; i++) total += numLeaves[i];
+		
+		mutex.lock();
+		
+		std::cout << "\r" << threadSeconds() << " thread-seconds elapsed, "
+			<< total << " leaves encountered";
+		
+		std::cout.flush();
+		
+		lastWasNew = false;
+		
+		mutex.unlock();
 	}
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
