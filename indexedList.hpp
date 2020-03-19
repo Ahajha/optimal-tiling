@@ -29,7 +29,13 @@ class indexedList
 	int  pop_front ();
 	int  pop_back  ();
 	
-	bool empty();
+	bool empty() const;
+	
+	// Removes a random item from the list and returns it, uniformly distributed.
+	// Assumes there is an item to remove.
+	int removeRandom();
+	
+	unsigned size() const;
 	
 	private:
 	
@@ -42,6 +48,8 @@ class indexedList
 		
 		index() : inList(false), next(EMPTY), prev(EMPTY) {}
 	};
+	
+	unsigned numItems;
 	
 	std::array<index, N> list;
 	
