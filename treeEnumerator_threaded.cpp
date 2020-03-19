@@ -31,7 +31,7 @@ const Graph G;
 ctpl::thread_pool pool(NUM_THREADS);
 
 // Maximum size graph seen so far
-unsigned largestTree = 0;
+unsigned largestTree = 0, largestWithEnclosed = 0;
 
 // File to write the best graph seen so far to
 std::string outfile;
@@ -124,13 +124,22 @@ void checkCandidate(Subtree S)
 		
 		if (S.hasEnclosedSpace())
 		{
-			std::clog << S.numInduced
-				<< " vertices with enclosed space, found at "
-				<< threadSeconds() << " thread-seconds" << std::endl;
+			if (S.numInduced > largestWithEnclosed)
+			{
+				largestWithEnclosed = S.numInduced;
+				
+				S.writeToFile(outfile + "_enclosed");
+				
+				std::clog << S.numInduced
+					<< " vertices with enclosed space, found at "
+					<< threadSeconds() << " thread-seconds" << std::endl;
+			}
 		}
 		else
 		{
 			largestTree = S.numInduced;
+			
+			if (largestWithEnclosed < largestTree) largestWithEnclosed = largestTree;
 			
 			S.writeToFile(outfile);
 			
@@ -304,12 +313,13 @@ int main(int num_args, char** args)
 	
 	for (unsigned i = 0; i < NUM_THREADS; i++)
 	{
-		//pool.push(randomSample,0);
+		pool.push(randomSample,0);
 	}
 	
-	randomSample(0,0);
+	//pool.push(randomSample,0);
 	
 	// Wait for all threads to finish
+	/*
 	while (pool.n_idle() < NUM_THREADS)
 	{
 		std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -328,6 +338,9 @@ int main(int num_args, char** args)
 		
 		mutex.unlock();
 	}
+	*/
+	
+	while (true) std::this_thread::sleep_for (std::chrono::seconds(1));
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	
