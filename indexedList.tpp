@@ -15,7 +15,7 @@ bool indexedList<N>::remove(int x)
 	if (list[x].next != EMPTY)
 		list[list[x].next].prev = list[x].prev;
 	else // Tail of the list
-		tail = list[x].next;
+		tail = list[x].prev;
 	
 	if (list[x].prev != EMPTY)
 		list[list[x].prev].next = list[x].next;
