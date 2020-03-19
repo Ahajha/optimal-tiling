@@ -92,13 +92,13 @@ bool indexedList<N>::empty() const
 }
 
 template <std::size_t N>
-unsigned size() const
+unsigned indexedList<N>::size() const
 {
 	return numItems;
 }
 
 template <std::size_t N>
-int removeRandom()
+int indexedList<N>::removeRandom()
 {
 	int toRemove = rand() % numItems;
 	

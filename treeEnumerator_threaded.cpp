@@ -7,6 +7,7 @@
 #include <ctime>
 #include <thread>
 #include <mutex>
+#include <random>
 
 #define NUM_THREADS (std::thread::hardware_concurrency())
 
@@ -193,19 +194,79 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 	}
 }
 
-int main(int num_args, char** args)
+// Returns the size of the largest tree seen.
+unsigned randomBranch(int id, Subtree& S, indexedList<numVertices>& border,
+	std::stack<action>& previous_actions)
 {
-	if (num_args != 2)
+	// We only consider subtrees without children to be good candidates,
+	// since any children of this tree would be better candidates.
+	if (border.empty())
 	{
-		std::cerr << "usage: " << args[0] << " <outfile>" << std::endl;
-		exit(1);
+		if (S.numInduced > largestTree)
+		{
+			checkCandidate(S);
+		}
+		++numLeaves[id];
+		
+		return S.numInduced;
 	}
-	
-	outfile = args[1];
-	
-	start_time = clock();
-	
-	for (vertexID x = 0; x < numVertices; x++)
+	else
+	{
+		vertexID x;
+		unsigned result;
+		do
+		{
+			// Get and remove a random element,
+			// ensure it is valid.
+			x = border.removeRandom();
+			
+			// Push it onto a temporary list. This is a fix
+			// to the base algorithm, it will not work without this
+			// (along with the swap below)
+			lists[id][S.numInduced].push_back(x);
+		}
+		while (!S.add(x) && !border.empty());
+		
+		if (!border.empty())
+		{
+			previous_actions.push({stop,0});
+			update(S,border,x,previous_actions);
+			
+			// This is short, so just use one thread.
+			result = randomBranch(id,S,border,previous_actions);
+			
+			restore(border,previous_actions);
+			
+			S.rem(x);
+		}
+		else
+		{
+			if (S.numInduced > largestTree)
+			{
+				checkCandidate(S);
+			}
+			++numLeaves[id];
+			
+			result = S.numInduced;
+		}
+		
+		//std::swap(border, lists[id][S.numInduced]);
+		unsigned size = lists[id][S.numInduced].size();
+		for (unsigned i = 0; i < size; i++)
+		// This isn't working, empty() might be bugged.
+		//while (!lists[id][S.numInduced].empty())
+		{
+			border.push_back(lists[id][S.numInduced].pop_front());
+		}
+		
+		return result;
+	}
+}
+
+// Constantly randomly samples from subtrees with root x.
+void randomSample(int id,vertexID x)
+{
+	while(true)
 	{
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
@@ -216,8 +277,37 @@ int main(int num_args, char** args)
 		
 		update(S,border,x,previous_actions);
 		
-		pool.push(branch,S,border,previous_actions);
+		//std::cout << randomBranch(0,S,border,previous_actions) << std::endl;
+	
+		randomBranch(id,S,border,previous_actions);
 	}
+}
+
+int main(int num_args, char** args)
+{
+	if (num_args != 2)
+	{
+		std::cerr << "usage: " << args[0] << " <outfile>" << std::endl;
+		exit(1);
+	}
+	
+	outfile = args[1];
+	
+	srand(time(NULL));
+	start_time = clock();
+	/*
+	for (vertexID x = 0; x < numVertices; x++)
+	{
+		randomSample(x);
+	}
+	*/
+	
+	for (unsigned i = 0; i < NUM_THREADS; i++)
+	{
+		//pool.push(randomSample,0);
+	}
+	
+	randomSample(0,0);
 	
 	// Wait for all threads to finish
 	while (pool.n_idle() < NUM_THREADS)
