@@ -51,6 +51,9 @@ struct Subtree
 	// Returns true iff there is at least one block whose
 	// faces cannot be accessed externally.
 	bool hasEnclosedSpace() const;
+	
+	// Returns true iff adding i would preserve the neighbor condition.
+	bool safeToAdd(vertexID i);
 };
 
 #endif

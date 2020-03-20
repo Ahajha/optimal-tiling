@@ -1,6 +1,7 @@
 #include "indexedList.hpp"
 
 #include <random>
+#include <iostream>
 
 template <std::size_t N>
 indexedList<N>::indexedList() : numItems(0), list(), head(EMPTY), tail(EMPTY) {}
@@ -21,6 +22,9 @@ bool indexedList<N>::remove(int x)
 		list[list[x].prev].next = list[x].next;
 	else // Head of the list
 		head = list[x].next;
+	
+	list[x].next = EMPTY;
+	list[x].prev = EMPTY;
 	
 	--numItems;
 	
@@ -109,4 +113,16 @@ int indexedList<N>::removeRandom()
 	remove(valueToRemove);
 	
 	return valueToRemove;
+}
+
+template <std::size_t N>
+void indexedList<N>::print()
+{
+	unsigned i = 0;
+	for (int x = head; x != EMPTY && i < 20; x = list[x].next)
+	{
+		std::cout << x << " ";
+		i++;
+	}
+	std::cout << std::endl;
 }

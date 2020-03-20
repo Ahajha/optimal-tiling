@@ -150,7 +150,7 @@ void checkCandidate(Subtree S)
 	
 	mutex.unlock();
 }
-
+/*
 // Performs the bulk of the algorithm described in the paper.
 void branch(int id, Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
@@ -202,7 +202,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 		std::swap(border, lists[id][S.numInduced]);
 	}
 }
-
+*/
 // Returns the size of the largest tree seen.
 unsigned randomBranch(int id, Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
@@ -234,10 +234,13 @@ unsigned randomBranch(int id, Subtree& S, indexedList<numVertices>& border,
 			// (along with the swap below)
 			lists[id][S.numInduced].push_back(x);
 		}
-		while (!S.add(x) && !border.empty());
+		// I think the issue is when these both trigger.
+		while (!S.safeToAdd(x) && !border.empty());
 		
-		if (!border.empty())
+		if (S.safeToAdd(x))
 		{
+			S.add(x);
+			
 			previous_actions.push({stop,0});
 			update(S,border,x,previous_actions);
 			
@@ -260,16 +263,132 @@ unsigned randomBranch(int id, Subtree& S, indexedList<numVertices>& border,
 		}
 		
 		//std::swap(border, lists[id][S.numInduced]);
-		unsigned size = lists[id][S.numInduced].size();
-		for (unsigned i = 0; i < size; i++)
+		//unsigned size = lists[id][S.numInduced].size();
+		//for (unsigned i = 0; i < size; i++)
 		// This isn't working, empty() might be bugged.
-		//while (!lists[id][S.numInduced].empty())
+		
+		//std::cout << "Size before/after: " << lists[id][S.numInduced].size() << ' ';
+		while (!lists[id][S.numInduced].empty())
 		{
 			border.push_back(lists[id][S.numInduced].pop_front());
 		}
 		
+		//std::cout << lists[id][S.numInduced].size() << std::endl;
+		
 		return result;
 	}
+}
+
+unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
+	std::stack<action>& previous_actions, unsigned level)
+{
+	unsigned best = 0;
+
+	
+	//while(true)
+	{
+		for (int x = border.head; x != indexedList<numVertices>::EMPTY; x = border.list[x].next)
+		{
+			// No need to re-add these, since we will only going further down the tree.
+			if (!S.safeToAdd(x)) border.remove(x);
+		}
+		
+		if (border.empty())
+		{
+			if (S.numInduced > best) best = S.numInduced;
+			//break;
+			return best;
+		}
+		
+		//std::cout << "border size = " << border.size() << std::endl;
+		
+		unsigned nextVertex = border.head;
+		unsigned nextVertexScore = 0;
+		if (level == 0)
+		{
+			do
+			{
+				// Get and remove the first element
+				vertexID x = border.pop_front();
+				
+				// Push it onto a temporary list. This is a fix
+				// to the base algorithm, it will not work without this
+				// (along with the swap below)
+				lists[id][S.numInduced].push_back(x);
+				
+				// All additions are valid, so no need to check.
+				S.add(x);
+				
+				previous_actions.push({stop,0});
+
+				update(S,border,x,previous_actions);
+				
+				unsigned result = randomBranch(id,S,border,previous_actions);
+				
+				if (result > nextVertexScore)
+				{
+					nextVertex = x;
+					nextVertexScore = result;
+				}
+				
+				restore(border,previous_actions);
+				
+				S.rem(x);
+			}
+			while (!border.empty());
+			
+			std::swap(border, lists[id][S.numInduced]);
+		}
+		else
+		{
+			do
+			{
+				// Get and remove the first element
+				vertexID x = border.pop_front();
+				
+				// Push it onto a temporary list. This is a fix
+				// to the base algorithm, it will not work without this
+				// (along with the swap below)
+				lists[id][S.numInduced].push_back(x);
+				
+				// All additions are valid, so no need to check.
+				S.add(x);
+				
+				previous_actions.push({stop,0});
+				update(S,border,x,previous_actions);
+				
+				unsigned result = nested_monte_carlo(id,S,border,previous_actions, level - 1);
+				
+				if (result > nextVertexScore)
+				{
+					nextVertex = x;
+					nextVertexScore = result;
+				}
+				
+				restore(border,previous_actions);
+				
+				S.rem(x);
+			}
+			while (!border.empty());
+			
+			std::swap(border, lists[id][S.numInduced]);
+		}
+		
+		//S.add(nextVertex);
+				
+		//previous_actions.push({stop,0});
+		//update(S,border,nextVertex,previous_actions);
+		
+		/*
+		if (S.numInduced > best)
+		{
+			best = S.numInduced;
+			std::cout << S.numInduced;
+		}
+		*/
+	}
+	
+	return best;
 }
 
 // Constantly randomly samples from subtrees with root x.
@@ -310,11 +429,25 @@ int main(int num_args, char** args)
 		randomSample(x);
 	}
 	*/
-	
+	/*
 	for (unsigned i = 0; i < NUM_THREADS; i++)
 	{
 		pool.push(randomSample,0);
 	}
+	*/
+	
+	Subtree S(0);
+	
+	indexedList<numVertices> border;
+	
+	std::stack<action> previous_actions;
+	
+	update(S,border,0,previous_actions);
+	
+	for (unsigned i = 0; i < 20; i++)
+		nested_monte_carlo(0,S,border,previous_actions,0);
+	
+	
 	
 	//pool.push(randomSample,0);
 	
@@ -340,7 +473,7 @@ int main(int num_args, char** args)
 	}
 	*/
 	
-	while (true) std::this_thread::sleep_for (std::chrono::seconds(1));
+	//while (true) std::this_thread::sleep_for (std::chrono::seconds(1));
 	
 	std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	

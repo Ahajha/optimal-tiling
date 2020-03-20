@@ -13,10 +13,8 @@ removals are in constant time.
 */
 
 template<std::size_t N>
-class indexedList
-{
-	public:
-	
+struct indexedList
+{	
 	indexedList();
 
 	// Returns true if x was removed, and false if x did not already exist here.
@@ -37,7 +35,7 @@ class indexedList
 	
 	unsigned size() const;
 	
-	private:
+	void print();
 	
 	static constexpr int EMPTY = -1;
 	
