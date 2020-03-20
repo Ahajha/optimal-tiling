@@ -23,8 +23,8 @@ bool indexedList<N>::remove(int x)
 	else // Head of the list
 		head = list[x].next;
 	
-	list[x].next = EMPTY;
-	list[x].prev = EMPTY;
+	//list[x].next = EMPTY;
+	//list[x].prev = EMPTY;
 	
 	--numItems;
 	
@@ -118,11 +118,18 @@ int indexedList<N>::removeRandom()
 template <std::size_t N>
 void indexedList<N>::print()
 {
-	unsigned i = 0;
-	for (int x = head; x != EMPTY && i < 20; x = list[x].next)
+	/*
+	for (int x = head; x != EMPTY; x = list[x].next)
 	{
 		std::cout << x << " ";
-		i++;
 	}
 	std::cout << std::endl;
+	*/
+	for (unsigned i = 0; i < N; i++)
+	{
+		std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
+			<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
+	}
+	std::cout << "head = " << head << ", tail = " << tail
+		<< ", size = " << numItems << std::endl;
 }

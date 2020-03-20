@@ -24,7 +24,7 @@ IL_files=indexedList.hpp indexedList.tpp
 
 TE_efile=bin/treeEnumerator_$(sizeString)
 
-CFLAGS= --std=c++11 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3
+CFLAGS= --std=c++11 -g -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3
 
 CC=g++-9
 
@@ -33,6 +33,10 @@ all: $(TE_efile)
 run: $(TE_efile)
 	if [ ! -d results ]; then mkdir results; fi
 	./$(TE_efile) results/results_$(sizeString).txt
+
+debug: $(TE_efile)
+	if [ ! -d results ]; then mkdir results; fi
+	gdb --args ./$(TE_efile) results/results_$(sizeString).txt
 
 perf: $(TE_efile)
 	if [ ! -d results ]; then mkdir results; fi
