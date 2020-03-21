@@ -55,10 +55,10 @@ $(TE_ofile): treeEnumerator.cpp $(IL_files)
 	$(CC) $(CFLAGS) -c treeEnumerator.cpp -o $(TE_ofile)
 
 analyze: bin/analyze
-	./analyze $(file)
+	./bin/analyze < $(file)
 
 bin/analyze: analyzer.cpp
-	$(CC) --std=c++11 -O3 analyzer.cpp -o /bin/analyzer
+	$(CC) --std=c++11 -O3 analyzer.cpp -o bin/analyze
 
 clean:
 	rm -f $(ST_ofile) $(TE_ofile) $(TE_efile)
