@@ -208,9 +208,8 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 	
 	while(true)
 	{
-		for (auto iter = border.begin(); iter != border.end(); ++iter)
+		for (vertexID x : border)
 		{
-			vertexID x = *iter;
 			// No need to re-add these, since we will only going further down the tree.
 			
 			// ?
@@ -225,81 +224,41 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		
 		unsigned nextVertex = -1;
 		unsigned nextVertexScore = 0;
-		if (level == 0)
+		do
 		{
-			do
+			// Get and remove the first element
+			vertexID x = border.pop_front();
+			
+			// Push it onto a temporary list. This is a fix
+			// to the base algorithm, it will not work without this
+			// (along with the swap below)
+			lists[id][S.numInduced].push_back(x);
+			
+			// All additions are valid, so no need to check.
+			S.add(x);
+			
+			previous_actions.push({stop,0});
+			
+			update(S,border,x,previous_actions);
+			
+			// Give a copy to the call
+			unsigned result = level == 0
+				? randomBranch(id,S,border)
+				: nested_monte_carlo(id,S,border,previous_actions, level - 1);
+			
+			if (result > nextVertexScore)
 			{
-				// Get and remove the first element
-				vertexID x = border.pop_front();
-				
-				// Push it onto a temporary list. This is a fix
-				// to the base algorithm, it will not work without this
-				// (along with the swap below)
-				lists[id][S.numInduced].push_back(x);
-				
-				// All additions are valid, so no need to check.
-				S.add(x);
-				
-				previous_actions.push({stop,0});
-
-				update(S,border,x,previous_actions);
-				
-				// Give a copy to the call
-				unsigned result = randomBranch(id,S,border);
-				
-				if (result > nextVertexScore)
-				{
-					nextVertex = x;
-					nextVertexScore = result;
-				}
-				
-				restore(border,previous_actions);
-				
-				S.rem(x);
+				nextVertex = x;
+				nextVertexScore = result;
 			}
-			while (!border.empty());
 			
-			std::swap(border, lists[id][S.numInduced]);
+			restore(border,previous_actions);
 			
-			//std::cout << "Decided on vertex " << nextVertex << std::endl;
+			S.rem(x);
 		}
-		else
-		{
-			//std::cout << border.size() << std::endl;
-			do
-			{
-				// Get and remove the first element
-				vertexID x = border.pop_front();
-				
-				// Push it onto a temporary list. This is a fix
-				// to the base algorithm, it will not work without this
-				// (along with the swap below)
-				lists[id][S.numInduced].push_back(x);
-				
-				// All additions are valid, so no need to check.
-				S.add(x);
-				
-				previous_actions.push({stop,0});
-				update(S,border,x,previous_actions);
-				
-				unsigned result = nested_monte_carlo(id,S,border,previous_actions, level - 1);
-				
-				//std::cout << "Using vertex " << x << ", result = " << result << std::endl;
-				
-				if (result > nextVertexScore)
-				{
-					nextVertex = x;
-					nextVertexScore = result;
-				}
-				
-				restore(border,previous_actions);
-				
-				S.rem(x);
-			}
-			while (!border.empty());
+		while (!border.empty());
 			
-			std::swap(border, lists[id][S.numInduced]);
-		}
+		std::swap(border, lists[id][S.numInduced]);
 		
 		S.add(nextVertex);
 		
