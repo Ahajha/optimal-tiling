@@ -204,20 +204,23 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 	// Keep track of the vertices added.
 	std::stack<vertexID> added;
 	
-	indexedList<numVertices> excluded;
-	
 	while(true)
 	{
+		// Temporarily remove any vertices that are invalid to add.
 		for (vertexID x : border)
 		{
 			if (!S.safeToAdd(x))
 			{
 				border.remove(x);
-				excluded.push_back(x);
+				lists[id][S.numInduced].push_back(x);
 			}
 		}
 		
-		if (border.empty()) break;
+		if (border.empty())
+		{
+			std::swap(border, lists[id][S.numInduced]);
+			break;
+		}
 		
 		unsigned nextVertex = -1;
 		unsigned nextVertexScore = 0;
@@ -286,13 +289,6 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		restore(border,previous_actions);
 		
 		border.push_back(x);
-	}
-	
-	while (!excluded.empty())
-	{
-		vertexID x = excluded.pop_front();
-		
-		if (border.exists(x)) border.push_back(x);
 	}
 	
 	return result;
