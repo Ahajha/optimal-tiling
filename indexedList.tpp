@@ -96,6 +96,12 @@ bool indexedList<N>::empty() const
 }
 
 template <std::size_t N>
+bool indexedList<N>::exists(int x) const
+{
+	return list[x].inList;
+}
+
+template <std::size_t N>
 unsigned indexedList<N>::size() const
 {
 	return numItems;
