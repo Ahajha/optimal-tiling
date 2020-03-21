@@ -204,14 +204,17 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 	// Keep track of the vertices added.
 	std::stack<vertexID> added;
 	
+	indexedList<numVertices> excluded;
+	
 	while(true)
 	{
 		for (vertexID x : border)
 		{
-			// No need to re-add these, since we will only going further down the tree.
-			
-			// ?
-			if (!S.safeToAdd(x)) border.remove(x);
+			if (!S.safeToAdd(x))
+			{
+				border.remove(x);
+				excluded.push_back(x);
+			}
 		}
 		
 		if (border.empty()) break;
@@ -283,6 +286,13 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		restore(border,previous_actions);
 		
 		border.push_back(x);
+	}
+	
+	while (!excluded.empty())
+	{
+		vertexID x = excluded.pop_front();
+		
+		if (border.exists(x)) border.push_back(x);
 	}
 	
 	return result;
