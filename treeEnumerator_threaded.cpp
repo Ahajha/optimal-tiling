@@ -170,7 +170,9 @@ void checkCandidate(Subtree S)
 
 // Randomly adds vertices to S until it becomes maximal, then returns
 // its size.
-unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
+// Current path should start with only the last added vertex.
+void randomBranch(int id, Subtree S, indexedList<numVertices> border, unsigned& bestResult,
+	indexedList<numVertices> currentPath, indexedList<numVertices>& bestPath)
 {
 	while(!border.empty())
 	{
@@ -187,6 +189,8 @@ unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
 		if (!S.add(x)) break;
 		
 		simpleUpdate(S,border,x);
+		
+		currentPath.push_back(x);
 	}
 	
 	if (S.numInduced > largestTree)
@@ -195,15 +199,24 @@ unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
 	}
 	++numLeaves[id];
 	
-	return S.numInduced;
+	if (S.numInduced > bestResult)
+	{
+		bestResult = S.numInduced;
+		std::swap(bestPath, currentPath);
+	}
+	
+	//return S.numInduced;
 }
 
-unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
-	std::stack<action>& previous_actions, unsigned level)
+void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
+	std::stack<action>& previous_actions, unsigned level, unsigned& globalBestResult,
+	indexedList<numVertices> currentPath, indexedList<numVertices>& globalBestPath)
 {
 	// Keep track of the vertices added.
 	std::stack<vertexID> added;
 	
+	indexedList<numVertices> bestPath;
+	unsigned bestResult = 0;
 	while(true)
 	{
 		// Temporarily remove any vertices that are invalid to add.
@@ -222,8 +235,7 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 			break;
 		}
 		
-		unsigned nextVertex = -1;
-		unsigned nextVertexScore = 0;
+		indexedList<numVertices> trialPath;
 		do
 		{
 			// Get and remove the first element
@@ -241,16 +253,24 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 			
 			update(S,border,x,previous_actions);
 			
-			// Give a copy to the call
-			unsigned result = level == 0
-				? randomBranch(id,S,border)
-				: nested_monte_carlo(id,S,border,previous_actions, level - 1);
+			trialPath.push_back(x);
 			
+			if (level == 0)
+				randomBranch(id,S,border,bestResult,trialPath,bestPath);
+			else
+				nested_monte_carlo(id,S,border,previous_actions, level - 1,
+					bestResult,trialPath,bestPath);
+			
+			/*
 			if (result > nextVertexScore)
 			{
 				nextVertex = x;
 				nextVertexScore = result;
 			}
+			*/
+			
+			//trialPath.pop_back();
+			trialPath.clear();
 			
 			restore(border,previous_actions);
 			
@@ -259,6 +279,13 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		while (!border.empty());
 			
 		std::swap(border, lists[id][S.numInduced]);
+		
+		// Remove the first vertex, it has already been added.
+		//std::cout << "Popping " << bestPath.pop_front() << std::endl;
+		
+		//if (bestPath.empty()) std::cout << "AHH" << std::endl;
+		
+		vertexID nextVertex = bestPath.pop_front();
 		
 		S.add(nextVertex);
 		
@@ -269,7 +296,7 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		previous_actions.push({stop,0});
 		update(S,border,nextVertex,previous_actions);
 		
-		if (level > 1)
+		if (level > 0)
 		{
 			std::cout << "Level " << level << " decided on vertex "
 				<< nextVertex << ", numInduced = " << S.numInduced << 
@@ -289,9 +316,18 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		restore(border,previous_actions);
 		
 		border.push_back(x);
+		
+		currentPath.push_front(x);
 	}
 	
-	return result;
+	if (result > globalBestResult)
+	{
+		std::cout << "New global best = " << result << std::endl;
+		globalBestResult = result;
+		std::swap(globalBestPath, currentPath);
+	}
+	
+	//return result;
 }
 
 int main(int num_args, char** args)
@@ -307,6 +343,11 @@ int main(int num_args, char** args)
 	srand(time(NULL));
 	start_time = clock();
 	
+	unsigned globalBestResult = 0;
+	indexedList<numVertices> currentPath;
+	currentPath.push_front(0);
+	indexedList<numVertices> globalBestPath;
+	
 	Subtree S(0);
 	
 	indexedList<numVertices> border;
@@ -315,7 +356,10 @@ int main(int num_args, char** args)
 	
 	update(S,border,0,previous_actions);
 	
-	nested_monte_carlo(0,S,border,previous_actions,2);
+	nested_monte_carlo(0,S,border,previous_actions,1,
+		globalBestResult,currentPath,globalBestPath);
+	
+	std::cout << "Monte-Carlo result = " << globalBestResult << std::endl;
 	
 	//pool.push(randomSample,0);
 	
