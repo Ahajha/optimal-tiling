@@ -17,7 +17,7 @@ endif
 sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
 
 ST_ofile=obj/subTree_$(sizeString).o
-TE_ofile=obj/treeEnumerator_$(sizeString).o
+TE_ofile=obj/treeEnumerator_$(sizeString)_level$(level).o
 GH_ofile=obj/graph_$(sizeString).o
 
 IL_files=indexedList.hpp indexedList.tpp
@@ -56,7 +56,7 @@ $(GH_ofile): graph.cpp graph.hpp
 
 $(TE_ofile): treeEnumerator_threaded.cpp $(IL_files)
 	if [ ! -d bin ]; then mkdir bin; fi
-	$(CC) $(CFLAGS) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
+	$(CC) $(CFLAGS) -D NMC_LEVEL=$(level) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
 
 analyze: bin/analyze
 	./bin/analyze < $(file)

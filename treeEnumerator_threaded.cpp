@@ -280,7 +280,7 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 		previous_actions.push({stop,0});
 		update(S,border,nextVertex,previous_actions);
 		
-		if (level == 2)
+		if (level == NMC_LEVEL)
 		{
 			std::cout << "Level " << level << " decided on vertex "
 				<< nextVertex << ", numInduced = " << S.numInduced << 
@@ -341,7 +341,7 @@ int main(int num_args, char** args)
 	
 	update(S,border,0,previous_actions);
 	
-	nested_monte_carlo(0,S,border,previous_actions,2,
+	nested_monte_carlo(0,S,border,previous_actions,NMC_LEVEL,
 		globalBestResult,currentPath,globalBestPath);
 	
 	std::cout << "Monte-Carlo result = " << globalBestResult << std::endl;
