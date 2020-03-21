@@ -37,6 +37,8 @@ class indexedList
 	
 	bool exists(int x) const;
 	
+	void clear();
+	
 	// Removes a random item from the list and returns it, uniformly distributed.
 	// Assumes there is an item to remove.
 	int removeRandom();

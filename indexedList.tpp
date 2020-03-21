@@ -102,6 +102,12 @@ bool indexedList<N>::exists(int x) const
 }
 
 template <std::size_t N>
+void indexedList<N>::clear()
+{
+	head = tail = EMPTY;
+}
+
+template <std::size_t N>
 unsigned indexedList<N>::size() const
 {
 	return numItems;
