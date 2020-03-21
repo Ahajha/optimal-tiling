@@ -137,10 +137,12 @@ void indexedList<N>::print()
 	}
 	std::cout << std::endl;
 	*/
+	std::cout << "(default cells omitted)" << std::endl;
 	for (unsigned i = 0; i < N; i++)
 	{
-		std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
-			<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
+		if (list[i].inList || list[i].next != EMPTY || list[i].prev != EMPTY)
+			std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
+				<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
 	}
 	std::cout << "head = " << head << ", tail = " << tail
 		<< ", size = " << numItems << std::endl;
