@@ -240,7 +240,7 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 				update(S,border,x,previous_actions);
 				
 				// Give a copy to the call
-				unsigned result = randomBranch(id,Subtree(S),indexedList<numVertices>(border));
+				unsigned result = randomBranch(id,S,border);
 				
 				if (result > nextVertexScore)
 				{
