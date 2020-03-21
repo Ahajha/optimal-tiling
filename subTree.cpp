@@ -81,6 +81,7 @@ void Subtree::writeToFile(std::string filename) const
 		}
 		file << std::endl;
 	}
+	file << numInduced << std::endl;
 }
 
 Subtree::Subtree(vertexID r) : numInduced(0), root(r), vertices()
