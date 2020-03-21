@@ -152,74 +152,45 @@ void checkCandidate(Subtree S)
 	mutex.unlock();
 }
 
-// Returns the size of the largest tree seen.
-unsigned randomBranch(int id, Subtree& S, indexedList<numVertices>& border,
-	std::stack<action>& previous_actions)
+// Randomly adds vertices to S until it becomes maximal, then returns
+// its size.
+unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
 {
-	// We only consider subtrees without children to be good candidates,
-	// since any children of this tree would be better candidates.
-	if (border.empty())
-	{
-		if (S.numInduced > largestTree)
-		{
-			checkCandidate(S);
-		}
-		++numLeaves[id];
-		
-		return S.numInduced;
-	}
-	else
+	while(!border.empty())
 	{
 		vertexID x;
-		unsigned result;
 		do
 		{
 			// Get and remove a random element,
 			// ensure it is valid.
 			x = border.removeRandom();
-			
-			// Push it onto a temporary list. This is a fix
-			// to the base algorithm, it will not work without this
-			// (along with the swap below)
-			lists[id][S.numInduced].push_back(x);
-			
-			if (x == -1) { border.print(); exit(56); }
 		}
 		while (!S.safeToAdd(x) && !border.empty());
 		
 		// Check for this, not the empty border.
-		if (S.safeToAdd(x))
+		if (!S.add(x)) break;
+		
+		// Shortened version of update
+		for (vertexID y : G.vertices[x].neighbors)
 		{
-			S.add(x);
-			
-			previous_actions.push({stop,0});
-			update(S,border,x,previous_actions);
-			
-			// This is short, so just use one thread.
-			result = randomBranch(id,S,border,previous_actions);
-			
-			restore(border,previous_actions);
-			
-			S.rem(x);
-		}
-		else
-		{
-			if (S.numInduced > largestTree)
+			if (S.cnt(y) > 1)
 			{
-				checkCandidate(S);
+				border.remove(y);
 			}
-			++numLeaves[id];
-			
-			result = S.numInduced;
+			else if (y > S.root && !S.has(y))
+			{
+				border.push_front(y);
+			}
 		}
-		
-		while (!lists[id][S.numInduced].empty())
-		{
-			border.push_back(lists[id][S.numInduced].pop_front());
-		}
-		
-		return result;
 	}
+	
+	if (S.numInduced > largestTree)
+	{
+		checkCandidate(S);
+	}
+	++numLeaves[id];
+	
+	return S.numInduced;
 }
 
 unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
@@ -236,6 +207,8 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		{
 			vertexID x = *iter;
 			// No need to re-add these, since we will only going further down the tree.
+			
+			// ?
 			if (!S.safeToAdd(x)) border.remove(x);
 		}
 		
@@ -266,9 +239,8 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 
 				update(S,border,x,previous_actions);
 				
-				unsigned result = randomBranch(id,S,border,previous_actions);
-				
-				//std::cout << "Using vertex " << x << ", result = " << result << std::endl;
+				// Give a copy to the call
+				unsigned result = randomBranch(id,Subtree(S),indexedList<numVertices>(border));
 				
 				if (result > nextVertexScore)
 				{
@@ -322,8 +294,6 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 			while (!border.empty());
 			
 			std::swap(border, lists[id][S.numInduced]);
-			
-			//std::cout << "Decided on vertex " << nextVertex << std::endl;
 		}
 		
 		S.add(nextVertex);
@@ -334,6 +304,13 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		
 		previous_actions.push({stop,0});
 		update(S,border,nextVertex,previous_actions);
+		
+		if (level > 1)
+		{
+			std::cout << "Level " << level << " decided on vertex "
+				<< nextVertex << ", numInduced = " << S.numInduced << 
+				": " << threadSeconds() << std::endl;
+		}
 		
 		if (S.numInduced > best)
 		{
@@ -403,7 +380,7 @@ int main(int num_args, char** args)
 	}
 	*/
 	
-	//std::clog << threadSeconds() << " thread-seconds" << std::endl;
+	std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	
-	//std::clog << "Largest size = " << largestTree << std::endl;
+	std::clog << "Largest size = " << largestTree << std::endl;
 }
