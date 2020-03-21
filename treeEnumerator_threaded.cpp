@@ -201,8 +201,6 @@ unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
 unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 	std::stack<action>& previous_actions, unsigned level)
 {
-	unsigned best = 0;
-	
 	// Keep track of the vertices added.
 	std::stack<vertexID> added;
 	
@@ -216,11 +214,7 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 			if (!S.safeToAdd(x)) border.remove(x);
 		}
 		
-		if (border.empty())
-		{
-			if (S.numInduced > best) best = S.numInduced;
-			break;
-		}
+		if (border.empty()) break;
 		
 		unsigned nextVertex = -1;
 		unsigned nextVertexScore = 0;
@@ -275,12 +269,9 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 				<< nextVertex << ", numInduced = " << S.numInduced << 
 				": " << threadSeconds() << std::endl;
 		}
-		
-		if (S.numInduced > best)
-		{
-			best = S.numInduced;
-		}
 	}
+	
+	unsigned result = S.numInduced;
 	
 	while(!added.empty())
 	{
@@ -294,7 +285,7 @@ unsigned nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border
 		border.push_back(x);
 	}
 	
-	return best;
+	return result;
 }
 
 int main(int num_args, char** args)
