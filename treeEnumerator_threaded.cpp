@@ -79,6 +79,22 @@ void update(Subtree& S, indexedList<numVertices>& border,
 	}
 }
 
+// Updates the border of S after adding x, does not track changes.
+void simpleUpdate(Subtree& S, indexedList<numVertices>& border, vertexID x)
+{
+	for (vertexID y : G.vertices[x].neighbors)
+	{
+		if (S.cnt(y) > 1)
+		{
+			border.remove(y);
+		}
+		else if (y > S.root && !S.has(y))
+		{
+			border.push_front(y);
+		}
+	}
+}
+
 // Restores the border of S after removing x.
 void restore(indexedList<numVertices>& border,
 	std::stack<action>& previous_actions)
@@ -170,18 +186,7 @@ unsigned randomBranch(int id, Subtree S, indexedList<numVertices> border)
 		// Check for this, not the empty border.
 		if (!S.add(x)) break;
 		
-		// Shortened version of update
-		for (vertexID y : G.vertices[x].neighbors)
-		{
-			if (S.cnt(y) > 1)
-			{
-				border.remove(y);
-			}
-			else if (y > S.root && !S.has(y))
-			{
-				border.push_front(y);
-			}
-		}
+		simpleUpdate(S,border,x);
 	}
 	
 	if (S.numInduced > largestTree)
