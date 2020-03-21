@@ -13,8 +13,14 @@ removals are in constant time.
 */
 
 template<std::size_t N>
-struct indexedList
-{	
+class indexedList
+{
+	private:
+	
+	struct index;
+
+	public:
+	
 	indexedList();
 
 	// Returns true if x was removed, and false if x did not already exist here.
@@ -36,6 +42,46 @@ struct indexedList
 	unsigned size() const;
 	
 	void print();
+	
+	friend class iterator;
+	
+	class iterator
+	{
+		public:
+		
+		iterator(std::array<index, N>& li, int x) : currentNode(x), list(li) {}
+		
+		iterator& operator++()
+		{
+			if (currentNode != EMPTY)
+				currentNode = list[currentNode].next;
+			return *this;
+		}
+		
+		iterator  operator++(int)
+		{
+			iterator it = *this;
+			++*this;
+			return it;
+		}
+		
+		bool operator !=(const iterator& i)
+		{
+			return currentNode != i.currentNode;
+		}
+		
+		int operator*() { return currentNode; }
+		
+		private:
+		
+		int currentNode;
+		const std::array<index, N>& list;
+	};
+	
+	iterator begin() { return iterator(list,head); }
+	iterator end  () { return iterator(list,EMPTY); }
+	
+	private:
 	
 	static constexpr int EMPTY = -1;
 	
