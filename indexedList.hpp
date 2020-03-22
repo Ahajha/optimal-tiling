@@ -31,6 +31,9 @@ class indexedList
 	
 	bool empty();
 	
+	template <std::size_t X>
+	friend void swap(indexedList<X>&,indexedList<X>&);
+	
 	private:
 	
 	static constexpr int EMPTY = -1;

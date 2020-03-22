@@ -13,7 +13,7 @@ bool indexedList<N>::remove(int x)
 	if (list[x].next != EMPTY)
 		list[list[x].next].prev = list[x].prev;
 	else // Tail of the list
-		tail = list[x].next;
+		tail = list[x].prev;
 	
 	if (list[x].prev != EMPTY)
 		list[list[x].prev].next = list[x].next;
@@ -81,4 +81,33 @@ template <std::size_t N>
 bool indexedList<N>::empty()
 {
 	return head == EMPTY;
+}
+
+template <std::size_t N>
+void swap(indexedList<N>& list1, indexedList<N>& list2)
+{
+	// Loop follows the second list, since this constantly swaps the
+	// next item information into the other list.
+	for (int x = list1.head; x != indexedList<N>::EMPTY; x = list2.list[x].next)
+	{
+		std::swap(list1.list[x],list2.list[x]);
+	}
+	
+	// Now follow list2 again, but only swap if list1 did not already swap.
+	// The cell has been swapped if either the cell in list 2 is not induced
+	// (since it should be) or if the cell in both lists are induced.
+	// (!list2.list[x].inList || list1.list[x].inList), which negates to
+	// (list2.list[x].inList && !list1.list[x].inList).
+	// After the (potential) swap, the next cell will always be in list1.
+	for (int x = list2.head; x != indexedList<N>::EMPTY; x = list1.list[x].next)
+	{
+		if (list2.list[x].inList && !list1.list[x].inList)
+		{
+			std::swap(list1.list[x],list2.list[x]);
+		}
+	}
+	
+	// Finally, swap the heads and tails.
+	std::swap(list1.head,list2.head);
+	std::swap(list1.tail,list2.tail);
 }
