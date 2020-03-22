@@ -189,7 +189,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 		}
 		while (!border.empty());
 		
-		std::swap(border, lists[id][S.numInduced]);
+		swap(border, lists[id][S.numInduced]);
 	}
 }
 
