@@ -51,6 +51,8 @@ class Graph
 	
 	Graph();
 	
+	bool onOuterShell(vertexID i) const;
+	
 	private:
 	
 	static int get_x(vertexID);

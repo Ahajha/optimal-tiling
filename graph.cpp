@@ -46,3 +46,8 @@ Graph::Graph()
 		vertices[i] = graphVertex(i);
 	}
 }
+
+bool Graph::onOuterShell(vertexID i) const
+{
+	return vertices[i].neighbors.size() != 6;
+}

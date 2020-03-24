@@ -7,17 +7,6 @@
 #define BLOCK_PRESENT 'X'
 #define BLOCK_MISSING '_'
 
-bool onOuterShell(vertexID i)
-{
-	// If i has an 'empty' neighbor, then it is
-	// on the outer shell.
-	for (vertexID x : G.vertices[i].directions)
-	{
-		if (x == EMPTY) return true;
-	}
-	return false;
-}
-
 bool Subtree::add(vertexID i)
 {
 	vertices[i].induced = true;
@@ -137,7 +126,7 @@ bool Subtree::hasEnclosedSpace() const
 	// queue for searching
 	for (vertexID x = 0; x < numVertices; x++)
 	{
-		if (onOuterShell(x))
+		if (G.onOuterShell(x))
 		{
 			toBeVisited.push(x);
 		}
