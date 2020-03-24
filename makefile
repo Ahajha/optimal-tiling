@@ -50,9 +50,9 @@ $(GH_ofile): graph.cpp graph.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c graph.cpp -o $(GH_ofile)
 
-$(TE_ofile): treeEnumerator_threaded.cpp $(IL_files)
+$(TE_ofile): treeEnumerator.cpp $(IL_files)
 	if [ ! -d bin ]; then mkdir bin; fi
-	$(CC) $(CFLAGS) -c treeEnumerator_threaded.cpp -o $(TE_ofile)
+	$(CC) $(CFLAGS) -c treeEnumerator.cpp -o $(TE_ofile)
 
 analyze: bin/analyze
 	./analyze $(file)
