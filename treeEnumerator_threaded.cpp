@@ -229,10 +229,8 @@ int main(int num_args, char** args)
 		
 		mutex.lock();
 		
-		std::cout << "\r" << threadSeconds() << " thread-seconds elapsed, "
-			<< total << " leaves encountered";
-		
-		std::cout.flush();
+		std::clog << "\r" << threadSeconds() << " thread-seconds elapsed, "
+			<< total << " leaves encountered" << std::flush;
 		
 		lastWasNew = false;
 		
