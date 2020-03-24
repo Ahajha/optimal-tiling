@@ -237,5 +237,5 @@ int main(int num_args, char** args)
 		mutex.unlock();
 	}
 	
-	std::clog << "Largest size = " << largestTree << std::endl;
+	std::clog << std::endl << "Largest size = " << largestTree << std::endl;
 }
