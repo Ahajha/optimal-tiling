@@ -239,7 +239,5 @@ int main(int num_args, char** args)
 		mutex.unlock();
 	}
 	
-	std::clog << threadSeconds() << " thread-seconds" << std::endl;
-	
 	std::clog << "Largest size = " << largestTree << std::endl;
 }
