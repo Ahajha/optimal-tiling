@@ -28,7 +28,7 @@ CFLAGS= --std=c++11 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthre
 
 CC=g++-9
 
-all: $(TE_efile)
+all: $(MC_efile)
 
 run: $(TE_efile)
 	if [ ! -d results ]; then mkdir results; fi
@@ -50,15 +50,15 @@ $(MC_efile): $(ST_ofile) $(MC_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) $(ST_ofile) $(MC_ofile) $(GH_ofile) -o $(MC_efile)
 
-$(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp
+$(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp defs.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
 
-$(GH_ofile): graph.cpp graph.hpp
+$(GH_ofile): graph.cpp graph.hpp defs.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c graph.cpp -o $(GH_ofile)
 
-$(MC_ofile): monteCarloSearch.cpp $(IL_files)
+$(MC_ofile): monteCarloSearch.cpp $(IL_files) defs.hpp
 	if [ ! -d bin ]; then mkdir bin; fi
 	$(CC) $(CFLAGS) -D NMC_LEVEL=$(level) -c monteCarloSearch.cpp -o $(MC_ofile)
 

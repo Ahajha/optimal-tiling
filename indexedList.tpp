@@ -7,7 +7,7 @@ template <std::size_t N>
 indexedList<N>::indexedList() : numItems(0), list(), head(EMPTY), tail(EMPTY) {}
 
 template <std::size_t N>
-bool indexedList<N>::remove(int x)
+bool indexedList<N>::remove(vertexID x)
 {
 	if (!list[x].inList) return false;
 	
@@ -32,7 +32,7 @@ bool indexedList<N>::remove(int x)
 }
 
 template <std::size_t N>
-void indexedList<N>::push_front(int x)
+void indexedList<N>::push_front(vertexID x)
 {
 	list[x].inList = true;
 	list[x].next = head;
@@ -53,7 +53,7 @@ void indexedList<N>::push_front(int x)
 }
 
 template <std::size_t N>
-void indexedList<N>::push_back(int x)
+void indexedList<N>::push_back(vertexID x)
 {
 	list[x].inList = true;
 	list[x].next = EMPTY;
@@ -74,17 +74,17 @@ void indexedList<N>::push_back(int x)
 }
 
 template <std::size_t N>
-int indexedList<N>::pop_front()
+vertexID indexedList<N>::pop_front()
 {
-	int x = head;
+	vertexID x = head;
 	remove(head);
 	return x;
 }
 
 template <std::size_t N>
-int indexedList<N>::pop_back()
+vertexID indexedList<N>::pop_back()
 {
-	int x = tail;
+	vertexID x = tail;
 	remove(tail);
 	return x;
 }
@@ -96,7 +96,7 @@ bool indexedList<N>::empty() const
 }
 
 template <std::size_t N>
-bool indexedList<N>::exists(int x) const
+bool indexedList<N>::exists(vertexID x) const
 {
 	return list[x].inList;
 }
@@ -114,11 +114,11 @@ unsigned indexedList<N>::size() const
 }
 
 template <std::size_t N>
-int indexedList<N>::removeRandom()
+vertexID indexedList<N>::removeRandom()
 {
-	int toRemove = rand() % numItems;
+	vertexID toRemove = rand() % numItems;
 	
-	int valueToRemove = head;
+	vertexID valueToRemove = head;
 	for (unsigned i = 0; i < toRemove; i++)
 		valueToRemove = list[valueToRemove].next;
 	
@@ -131,7 +131,7 @@ template <std::size_t N>
 void indexedList<N>::print()
 {
 	/*
-	for (int x = head; x != EMPTY; x = list[x].next)
+	for (vertexID x = head; x != EMPTY; x = list[x].next)
 	{
 		std::cout << x << " ";
 	}

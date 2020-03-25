@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 
+#include "defs.hpp"
 #include "graph.hpp"
 
 extern const Graph G;
