@@ -32,7 +32,7 @@ for a rectangular prism of side lengths A, B, and C.
 If not already in monte-carlo-search, run  
 ```git checkout monte-carlo-search```  
 and then run using either  
-```make run level=K size=A```  
+```make mcs level=K size=A```  
 for nested Monte-Carlo at level K (higher levels take longer, but tend to produce better results) on a cube of size length A or  
-```make run level=K sizeX=A sizeY=B sizeZ=C```  
+```make mcs level=K sizeX=A sizeY=B sizeZ=C```  
 for nested Monte-Carlo at level K on a rectangular prism of side lengths A,B, and C.
