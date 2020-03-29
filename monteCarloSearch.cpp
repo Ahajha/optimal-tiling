@@ -4,8 +4,6 @@
 
 #include <stack>
 #include <iostream>
-#include <ctime>
-#include <mutex>
 #include <random>
 
 // Updates the border of S after adding x, does not track changes.

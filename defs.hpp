@@ -4,6 +4,8 @@
 #include "CTPL/ctpl_stl.h"
 
 #include <stack>
+#include <ctime>
+#include <mutex>
 
 // This file contains basic type definitions along with headers for some functions
 // shared between different programs, and 'global' variables.

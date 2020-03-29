@@ -4,8 +4,6 @@
 
 #include <stack>
 #include <iostream>
-#include <ctime>
-#include <mutex>
 
 // Performs the bulk of the algorithm described in the paper.
 void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,

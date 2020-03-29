@@ -4,6 +4,7 @@
 #include "graph.hpp"
 
 #include <thread>
+#include <iostream>
 
 const Graph defs::G;
 
