@@ -5,36 +5,7 @@
 #include <stack>
 #include <iostream>
 #include <ctime>
-#include <thread>
 #include <mutex>
-
-#define NUM_THREADS (std::thread::hardware_concurrency())
-
-// Thread pool
-ctpl::thread_pool pool(NUM_THREADS);
-
-// Maximum size graph seen so far
-unsigned largestTree = 0;
-
-// File to write the best graph seen so far to
-std::string outfile;
-
-// The start time of the program
-clock_t start_time;
-
-// Grid of indexedLists, used to store the border elements as they are removed,
-// then swapped back to restore. A call to branch can find the list it should
-// use by going to lists[id][S.numInduced].
-std::vector<std::array<indexedList<defs::numVertices>, defs::numVertices>> lists(NUM_THREADS);
-
-std::vector<unsigned long long> numLeaves(NUM_THREADS);
-bool lastWasNew = false;
-
-// Returns the number of thread-seconds since the start of the program.
-float threadSeconds()
-{
-	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
-}
 
 // After confirming S has a greater number of blocks than seen before,
 // prints to clog If S does not have enclosed space, updates
@@ -47,28 +18,28 @@ void checkCandidate(Subtree S)
 {	
 	mutex.lock();
 	
-	if (S.numInduced > largestTree)
+	if (S.numInduced > defs::largestTree)
 	{
-		if (!lastWasNew)
+		if (!defs::lastWasNew)
 		{
 			std::cout << std::endl;
-			lastWasNew = true;
+			defs::lastWasNew = true;
 		}
 		
 		if (S.hasEnclosedSpace())
 		{
 			std::clog << S.numInduced
 				<< " vertices with enclosed space, found at "
-				<< threadSeconds() << " thread-seconds" << std::endl;
+				<< defs::threadSeconds() << " thread-seconds" << std::endl;
 		}
 		else
 		{
-			largestTree = S.numInduced;
+			defs::largestTree = S.numInduced;
 			
-			S.writeToFile(outfile);
+			S.writeToFile(defs::outfile);
 			
-			std::clog << largestTree << " vertices, found at " <<
-				threadSeconds() << " thread-seconds" << std::endl;
+			std::clog << defs::largestTree << " vertices, found at " <<
+				defs::threadSeconds() << " thread-seconds" << std::endl;
 		}
 	}
 	
@@ -83,11 +54,11 @@ void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 	// since any children of this tree would be better candidates.
 	if (border.empty())
 	{
-		if (S.numInduced > largestTree)
+		if (S.numInduced > defs::largestTree)
 		{
 			checkCandidate(S);
 		}
-		++numLeaves[id];
+		++defs::numLeaves[id];
 	}
 	else
 	{
@@ -99,7 +70,7 @@ void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
 			// (along with the swap below)
-			lists[id][S.numInduced].push_back(x);
+			defs::lists[id][S.numInduced].push_back(x);
 			
 			// Ensure the addition would be valid
 			if(S.add(x))
@@ -107,9 +78,9 @@ void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 				previous_actions.push({defs::stop,0});
 				defs::update(S,border,x,previous_actions);
 				
-				if (pool.n_idle() != 0)
+				if (defs::pool.n_idle() != 0)
 				{
-					pool.push(branch,S,border,previous_actions);
+					defs::pool.push(branch,S,border,previous_actions);
 				}
 				else
 				{
@@ -123,7 +94,7 @@ void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 		}
 		while (!border.empty());
 		
-		swap(border, lists[id][S.numInduced]);
+		swap(border, defs::lists[id][S.numInduced]);
 	}
 }
 
@@ -135,9 +106,9 @@ int main(int num_args, char** args)
 		exit(1);
 	}
 	
-	outfile = args[1];
+	defs::outfile = args[1];
 	
-	start_time = clock();
+	defs::start_time = clock();
 	
 	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
@@ -150,26 +121,26 @@ int main(int num_args, char** args)
 		
 		defs::update(S,border,x,previous_actions);
 		
-		pool.push(branch,S,border,previous_actions);
+		defs::pool.push(branch,S,border,previous_actions);
 	}
 	
 	// Wait for all threads to finish
-	while (pool.n_idle() < NUM_THREADS)
+	while (defs::pool.n_idle() < defs::NUM_THREADS)
 	{
 		std::this_thread::sleep_for (std::chrono::seconds(1));
 		
 		unsigned long long total = 0;
-		for (unsigned i = 0; i < NUM_THREADS; i++) total += numLeaves[i];
+		for (unsigned i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
 		
 		mutex.lock();
 		
-		std::clog << "\r" << threadSeconds() << " thread-seconds elapsed, "
+		std::clog << "\r" << defs::threadSeconds() << " thread-seconds elapsed, "
 			<< total << " leaves encountered" << std::flush;
 		
-		lastWasNew = false;
+		defs::lastWasNew = false;
 		
 		mutex.unlock();
 	}
 	
-	std::clog << std::endl << "Largest size = " << largestTree << std::endl;
+	std::clog << std::endl << "Largest size = " << defs::largestTree << std::endl;
 }

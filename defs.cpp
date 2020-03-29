@@ -3,7 +3,27 @@
 #include "subTree.hpp"
 #include "graph.hpp"
 
+#include <thread>
+
 const Graph defs::G;
+
+const unsigned defs::NUM_THREADS = std::thread::hardware_concurrency();
+
+ctpl::thread_pool defs::pool(NUM_THREADS);
+
+unsigned defs::largestTree = 0, defs::largestWithEnclosed = 0;
+
+std::string defs::outfile;
+
+clock_t defs::start_time;
+
+std::vector<
+	std::array<indexedList<defs::numVertices>, defs::numVertices>
+> defs::lists(NUM_THREADS);
+
+std::vector<unsigned long long> defs::numLeaves(NUM_THREADS);
+
+bool defs::lastWasNew = false;
 
 void defs::update(Subtree& S, indexedList<numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
@@ -51,4 +71,9 @@ void defs::restore(indexedList<numVertices>& border,
 			border.push_front(act.v);
 		}
 	}
+}
+
+float defs::threadSeconds()
+{
+	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }

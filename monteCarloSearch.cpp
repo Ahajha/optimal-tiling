@@ -5,37 +5,8 @@
 #include <stack>
 #include <iostream>
 #include <ctime>
-#include <thread>
 #include <mutex>
 #include <random>
-
-#define NUM_THREADS (std::thread::hardware_concurrency())
-
-// Thread pool
-ctpl::thread_pool pool(NUM_THREADS);
-
-// Maximum size graph seen so far
-unsigned largestTree = 0, largestWithEnclosed = 0;
-
-// File to write the best graph seen so far to
-std::string outfile;
-
-// The start time of the program
-clock_t start_time;
-
-// Grid of indexedLists, used to store the border elements as they are removed,
-// then swapped back to restore. A call to branch can find the list it should
-// use by going to lists[id][S.numInduced].
-std::vector<std::array<indexedList<defs::numVertices>, defs::numVertices>> lists(NUM_THREADS);
-
-std::vector<unsigned long long> numLeaves(NUM_THREADS);
-bool lastWasNew = false;
-
-// Returns the number of thread-seconds since the start of the program.
-float threadSeconds()
-{
-	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
-}
 
 // Updates the border of S after adding x, does not track changes.
 void simpleUpdate(Subtree& S, indexedList<defs::numVertices>& border, defs::vertexID x)
@@ -64,37 +35,38 @@ void checkCandidate(Subtree S)
 {	
 	mutex.lock();
 	
-	if (S.numInduced > largestTree)
+	if (S.numInduced > defs::largestTree)
 	{
-		if (!lastWasNew)
+		if (!defs::lastWasNew)
 		{
 			std::cout << std::endl;
-			lastWasNew = true;
+			defs::lastWasNew = true;
 		}
 		
 		if (S.hasEnclosedSpace())
 		{
-			if (S.numInduced > largestWithEnclosed)
+			if (S.numInduced > defs::largestWithEnclosed)
 			{
-				largestWithEnclosed = S.numInduced;
+				defs::largestWithEnclosed = S.numInduced;
 				
-				S.writeToFile(outfile + "_enclosed");
+				S.writeToFile(defs::outfile + "_enclosed");
 				
 				std::clog << S.numInduced
 					<< " vertices with enclosed space, found at "
-					<< threadSeconds() << " thread-seconds" << std::endl;
+					<< defs::threadSeconds() << " thread-seconds" << std::endl;
 			}
 		}
 		else
 		{
-			largestTree = S.numInduced;
+			defs::largestTree = S.numInduced;
 			
-			if (largestWithEnclosed < largestTree) largestWithEnclosed = largestTree;
+			if (defs::largestWithEnclosed < defs::largestTree)
+				defs::largestWithEnclosed = defs::largestTree;
 			
-			S.writeToFile(outfile);
+			S.writeToFile(defs::outfile);
 			
-			std::clog << largestTree << " vertices, found at " <<
-				threadSeconds() << " thread-seconds" << std::endl;
+			std::clog << defs::largestTree << " vertices, found at " <<
+				defs::threadSeconds() << " thread-seconds" << std::endl;
 		}
 	}
 	
@@ -126,11 +98,11 @@ void randomBranch(int id, Subtree S, indexedList<defs::numVertices> border, unsi
 		currentPath.push_back(x);
 	}
 	
-	if (S.numInduced > largestTree)
+	if (S.numInduced > defs::largestTree)
 	{
 		checkCandidate(S);
 	}
-	++numLeaves[id];
+	++defs::numLeaves[id];
 	
 	if (S.numInduced > bestResult)
 	{
@@ -156,13 +128,13 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& bord
 			if (!S.safeToAdd(x))
 			{
 				border.remove(x);
-				lists[id][S.numInduced].push_back(x);
+				defs::lists[id][S.numInduced].push_back(x);
 			}
 		}
 		
 		if (border.empty())
 		{
-			std::swap(border, lists[id][S.numInduced]);
+			std::swap(border, defs::lists[id][S.numInduced]);
 			break;
 		}
 		
@@ -175,14 +147,14 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& bord
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
 			// (along with the swap below)
-			lists[id][S.numInduced].push_back(x);
+			defs::lists[id][S.numInduced].push_back(x);
 			
 			// All additions are valid, so no need to check.
 			S.add(x);
 			
 			previous_actions.push({defs::stop,0});
 			
-			update(S,border,x,previous_actions);
+			defs::update(S,border,x,previous_actions);
 			
 			trialPath.push_back(x);
 			
@@ -194,13 +166,13 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& bord
 			
 			trialPath.pop_back();
 			
-			restore(border,previous_actions);
+			defs::restore(border,previous_actions);
 			
 			S.rem(x);
 		}
 		while (!border.empty());
 			
-		std::swap(border, lists[id][S.numInduced]);
+		std::swap(border, defs::lists[id][S.numInduced]);
 		
 		defs::vertexID nextVertex = bestPath.pop_front();
 		
@@ -211,13 +183,13 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& bord
 		border.remove(nextVertex);
 		
 		previous_actions.push({defs::stop,0});
-		update(S,border,nextVertex,previous_actions);
+		defs::update(S,border,nextVertex,previous_actions);
 		
 		if (level == NMC_LEVEL)
 		{
 			std::cout << "Level " << level << " decided on vertex "
 				<< nextVertex << ", numInduced = " << S.numInduced << 
-				": " << threadSeconds() << std::endl;
+				": " << defs::threadSeconds() << std::endl;
 		}
 	}
 	
@@ -233,7 +205,7 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& bord
 		
 		S.rem(x);
 		
-		restore(border,previous_actions);
+		defs::restore(border,previous_actions);
 		
 		border.push_back(x);
 		
@@ -256,10 +228,10 @@ int main(int num_args, char** args)
 		exit(1);
 	}
 	
-	outfile = args[1];
+	defs::outfile = args[1];
 	
 	srand(time(NULL));
-	start_time = clock();
+	defs::start_time = clock();
 	
 	unsigned globalBestResult = 0;
 	indexedList<defs::numVertices> currentPath;
@@ -272,7 +244,7 @@ int main(int num_args, char** args)
 	
 	std::stack<defs::action> previous_actions;
 	
-	update(S,border,0,previous_actions);
+	defs::update(S,border,0,previous_actions);
 	
 	nested_monte_carlo(0,S,border,previous_actions,NMC_LEVEL,
 		globalBestResult,currentPath,globalBestPath);
@@ -305,5 +277,5 @@ int main(int num_args, char** args)
 	
 	//std::clog << threadSeconds() << " thread-seconds" << std::endl;
 	
-	std::clog << "Largest size (no enclosed space) = " << largestTree << std::endl;
+	std::clog << "Largest size (no enclosed space) = " << defs::largestTree << std::endl;
 }
