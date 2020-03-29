@@ -8,12 +8,8 @@
 #include <thread>
 #include <mutex>
 #include <random>
-#include <stack>
 
 #define NUM_THREADS (std::thread::hardware_concurrency())
-
-// Since there is only one base graph, we can let it be global.
-const Graph G;
 
 // Thread pool
 ctpl::thread_pool pool(NUM_THREADS);
@@ -41,35 +37,10 @@ float threadSeconds()
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }
 
-// Updates the border of S after adding x.
-void update(Subtree& S, indexedList<defs::numVertices>& border,
-	defs::vertexID x, std::stack<defs::action>& previous_actions)
-{
-	for (defs::vertexID y : G.vertices[x].neighbors)
-	{
-		// Pushes the current action, will need
-		// to do the opposite action to reverse.
-		if (S.cnt(y) > 1)
-		{
-			// This is a fix for the base algorithm, it will
-			// not work without this.
-			if (border.remove(y))
-			{
-				previous_actions.push({defs::rem,y});
-			}
-		}
-		else if (y > S.root && !S.has(y))
-		{
-			border.push_front(y);
-			previous_actions.push({defs::add,y});
-		}
-	}
-}
-
 // Updates the border of S after adding x, does not track changes.
 void simpleUpdate(Subtree& S, indexedList<defs::numVertices>& border, defs::vertexID x)
 {
-	for (defs::vertexID y : G.vertices[x].neighbors)
+	for (defs::vertexID y : defs::G.vertices[x].neighbors)
 	{
 		if (S.cnt(y) > 1)
 		{
@@ -78,31 +49,6 @@ void simpleUpdate(Subtree& S, indexedList<defs::numVertices>& border, defs::vert
 		else if (y > S.root && !S.has(y))
 		{
 			border.push_front(y);
-		}
-	}
-}
-
-// Restores the border of S after removing x.
-void restore(indexedList<defs::numVertices>& border,
-	std::stack<defs::action>& previous_actions)
-{
-	while (true)
-	{
-		defs::action act = previous_actions.top();
-		previous_actions.pop();
-		
-		if (act.type == defs::stop)
-		{
-			return;
-		}
-		
-		if (act.type == defs::add)
-		{
-			border.remove(act.v);
-		}
-		else /* act.type == rem */
-		{
-			border.push_front(act.v);
 		}
 	}
 }

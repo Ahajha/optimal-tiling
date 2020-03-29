@@ -20,6 +20,7 @@ ST_ofile=obj/subTree_$(sizeString).o
 MC_ofile=obj/monteCarloSearch_$(sizeString)_level$(level).o
 TE_ofile=obj/treeEnumerator_$(sizeString).o
 GH_ofile=obj/graph_$(sizeString).o
+DF_ofile=obj/defs_$(sizeString).o
 
 IL_files=indexedList.hpp indexedList.tpp
 
@@ -56,21 +57,25 @@ perf_mcs: $(MC_efile)
 	if [ ! -d results ]; then mkdir results; fi
 	perf record ./$(MC_efile) results/results_$(sizeString).txt
 
-$(MC_efile): $(ST_ofile) $(MC_ofile) $(GH_ofile)
+$(MC_efile): $(ST_ofile) $(MC_ofile) $(GH_ofile) $(DF_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
-	$(CC) $(CFLAGS) $(ST_ofile) $(MC_ofile) $(GH_ofile) -o $(MC_efile)
+	$(CC) $(CFLAGS) $(ST_ofile) $(MC_ofile) $(GH_ofile) $(DF_ofile) -o $(MC_efile)
 
-$(TE_efile): $(ST_ofile) $(TE_ofile) $(GH_ofile)
+$(TE_efile): $(ST_ofile) $(TE_ofile) $(GH_ofile) $(DF_ofile)
 	if [ ! -d obj ]; then mkdir obj; fi
-	$(CC) $(CFLAGS) $(ST_ofile) $(TE_ofile) $(GH_ofile) -o $(TE_efile)
+	$(CC) $(CFLAGS) $(ST_ofile) $(TE_ofile) $(GH_ofile) $(DF_ofile) -o $(TE_efile)
 
-$(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp defs.hpp
+$(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
 
-$(GH_ofile): graph.cpp graph.hpp defs.hpp
+$(GH_ofile): graph.cpp graph.hpp
 	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c graph.cpp -o $(GH_ofile)
+
+$(DF_ofile): defs.hpp defs.cpp
+	if [ ! -d obj ]; then mkdir obj; fi
+	$(CC) $(CFLAGS) -c defs.cpp -o $(DF_ofile)
 
 $(TE_ofile): treeEnumerator.cpp $(IL_files)
 	if [ ! -d bin ]; then mkdir bin; fi

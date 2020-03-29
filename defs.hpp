@@ -10,6 +10,7 @@ template <std::size_t N>
 class indexedList;
 
 struct Subtree;
+struct Graph;
 
 namespace defs
 {
@@ -20,6 +21,16 @@ namespace defs
 	
 	enum action_type { add, rem, stop };
 	struct action { action_type type; vertexID v; };
+	
+	extern const Graph G;
+	
+	// Updates the border of S after adding x.
+	void update(Subtree& S, indexedList<numVertices>& border,
+		vertexID x, std::stack<action>& previous_actions);
+	
+	// Restores the border of S after removing x.
+	void restore(indexedList<numVertices>& border,
+		std::stack<action>& previous_actions);
 }
 
 #endif

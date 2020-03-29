@@ -12,7 +12,7 @@ bool Subtree::add(defs::vertexID i)
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
-	for (const defs::vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : defs::G.vertices[i].neighbors)
 	{
 		if (has(x))
 		{
@@ -31,7 +31,7 @@ bool Subtree::add(defs::vertexID i)
 	
 	++numInduced;
 
-	for (const defs::vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : defs::G.vertices[i].neighbors)
 	{
 		// Ignore the induced vertex, its degree has already been increased.
 		if (!has(x))
@@ -46,7 +46,7 @@ void Subtree::rem(defs::vertexID i)
 	
 	--numInduced;
 	
-	for (const defs::vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : defs::G.vertices[i].neighbors)
 	{
 		--vertices[x].effectiveDegree;
 	}
@@ -94,7 +94,7 @@ bool Subtree::validate(defs::vertexID i) const
 	if (cnt(i) != 4)
 		return cnt(i) < 4;
 	
-	auto& directions = G.vertices[i].directions;
+	auto& directions = defs::G.vertices[i].directions;
 	
 	// Ensure all axis have at least one neighbor
 	return
@@ -127,7 +127,7 @@ bool Subtree::hasEnclosedSpace() const
 	// queue for searching
 	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
-		if (G.onOuterShell(x))
+		if (defs::G.onOuterShell(x))
 		{
 			toBeVisited.push(x);
 		}
@@ -148,7 +148,7 @@ bool Subtree::hasEnclosedSpace() const
 			++numConnected;
 			
 			// Queue all of x's neighbors
-			for (defs::vertexID y : G.vertices[x].neighbors)
+			for (defs::vertexID y : defs::G.vertices[x].neighbors)
 			{
 				toBeVisited.push(y);
 			}
@@ -165,7 +165,7 @@ bool Subtree::safeToAdd(defs::vertexID i)
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
-	for (const defs::vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : defs::G.vertices[i].neighbors)
 	{
 		if (has(x))
 		{
