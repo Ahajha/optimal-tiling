@@ -9,11 +9,11 @@ These programs were programmed and tested on Ubuntu, though I do support MacOS a
 
 ### Exhaustive Enumeration
 
-This algorithm (in master), based on the paper at https://pdfs.semanticscholar.org/9631/ef7c303b64c90797eabc26cbfcd11dcc4507.pdf, is used to exhaustively check every single induced subtree of a cubic lattice. This is the most naive approach to the search for the largest induced subtree, and is very computationally expensive (though it does support multithreading). The largest cubic lattice that has finished running to date is a 3x4x4.
+This algorithm, based on the paper at https://pdfs.semanticscholar.org/9631/ef7c303b64c90797eabc26cbfcd11dcc4507.pdf, is used to exhaustively check every single induced subtree of a cubic lattice. This is the most naive approach to the search for the largest induced subtree, and is very computationally expensive (though it does support multithreading). The largest cubic lattice that has finished running to date is a 3x4x4.
 
 ### Nested Monte-Carlo Tree Search
 
-This algorithm (in monto-carlo-search), based on the paper at https://www.ijcai.org/Proceedings/09/Papers/083.pdf, is used to search for 'good' tree-based structures by using nested monte-carlo tree search combined with the base enumeration algorithm in master. To date, it has given us the largest known induced subtrees of any graph, though the search is not exhaustive.
+This algorithm, based on the paper at https://www.ijcai.org/Proceedings/09/Papers/083.pdf, is used to search for 'good' tree-based structures by using nested monte-carlo tree search combined with the base enumeration algorithm. To date, it has given us the largest known induced subtrees of any graph, though the search is not exhaustive.
 
 ## Running the Programs
 
