@@ -24,55 +24,6 @@ void simpleUpdate(Subtree& S, indexedList<defs::numVertices>& border, defs::vert
 	}
 }
 
-// After confirming S has a greater number of blocks than seen before,
-// prints to clog If S does not have enclosed space, updates
-// largestTree and writes the result to outfile, does neither if S
-// does have enclosed space. Relies on the mutex below for thread safety.
-
-std::mutex mutex;
-
-void checkCandidate(Subtree S)
-{	
-	mutex.lock();
-	
-	if (S.numInduced > defs::largestTree)
-	{
-		if (!defs::lastWasNew)
-		{
-			std::cout << std::endl;
-			defs::lastWasNew = true;
-		}
-		
-		if (S.hasEnclosedSpace())
-		{
-			if (S.numInduced > defs::largestWithEnclosed)
-			{
-				defs::largestWithEnclosed = S.numInduced;
-				
-				S.writeToFile(defs::outfile + "_enclosed");
-				
-				std::clog << S.numInduced
-					<< " vertices with enclosed space, found at "
-					<< defs::threadSeconds() << " thread-seconds" << std::endl;
-			}
-		}
-		else
-		{
-			defs::largestTree = S.numInduced;
-			
-			if (defs::largestWithEnclosed < defs::largestTree)
-				defs::largestWithEnclosed = defs::largestTree;
-			
-			S.writeToFile(defs::outfile);
-			
-			std::clog << defs::largestTree << " vertices, found at " <<
-				defs::threadSeconds() << " thread-seconds" << std::endl;
-		}
-	}
-	
-	mutex.unlock();
-}
-
 // Randomly adds vertices to S until it becomes maximal, then returns
 // its size.
 // Current path should start with only the last added vertex.
@@ -100,7 +51,7 @@ void randomBranch(int id, Subtree S, indexedList<defs::numVertices> border, unsi
 	
 	if (S.numInduced > defs::largestTree)
 	{
-		checkCandidate(S);
+		defs::checkCandidate(S);
 	}
 	++defs::numLeaves[id];
 	

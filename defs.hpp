@@ -51,6 +51,9 @@ namespace defs
 	extern std::vector<unsigned long long> numLeaves;
 	extern bool lastWasNew;
 	
+	// Used for thread safety on any IO actions.
+	extern std::mutex IOmutex;
+	
 	// Returns the number of thread-seconds since the start of the program.
 	float threadSeconds();
 	
@@ -61,6 +64,12 @@ namespace defs
 	// Restores the border of S after removing x.
 	void restore(indexedList<numVertices>& border,
 		std::stack<action>& previous_actions);
+	
+	// After confirming S has a greater number of blocks than seen before,
+	// prints to clog If S does not have enclosed space, updates
+	// largestTree and writes the result to outfile, does neither if S
+	// does have enclosed space.
+	void checkCandidate(Subtree S);
 }
 
 #endif

@@ -25,6 +25,8 @@ std::vector<unsigned long long> defs::numLeaves(NUM_THREADS);
 
 bool defs::lastWasNew = false;
 
+std::mutex defs::IOmutex;
+
 void defs::update(Subtree& S, indexedList<numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
 {
@@ -76,4 +78,46 @@ void defs::restore(indexedList<numVertices>& border,
 float defs::threadSeconds()
 {
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
+}
+
+void defs::checkCandidate(Subtree S)
+{	
+	IOmutex.lock();
+	
+	if (S.numInduced > largestTree)
+	{
+		if (!defs::lastWasNew)
+		{
+			std::cout << std::endl;
+			lastWasNew = true;
+		}
+		
+		if (S.hasEnclosedSpace())
+		{
+			if (S.numInduced > largestWithEnclosed)
+			{
+				largestWithEnclosed = S.numInduced;
+				
+				S.writeToFile(outfile + "_enclosed");
+				
+				std::clog << S.numInduced
+					<< " vertices with enclosed space, found at "
+					<< threadSeconds() << " thread-seconds" << std::endl;
+			}
+		}
+		else
+		{
+			largestTree = S.numInduced;
+			
+			if (largestWithEnclosed < defs::largestTree)
+				largestWithEnclosed = defs::largestTree;
+			
+			S.writeToFile(defs::outfile);
+			
+			std::clog << largestTree << " vertices, found at " <<
+				threadSeconds() << " thread-seconds" << std::endl;
+		}
+	}
+	
+	IOmutex.unlock();
 }

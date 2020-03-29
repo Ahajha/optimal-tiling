@@ -7,45 +7,6 @@
 #include <ctime>
 #include <mutex>
 
-// After confirming S has a greater number of blocks than seen before,
-// prints to clog If S does not have enclosed space, updates
-// largestTree and writes the result to outfile, does neither if S
-// does have enclosed space. Relies on the mutex below for thread safety.
-
-std::mutex mutex;
-
-void checkCandidate(Subtree S)
-{	
-	mutex.lock();
-	
-	if (S.numInduced > defs::largestTree)
-	{
-		if (!defs::lastWasNew)
-		{
-			std::cout << std::endl;
-			defs::lastWasNew = true;
-		}
-		
-		if (S.hasEnclosedSpace())
-		{
-			std::clog << S.numInduced
-				<< " vertices with enclosed space, found at "
-				<< defs::threadSeconds() << " thread-seconds" << std::endl;
-		}
-		else
-		{
-			defs::largestTree = S.numInduced;
-			
-			S.writeToFile(defs::outfile);
-			
-			std::clog << defs::largestTree << " vertices, found at " <<
-				defs::threadSeconds() << " thread-seconds" << std::endl;
-		}
-	}
-	
-	mutex.unlock();
-}
-
 // Performs the bulk of the algorithm described in the paper.
 void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 	std::stack<defs::action>& previous_actions)
@@ -56,7 +17,7 @@ void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
 	{
 		if (S.numInduced > defs::largestTree)
 		{
-			checkCandidate(S);
+			defs::checkCandidate(S);
 		}
 		++defs::numLeaves[id];
 	}
@@ -132,14 +93,14 @@ int main(int num_args, char** args)
 		unsigned long long total = 0;
 		for (unsigned i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
 		
-		mutex.lock();
+		defs::IOmutex.lock();
 		
 		std::clog << "\r" << defs::threadSeconds() << " thread-seconds elapsed, "
 			<< total << " leaves encountered" << std::flush;
 		
 		defs::lastWasNew = false;
 		
-		mutex.unlock();
+		defs::IOmutex.unlock();
 	}
 	
 	std::clog << std::endl << "Largest size = " << defs::largestTree << std::endl;
