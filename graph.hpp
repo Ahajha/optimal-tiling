@@ -3,11 +3,7 @@
 
 #include <array>
 #include <vector>
-
-typedef int vertexID;
-
-constexpr vertexID EMPTY = -1;
-constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
+#include "defs.hpp"
 
 /*
 In this case, a Graph is a cubic lattice, with size given

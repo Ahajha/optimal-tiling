@@ -159,3 +159,27 @@ bool Subtree::hasEnclosedSpace() const
 	// be vertices not accounted for in this formula
 	return numInduced + numConnected != numVertices;
 }
+
+bool Subtree::safeToAdd(vertexID i)
+{
+	vertices[i].induced = true;
+	
+	// This should have one neighbor, we need to validate the neighbor
+	for (const vertexID x : G.vertices[i].neighbors)
+	{
+		if (has(x))
+		{
+			++vertices[x].effectiveDegree;
+			
+			bool result = validate(x);
+			
+			// Undo changes made and report that this is invalid
+			--vertices[x].effectiveDegree;
+			vertices[i].induced = false;
+			
+			return result;
+		}
+	}
+	
+	return false;
+}

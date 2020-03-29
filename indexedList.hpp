@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <array>
+#include "defs.hpp"
 
 /*
 An indexedList is an array/doubly linked list hybrid,
@@ -15,40 +16,94 @@ removals are in constant time.
 template<std::size_t N>
 class indexedList
 {
+	private:
+	
+	struct index;
+
 	public:
 	
 	indexedList();
 
 	// Returns true if x was removed, and false if x did not already exist here.
 	// Remove and both pop methods assume there is at least one item in the list.
-	bool remove(int x);
+	bool remove(vertexID x);
 	
-	void push_front(int x);
-	void push_back (int x);
+	void push_front(vertexID x);
+	void push_back (vertexID x);
 	
-	int  pop_front ();
-	int  pop_back  ();
+	vertexID  pop_front ();
+	vertexID  pop_back  ();
 	
-	bool empty();
+	bool empty() const;
+	
+	bool exists(vertexID x) const;
+	
+	void clear();
+	
+	// Removes a random item from the list and returns it, uniformly distributed.
+	// Assumes there is an item to remove.
+	vertexID removeRandom();
+	
+	unsigned size() const;
+	
+	void print();
+	
+	friend class iterator;
+	
+	class iterator
+	{
+		public:
+		
+		iterator(std::array<index, N>& li, vertexID x) : currentNode(x), list(li) {}
+		
+		iterator& operator++()
+		{
+			if (currentNode != EMPTY)
+				currentNode = list[currentNode].next;
+			return *this;
+		}
+		
+		iterator  operator++(int)
+		{
+			iterator it = *this;
+			++*this;
+			return it;
+		}
+		
+		bool operator !=(const iterator& i)
+		{
+			return currentNode != i.currentNode;
+		}
+		
+		vertexID operator*() { return currentNode; }
+		
+		private:
+		
+		vertexID currentNode;
+		const std::array<index, N>& list;
+	};
+	
+	iterator begin() { return iterator(list,head); }
+	iterator end  () { return iterator(list,EMPTY); }
 	
 	template <std::size_t X>
 	friend void swap(indexedList<X>&,indexedList<X>&);
 	
 	private:
 	
-	static constexpr int EMPTY = -1;
-	
 	struct index
 	{
 		bool inList;
-		int next, prev;
+		vertexID next, prev;
 		
 		index() : inList(false), next(EMPTY), prev(EMPTY) {}
 	};
 	
+	unsigned numItems;
+	
 	std::array<index, N> list;
 	
-	int head, tail;
+	vertexID head, tail;
 };
 
 #include "indexedList.tpp"
