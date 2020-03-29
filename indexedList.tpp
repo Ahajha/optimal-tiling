@@ -4,21 +4,21 @@
 #include <iostream>
 
 template <std::size_t N>
-indexedList<N>::indexedList() : numItems(0), list(), head(EMPTY), tail(EMPTY) {}
+indexedList<N>::indexedList() : numItems(0), list(), head(defs::EMPTY), tail(defs::EMPTY) {}
 
 template <std::size_t N>
-bool indexedList<N>::remove(vertexID x)
+bool indexedList<N>::remove(defs::vertexID x)
 {
 	if (!list[x].inList) return false;
 	
 	list[x].inList = false;
 	
-	if (list[x].next != EMPTY)
+	if (list[x].next != defs::EMPTY)
 		list[list[x].next].prev = list[x].prev;
 	else // Tail of the list
 		tail = list[x].prev;
 	
-	if (list[x].prev != EMPTY)
+	if (list[x].prev != defs::EMPTY)
 		list[list[x].prev].next = list[x].next;
 	else // Head of the list
 		head = list[x].next;
@@ -32,13 +32,13 @@ bool indexedList<N>::remove(vertexID x)
 }
 
 template <std::size_t N>
-void indexedList<N>::push_front(vertexID x)
+void indexedList<N>::push_front(defs::vertexID x)
 {
 	list[x].inList = true;
 	list[x].next = head;
-	list[x].prev = EMPTY;
+	list[x].prev = defs::EMPTY;
 	
-	if (head == EMPTY)
+	if (head == defs::EMPTY)
 	{
 		tail = x;
 	}
@@ -53,13 +53,13 @@ void indexedList<N>::push_front(vertexID x)
 }
 
 template <std::size_t N>
-void indexedList<N>::push_back(vertexID x)
+void indexedList<N>::push_back(defs::vertexID x)
 {
 	list[x].inList = true;
-	list[x].next = EMPTY;
+	list[x].next = defs::EMPTY;
 	list[x].prev = tail;
 	
-	if (tail == EMPTY)
+	if (tail == defs::EMPTY)
 	{
 		head = x;
 	}
@@ -74,17 +74,17 @@ void indexedList<N>::push_back(vertexID x)
 }
 
 template <std::size_t N>
-vertexID indexedList<N>::pop_front()
+defs::vertexID indexedList<N>::pop_front()
 {
-	vertexID x = head;
+	defs::vertexID x = head;
 	remove(head);
 	return x;
 }
 
 template <std::size_t N>
-vertexID indexedList<N>::pop_back()
+defs::vertexID indexedList<N>::pop_back()
 {
-	vertexID x = tail;
+	defs::vertexID x = tail;
 	remove(tail);
 	return x;
 }
@@ -92,7 +92,7 @@ vertexID indexedList<N>::pop_back()
 template <std::size_t N>
 bool indexedList<N>::empty() const
 {
-	return head == EMPTY;
+	return head == defs::EMPTY;
 }
 
 template <std::size_t N>
@@ -100,7 +100,7 @@ void swap(indexedList<N>& list1, indexedList<N>& list2)
 {
 	// Loop follows the second list, since this constantly swaps the
 	// next item information into the other list.
-	for (int x = list1.head; x != EMPTY; x = list2.list[x].next)
+	for (int x = list1.head; x != defs::EMPTY; x = list2.list[x].next)
 	{
 		std::swap(list1.list[x],list2.list[x]);
 	}
@@ -111,7 +111,7 @@ void swap(indexedList<N>& list1, indexedList<N>& list2)
 	// (!list2.list[x].inList || list1.list[x].inList), which negates to
 	// (list2.list[x].inList && !list1.list[x].inList).
 	// After the (potential) swap, the next cell will always be in list1.
-	for (int x = list2.head; x != EMPTY; x = list1.list[x].next)
+	for (int x = list2.head; x != defs::EMPTY; x = list1.list[x].next)
 	{
 		if (list2.list[x].inList && !list1.list[x].inList)
 		{
@@ -125,7 +125,7 @@ void swap(indexedList<N>& list1, indexedList<N>& list2)
 }
 
 template <std::size_t N>
-bool indexedList<N>::exists(vertexID x) const
+bool indexedList<N>::exists(defs::vertexID x) const
 {
 	return list[x].inList;
 }
@@ -133,7 +133,7 @@ bool indexedList<N>::exists(vertexID x) const
 template <std::size_t N>
 void indexedList<N>::clear()
 {
-	head = tail = EMPTY;
+	head = tail = defs::EMPTY;
 }
 
 template <std::size_t N>
@@ -143,11 +143,11 @@ unsigned indexedList<N>::size() const
 }
 
 template <std::size_t N>
-vertexID indexedList<N>::removeRandom()
+defs::vertexID indexedList<N>::removeRandom()
 {
-	vertexID toRemove = rand() % numItems;
+	defs::vertexID toRemove = rand() % numItems;
 	
-	vertexID valueToRemove = head;
+	defs::vertexID valueToRemove = head;
 	for (unsigned i = 0; i < toRemove; i++)
 		valueToRemove = list[valueToRemove].next;
 	
@@ -160,7 +160,7 @@ template <std::size_t N>
 void indexedList<N>::print()
 {
 	/*
-	for (vertexID x = head; x != EMPTY; x = list[x].next)
+	for (defs::vertexID x = head; x != EMPTY; x = list[x].next)
 	{
 		std::cout << x << " ";
 	}
@@ -169,7 +169,7 @@ void indexedList<N>::print()
 	std::cout << "(default cells omitted)" << std::endl;
 	for (unsigned i = 0; i < N; i++)
 	{
-		if (list[i].inList || list[i].next != EMPTY || list[i].prev != EMPTY)
+		if (list[i].inList || list[i].next != defs::EMPTY || list[i].prev != defs::EMPTY)
 			std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
 				<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
 	}

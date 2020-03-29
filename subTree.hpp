@@ -26,35 +26,35 @@ struct Subtree
 	
 	unsigned numInduced;
 	
-	vertexID root;
+	defs::vertexID root;
 	
-	std::array<subTreeVertex, numVertices> vertices;
+	std::array<subTreeVertex, defs::numVertices> vertices;
 	
-	Subtree(vertexID r);
+	Subtree(defs::vertexID);
 	
-	unsigned cnt(vertexID i) const { return vertices[i].effectiveDegree; }
-	bool     has(vertexID i) const { return vertices[i].induced;         }
+	unsigned cnt(defs::vertexID i) const { return vertices[i].effectiveDegree; }
+	bool     has(defs::vertexID i) const { return vertices[i].induced;         }
 	
 	// Does nothing if the graph would be invalidated
-	bool add(vertexID i);
+	bool add(defs::vertexID);
 	
-	void rem(vertexID i);
+	void rem(defs::vertexID);
 	
-	bool exists(vertexID i) const { return i != EMPTY && vertices[i].induced; }
+	bool exists(defs::vertexID i) const { return i != defs::EMPTY && vertices[i].induced; }
 	
 	void print() const;
 	
 	void writeToFile(std::string filename) const;
 	
 	// Returns true iff i does not have 4 neighbors in any plane.
-	bool validate(vertexID i) const;
+	bool validate(defs::vertexID i) const;
 	
 	// Returns true iff there is at least one block whose
 	// faces cannot be accessed externally.
 	bool hasEnclosedSpace() const;
 	
 	// Returns true iff adding i would preserve the neighbor condition.
-	bool safeToAdd(vertexID i);
+	bool safeToAdd(defs::vertexID);
 };
 
 #endif

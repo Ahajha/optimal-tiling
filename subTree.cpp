@@ -7,12 +7,12 @@
 #define BLOCK_PRESENT 'X'
 #define BLOCK_MISSING '_'
 
-bool Subtree::add(vertexID i)
+bool Subtree::add(defs::vertexID i)
 {
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
-	for (const vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : G.vertices[i].neighbors)
 	{
 		if (has(x))
 		{
@@ -31,7 +31,7 @@ bool Subtree::add(vertexID i)
 	
 	++numInduced;
 
-	for (const vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : G.vertices[i].neighbors)
 	{
 		// Ignore the induced vertex, its degree has already been increased.
 		if (!has(x))
@@ -40,13 +40,13 @@ bool Subtree::add(vertexID i)
 	return true;
 }
 
-void Subtree::rem(vertexID i)
+void Subtree::rem(defs::vertexID i)
 {
 	vertices[i].induced = false;
 	
 	--numInduced;
 	
-	for (const vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : G.vertices[i].neighbors)
 	{
 		--vertices[x].effectiveDegree;
 	}
@@ -55,7 +55,7 @@ void Subtree::rem(vertexID i)
 void Subtree::print() const
 {
 	std::cout << "Subgraph: ";
-	for (vertexID x = 0; x < numVertices; x++)
+	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
 		if (has(x)) std::cout << x << ' ';
 	}
@@ -68,7 +68,7 @@ void Subtree::writeToFile(std::string filename) const
 
 	file << SIZEX << ' ' << SIZEY << ' ' << SIZEZ << std::endl << std::endl;
 	
-	vertexID x = 0;
+	defs::vertexID x = 0;
 	for (unsigned i = 0; i < SIZEZ; i++)
 	{
 		for (unsigned j = 0; j < SIZEY; j++)
@@ -84,12 +84,12 @@ void Subtree::writeToFile(std::string filename) const
 	file << numInduced << std::endl;
 }
 
-Subtree::Subtree(vertexID r) : numInduced(0), root(r), vertices()
+Subtree::Subtree(defs::vertexID r) : numInduced(0), root(r), vertices()
 {
 	add(r);
 }
 
-bool Subtree::validate(vertexID i) const
+bool Subtree::validate(defs::vertexID i) const
 {
 	if (cnt(i) != 4)
 		return cnt(i) < 4;
@@ -112,20 +112,20 @@ bool Subtree::hasEnclosedSpace() const
 	enum label { induced, empty, empty_connected };
 	
 	// Each vertex is labeled one of the above
-	std::array<label, numVertices> vertex_labels;
+	std::array<label, defs::numVertices> vertex_labels;
 	
 	// Initial label is either induced or empty
-	for (vertexID x = 0; x < numVertices; x++)
+	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
 		vertex_labels[x] = has(x) ? induced : empty;
 	}
 	
 	// Queue for breadth-first search
-	std::queue<vertexID> toBeVisited;
+	std::queue<defs::vertexID> toBeVisited;
 	
 	// For each vertex touching the outer shell of the cube,
 	// queue for searching
-	for (vertexID x = 0; x < numVertices; x++)
+	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
 		if (G.onOuterShell(x))
 		{
@@ -138,7 +138,7 @@ bool Subtree::hasEnclosedSpace() const
 	
 	while (!toBeVisited.empty())
 	{
-		vertexID x = toBeVisited.front();
+		defs::vertexID x = toBeVisited.front();
 		toBeVisited.pop();
 		
 		if (vertex_labels[x] == empty)
@@ -148,7 +148,7 @@ bool Subtree::hasEnclosedSpace() const
 			++numConnected;
 			
 			// Queue all of x's neighbors
-			for (vertexID y : G.vertices[x].neighbors)
+			for (defs::vertexID y : G.vertices[x].neighbors)
 			{
 				toBeVisited.push(y);
 			}
@@ -157,15 +157,15 @@ bool Subtree::hasEnclosedSpace() const
 	
 	// If the graph has enclosed space, then there will
 	// be vertices not accounted for in this formula
-	return numInduced + numConnected != numVertices;
+	return numInduced + numConnected != defs::numVertices;
 }
 
-bool Subtree::safeToAdd(vertexID i)
+bool Subtree::safeToAdd(defs::vertexID i)
 {
 	vertices[i].induced = true;
 	
 	// This should have one neighbor, we need to validate the neighbor
-	for (const vertexID x : G.vertices[i].neighbors)
+	for (const defs::vertexID x : G.vertices[i].neighbors)
 	{
 		if (has(x))
 		{

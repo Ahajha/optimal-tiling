@@ -26,23 +26,23 @@ class indexedList
 
 	// Returns true if x was removed, and false if x did not already exist here.
 	// Remove and both pop methods assume there is at least one item in the list.
-	bool remove(vertexID x);
+	bool remove(defs::vertexID);
 	
-	void push_front(vertexID x);
-	void push_back (vertexID x);
+	void push_front(defs::vertexID);
+	void push_back (defs::vertexID);
 	
-	vertexID  pop_front ();
-	vertexID  pop_back  ();
+	defs::vertexID  pop_front ();
+	defs::vertexID  pop_back  ();
 	
 	bool empty() const;
 	
-	bool exists(vertexID x) const;
+	bool exists(defs::vertexID) const;
 	
 	void clear();
 	
 	// Removes a random item from the list and returns it, uniformly distributed.
 	// Assumes there is an item to remove.
-	vertexID removeRandom();
+	defs::vertexID removeRandom();
 	
 	unsigned size() const;
 	
@@ -54,11 +54,11 @@ class indexedList
 	{
 		public:
 		
-		iterator(std::array<index, N>& li, vertexID x) : currentNode(x), list(li) {}
+		iterator(std::array<index, N>& li, defs::vertexID x) : currentNode(x), list(li) {}
 		
 		iterator& operator++()
 		{
-			if (currentNode != EMPTY)
+			if (currentNode != defs::EMPTY)
 				currentNode = list[currentNode].next;
 			return *this;
 		}
@@ -75,16 +75,16 @@ class indexedList
 			return currentNode != i.currentNode;
 		}
 		
-		vertexID operator*() { return currentNode; }
+		defs::vertexID operator*() { return currentNode; }
 		
 		private:
 		
-		vertexID currentNode;
+		defs::vertexID currentNode;
 		const std::array<index, N>& list;
 	};
 	
 	iterator begin() { return iterator(list,head); }
-	iterator end  () { return iterator(list,EMPTY); }
+	iterator end  () { return iterator(list,defs::EMPTY); }
 	
 	template <std::size_t X>
 	friend void swap(indexedList<X>&,indexedList<X>&);
@@ -94,16 +94,16 @@ class indexedList
 	struct index
 	{
 		bool inList;
-		vertexID next, prev;
+		defs::vertexID next, prev;
 		
-		index() : inList(false), next(EMPTY), prev(EMPTY) {}
+		index() : inList(false), next(defs::EMPTY), prev(defs::EMPTY) {}
 	};
 	
 	unsigned numItems;
 	
 	std::array<index, N> list;
 	
-	vertexID head, tail;
+	defs::vertexID head, tail;
 };
 
 #include "indexedList.tpp"

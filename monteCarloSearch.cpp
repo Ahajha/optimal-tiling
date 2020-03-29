@@ -12,19 +12,6 @@
 
 #define NUM_THREADS (std::thread::hardware_concurrency())
 
-enum action_type
-{
-	add,
-	rem,
-	stop
-};
-
-struct action
-{
-	action_type type;
-	vertexID v;
-};
-
 // Since there is only one base graph, we can let it be global.
 const Graph G;
 
@@ -43,7 +30,7 @@ clock_t start_time;
 // Grid of indexedLists, used to store the border elements as they are removed,
 // then swapped back to restore. A call to branch can find the list it should
 // use by going to lists[id][S.numInduced].
-std::vector<std::array<indexedList<numVertices>, numVertices>> lists(NUM_THREADS);
+std::vector<std::array<indexedList<defs::numVertices>, defs::numVertices>> lists(NUM_THREADS);
 
 std::vector<unsigned long long> numLeaves(NUM_THREADS);
 bool lastWasNew = false;
@@ -55,10 +42,10 @@ float threadSeconds()
 }
 
 // Updates the border of S after adding x.
-void update(Subtree& S, indexedList<numVertices>& border,
-	vertexID x, std::stack<action>& previous_actions)
+void update(Subtree& S, indexedList<defs::numVertices>& border,
+	defs::vertexID x, std::stack<defs::action>& previous_actions)
 {
-	for (vertexID y : G.vertices[x].neighbors)
+	for (defs::vertexID y : G.vertices[x].neighbors)
 	{
 		// Pushes the current action, will need
 		// to do the opposite action to reverse.
@@ -68,21 +55,21 @@ void update(Subtree& S, indexedList<numVertices>& border,
 			// not work without this.
 			if (border.remove(y))
 			{
-				previous_actions.push({rem,y});
+				previous_actions.push({defs::rem,y});
 			}
 		}
 		else if (y > S.root && !S.has(y))
 		{
 			border.push_front(y);
-			previous_actions.push({add,y});
+			previous_actions.push({defs::add,y});
 		}
 	}
 }
 
 // Updates the border of S after adding x, does not track changes.
-void simpleUpdate(Subtree& S, indexedList<numVertices>& border, vertexID x)
+void simpleUpdate(Subtree& S, indexedList<defs::numVertices>& border, defs::vertexID x)
 {
-	for (vertexID y : G.vertices[x].neighbors)
+	for (defs::vertexID y : G.vertices[x].neighbors)
 	{
 		if (S.cnt(y) > 1)
 		{
@@ -96,20 +83,20 @@ void simpleUpdate(Subtree& S, indexedList<numVertices>& border, vertexID x)
 }
 
 // Restores the border of S after removing x.
-void restore(indexedList<numVertices>& border,
-	std::stack<action>& previous_actions)
+void restore(indexedList<defs::numVertices>& border,
+	std::stack<defs::action>& previous_actions)
 {
 	while (true)
 	{
-		action act = previous_actions.top();
+		defs::action act = previous_actions.top();
 		previous_actions.pop();
 		
-		if (act.type == stop)
+		if (act.type == defs::stop)
 		{
 			return;
 		}
 		
-		if (act.type == add)
+		if (act.type == defs::add)
 		{
 			border.remove(act.v);
 		}
@@ -171,12 +158,12 @@ void checkCandidate(Subtree S)
 // Randomly adds vertices to S until it becomes maximal, then returns
 // its size.
 // Current path should start with only the last added vertex.
-void randomBranch(int id, Subtree S, indexedList<numVertices> border, unsigned& bestResult,
-	indexedList<numVertices> currentPath, indexedList<numVertices>& bestPath)
+void randomBranch(int id, Subtree S, indexedList<defs::numVertices> border, unsigned& bestResult,
+	indexedList<defs::numVertices> currentPath, indexedList<defs::numVertices>& bestPath)
 {
 	while(!border.empty())
 	{
-		vertexID x;
+		defs::vertexID x;
 		do
 		{
 			// Get and remove a random element,
@@ -206,19 +193,19 @@ void randomBranch(int id, Subtree S, indexedList<numVertices> border, unsigned& 
 	}
 }
 
-void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
-	std::stack<action>& previous_actions, unsigned level, unsigned& globalBestResult,
-	indexedList<numVertices> currentPath, indexedList<numVertices>& globalBestPath)
+void nested_monte_carlo(int id, Subtree& S, indexedList<defs::numVertices>& border,
+	std::stack<defs::action>& previous_actions, unsigned level, unsigned& globalBestResult,
+	indexedList<defs::numVertices> currentPath, indexedList<defs::numVertices>& globalBestPath)
 {
 	// Keep track of the vertices added.
-	std::stack<vertexID> added;
+	std::stack<defs::vertexID> added;
 	
-	indexedList<numVertices> bestPath;
+	indexedList<defs::numVertices> bestPath;
 	unsigned bestResult = 0;
 	while(true)
 	{
 		// Temporarily remove any vertices that are invalid to add.
-		for (vertexID x : border)
+		for (defs::vertexID x : border)
 		{
 			if (!S.safeToAdd(x))
 			{
@@ -233,11 +220,11 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 			break;
 		}
 		
-		indexedList<numVertices> trialPath;
+		indexedList<defs::numVertices> trialPath;
 		do
 		{
 			// Get and remove the first element
-			vertexID x = border.pop_front();
+			defs::vertexID x = border.pop_front();
 			
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
@@ -247,7 +234,7 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 			// All additions are valid, so no need to check.
 			S.add(x);
 			
-			previous_actions.push({stop,0});
+			previous_actions.push({defs::stop,0});
 			
 			update(S,border,x,previous_actions);
 			
@@ -269,7 +256,7 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 			
 		std::swap(border, lists[id][S.numInduced]);
 		
-		vertexID nextVertex = bestPath.pop_front();
+		defs::vertexID nextVertex = bestPath.pop_front();
 		
 		S.add(nextVertex);
 		
@@ -277,7 +264,7 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 		
 		border.remove(nextVertex);
 		
-		previous_actions.push({stop,0});
+		previous_actions.push({defs::stop,0});
 		update(S,border,nextVertex,previous_actions);
 		
 		if (level == NMC_LEVEL)
@@ -292,10 +279,10 @@ void nested_monte_carlo(int id, Subtree& S, indexedList<numVertices>& border,
 	
 	// There is one item, temporarily remove it so
 	// we can put the rest of the items in order.
-	vertexID temp = currentPath.pop_front();
+	defs::vertexID temp = currentPath.pop_front();
 	while(!added.empty())
 	{
-		vertexID x = added.top();
+		defs::vertexID x = added.top();
 		added.pop();
 		
 		S.rem(x);
@@ -329,15 +316,15 @@ int main(int num_args, char** args)
 	start_time = clock();
 	
 	unsigned globalBestResult = 0;
-	indexedList<numVertices> currentPath;
+	indexedList<defs::numVertices> currentPath;
 	currentPath.push_front(0);
-	indexedList<numVertices> globalBestPath;
+	indexedList<defs::numVertices> globalBestPath;
 	
 	Subtree S(0);
 	
-	indexedList<numVertices> border;
+	indexedList<defs::numVertices> border;
 	
-	std::stack<action> previous_actions;
+	std::stack<defs::action> previous_actions;
 	
 	update(S,border,0,previous_actions);
 	

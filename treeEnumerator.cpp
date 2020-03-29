@@ -10,19 +10,6 @@
 
 #define NUM_THREADS (std::thread::hardware_concurrency())
 
-enum action_type
-{
-	add,
-	rem,
-	stop
-};
-
-struct action
-{
-	action_type type;
-	vertexID v;
-};
-
 // Since there is only one base graph, we can let it be global.
 const Graph G;
 
@@ -41,7 +28,7 @@ clock_t start_time;
 // Grid of indexedLists, used to store the border elements as they are removed,
 // then swapped back to restore. A call to branch can find the list it should
 // use by going to lists[id][S.numInduced].
-std::vector<std::array<indexedList<numVertices>, numVertices>> lists(NUM_THREADS);
+std::vector<std::array<indexedList<defs::numVertices>, defs::numVertices>> lists(NUM_THREADS);
 
 std::vector<unsigned long long> numLeaves(NUM_THREADS);
 bool lastWasNew = false;
@@ -53,10 +40,10 @@ float threadSeconds()
 }
 
 // Updates the border of S after adding x.
-void update(Subtree& S, indexedList<numVertices>& border,
-	vertexID x, std::stack<action>& previous_actions)
+void update(Subtree& S, indexedList<defs::numVertices>& border,
+	defs::vertexID x, std::stack<defs::action>& previous_actions)
 {
-	for (vertexID y : G.vertices[x].neighbors)
+	for (defs::vertexID y : G.vertices[x].neighbors)
 	{
 		// Pushes the current action, will need
 		// to do the opposite action to reverse.
@@ -66,32 +53,32 @@ void update(Subtree& S, indexedList<numVertices>& border,
 			// not work without this.
 			if (border.remove(y))
 			{
-				previous_actions.push({rem,y});
+				previous_actions.push({defs::rem,y});
 			}
 		}
 		else if (y > S.root && !S.has(y))
 		{
 			border.push_front(y);
-			previous_actions.push({add,y});
+			previous_actions.push({defs::add,y});
 		}
 	}
 }
 
 // Restores the border of S after removing x.
-void restore(indexedList<numVertices>& border,
-	std::stack<action>& previous_actions)
+void restore(indexedList<defs::numVertices>& border,
+	std::stack<defs::action>& previous_actions)
 {
 	while (true)
 	{
-		action act = previous_actions.top();
+		defs::action act = previous_actions.top();
 		previous_actions.pop();
 		
-		if (act.type == stop)
+		if (act.type == defs::stop)
 		{
 			return;
 		}
 		
-		if (act.type == add)
+		if (act.type == defs::add)
 		{
 			border.remove(act.v);
 		}
@@ -142,8 +129,8 @@ void checkCandidate(Subtree S)
 }
 
 // Performs the bulk of the algorithm described in the paper.
-void branch(int id, Subtree& S, indexedList<numVertices>& border,
-	std::stack<action>& previous_actions)
+void branch(int id, Subtree& S, indexedList<defs::numVertices>& border,
+	std::stack<defs::action>& previous_actions)
 {
 	// We only consider subtrees without children to be good candidates,
 	// since any children of this tree would be better candidates.
@@ -160,7 +147,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 		do
 		{
 			// Get and remove the first element
-			vertexID x = border.pop_front();
+			defs::vertexID x = border.pop_front();
 			
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
@@ -170,7 +157,7 @@ void branch(int id, Subtree& S, indexedList<numVertices>& border,
 			// Ensure the addition would be valid
 			if(S.add(x))
 			{
-				previous_actions.push({stop,0});
+				previous_actions.push({defs::stop,0});
 				update(S,border,x,previous_actions);
 				
 				if (pool.n_idle() != 0)
@@ -205,14 +192,14 @@ int main(int num_args, char** args)
 	
 	start_time = clock();
 	
-	for (vertexID x = 0; x < numVertices; x++)
+	for (defs::vertexID x = 0; x < defs::numVertices; x++)
 	{
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
 		
-		indexedList<numVertices> border;
+		indexedList<defs::numVertices> border;
 		
-		std::stack<action> previous_actions;
+		std::stack<defs::action> previous_actions;
 		
 		update(S,border,x,previous_actions);
 		

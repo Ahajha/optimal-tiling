@@ -21,11 +21,11 @@ class Graph
 		// the direction enum below, EMPTY means there
 		// is no vertex in a given direction.
 		
-		std::vector<vertexID> neighbors;
-		std::array <vertexID, 6> directions;
+		std::vector<defs::vertexID> neighbors;
+		std::array <defs::vertexID, 6> directions;
 		
 		graphVertex() {}
-		graphVertex(vertexID);
+		graphVertex(defs::vertexID);
 	};
 	
 	enum direction
@@ -43,27 +43,27 @@ class Graph
 	};
 	
 	// Index of a given vertex is its ID
-	std::array<graphVertex, numVertices> vertices;
+	std::array<graphVertex, defs::numVertices> vertices;
 	
 	Graph();
 	
-	bool onOuterShell(vertexID i) const;
+	bool onOuterShell(defs::vertexID) const;
 	
 	private:
 	
-	static int get_x(vertexID);
-	static int get_y(vertexID);
-	static int get_z(vertexID);
+	static int get_x(defs::vertexID);
+	static int get_y(defs::vertexID);
+	static int get_z(defs::vertexID);
 	
 	// Returns the index of the vertex in a given
 	// direction, or EMPTY if such a vertex does
 	// not exist.
-	static vertexID _west (vertexID);
-	static vertexID _east (vertexID);
-	static vertexID _north(vertexID);
-	static vertexID _south(vertexID);
-	static vertexID _down (vertexID);
-	static vertexID _up   (vertexID);
+	static defs::vertexID _west (defs::vertexID);
+	static defs::vertexID _east (defs::vertexID);
+	static defs::vertexID _north(defs::vertexID);
+	static defs::vertexID _south(defs::vertexID);
+	static defs::vertexID _down (defs::vertexID);
+	static defs::vertexID _up   (defs::vertexID);
 };
 
 #endif
