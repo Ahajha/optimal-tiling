@@ -17,11 +17,12 @@ This algorithm (in monto-carlo-search), based on the paper at https://www.ijcai.
 
 ## Running the Programs
 
+For both programs, if not already on the master branch, run  
+```git checkout master```  
+
 ### Exhaustive Enumeration
 
-If not already on master, run  
-```git checkout master```  
-and then run using either  
+Run using either  
 ```make run size=A```  
 for a cube of side length A or  
 ```make run sizeX=A sizeY=B sizeZ=C```  
@@ -29,9 +30,7 @@ for a rectangular prism of side lengths A, B, and C.
 
 ### Nested Monte-Carlo Tree Search
 
-If not already in monte-carlo-search, run  
-```git checkout monte-carlo-search```  
-and then run using either  
+Run using either  
 ```make mcs level=K size=A```  
 for nested Monte-Carlo at level K (higher levels take longer, but tend to produce better results) on a cube of size length A or  
 ```make mcs level=K sizeX=A sizeY=B sizeZ=C```  
