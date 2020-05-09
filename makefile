@@ -14,6 +14,8 @@ sizeZ=$(size)
 
 endif
 
+$(shell mkdir -p obj bin results)
+
 sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
 
 ST_ofile=obj/subTree_$(sizeString).o
@@ -34,55 +36,42 @@ CC=g++-9
 all: $(MC_efile)
 
 run: $(TE_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	./$(TE_efile) results/results_$(sizeString).txt
 
 debug_run: $(TE_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	gdb --args ./$(TE_efile) results/results_$(sizeString).txt
 
 perf_run: $(TE_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	perf record ./$(TE_efile) results/results_$(sizeString).txt
 
 mcs: $(MC_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	./$(MC_efile) results/results_$(sizeString).txt
 
 debug_mcs: $(MC_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	gdb --args ./$(MC_efile) results/results_$(sizeString).txt
 
 perf_mcs: $(MC_efile)
-	if [ ! -d results ]; then mkdir results; fi
 	perf record ./$(MC_efile) results/results_$(sizeString).txt
 
 $(MC_efile): $(ST_ofile) $(MC_ofile) $(GH_ofile) $(DF_ofile)
-	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) $(ST_ofile) $(MC_ofile) $(GH_ofile) $(DF_ofile) -o $(MC_efile)
 
 $(TE_efile): $(ST_ofile) $(TE_ofile) $(GH_ofile) $(DF_ofile)
-	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) $(ST_ofile) $(TE_ofile) $(GH_ofile) $(DF_ofile) -o $(TE_efile)
 
 $(ST_ofile): $(GH_ofile) subTree.cpp subTree.hpp
-	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c subTree.cpp -o $(ST_ofile)
 
 $(GH_ofile): graph.cpp graph.hpp
-	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c graph.cpp -o $(GH_ofile)
 
 $(DF_ofile): defs.hpp defs.cpp
-	if [ ! -d obj ]; then mkdir obj; fi
 	$(CC) $(CFLAGS) -c defs.cpp -o $(DF_ofile)
 
 $(TE_ofile): treeEnumerator.cpp $(IL_files)
-	if [ ! -d bin ]; then mkdir bin; fi
 	$(CC) $(CFLAGS) -c treeEnumerator.cpp -o $(TE_ofile)
 
 $(MC_ofile): monteCarloSearch.cpp $(IL_files) defs.hpp
-	if [ ! -d bin ]; then mkdir bin; fi
 	$(CC) $(CFLAGS) -D NMC_LEVEL=$(level) -c monteCarloSearch.cpp -o $(MC_ofile)
 
 analyze: bin/analyze
@@ -92,7 +81,4 @@ bin/analyze: analyzer.cpp
 	$(CC) --std=c++11 -O3 analyzer.cpp -o bin/analyze
 
 clean:
-	rm -f $(ST_ofile) $(MC_ofile) $(MC_efile)
-
-clean_all:
 	rm -f obj/* bin/*
