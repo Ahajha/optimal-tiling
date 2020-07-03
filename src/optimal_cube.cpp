@@ -162,6 +162,35 @@ struct rectangle
 	}
 };
 
+struct tile
+{
+	std::list<std::pair<unsigned,unsigned>> columnPath;
+	unsigned numVertices;
+	
+	std::strong_ordering operator<=>(const tile& other) const
+	{
+		if (other.columnPath.empty()) return numVertices <=> 0;
+		else if (columnPath.empty()) return 0 <=> other.numVertices;
+		
+		auto compare = (numVertices * other.columnPath.size())
+			<=> (other.numVertices * columnPath.size());
+		
+		// If they are different, return the result of the comparison.
+		if (compare != 0) return compare;
+		
+		// Otherwise, prefer shorter tilings over larger ones.
+		return other.numVertices <=> numVertices;
+	}
+	
+	tile() : columnPath(), numVertices(0) {}
+	
+	tile(unsigned i)
+	{
+		columnPath.push_back(std::pair(i,0));
+		numVertices = columns[i].cols.front().numVertices;
+	}
+};
+
 std::vector<rectangle> bestRectangles;
 rectangle bestTile;
 
@@ -202,6 +231,22 @@ std::ostream& operator<<(std::ostream& stream, const rectangle& t)
 		if (c.second == 1) reverse = !reverse;
 		
 		//stream << c.first << ": ";
+		if (!reverse) stream << columns[c.first].cols.front().physical;
+		else stream << columns[c.first].cols.back().physical;
+		
+		stream << std::endl;
+	}
+	
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const tile& t)
+{
+	bool reverse = false;
+	for (auto& c : t.columnPath)
+	{
+		if (c.second == 1) reverse = !reverse;
+		
 		if (!reverse) stream << columns[c.first].cols.front().physical;
 		else stream << columns[c.first].cols.back().physical;
 		
@@ -625,118 +670,36 @@ rectangle extractRectangle(path_info_matrix paths_info, const unsigned len, unsi
 	return r;
 }
 
-// Helper for enumerate, does enumeration for a given start column.
-void enumerateWithStart(unsigned start)
+// Recursive helper function to enumerateTiles.
+void enumerateTilesRecursive(tile& t)
 {
-	// Reference, for brevity
-	const column& col = columns[start].cols[0];
+	if (t.columnPath.size() >= n) return;
+
+	unsigned start = t.columnPath.front().first;
+	unsigned currentEnd = t.columnPath.back().first;
 	
-	// Ignore columns that have connected components, this means
-	// the equivalence class should be the last one in its given list.
-	// (This is based on the order they happen to be generated)
-	if (col.erConfig != erConfigs[col.numComponents].size() - 1) return;
-	
-	if (trace) std::cout << "Starting with class " << start << std::endl;
-	
-	// Information matrix
-	path_info_matrix paths_info;
-	
-	// Set the size of the 1-wide rectangle with just 1 column.
-	paths_info.lengths[1].info[start].num_induced = col.numVertices;
-	
-	// No need to check size here, the optimal 1xn rectangle is trivially all n vertices.
-	
-	// For each length
-	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
+	for (auto& adj : columns[currentEnd].adjList)
 	{
-		if (trace) std::cout << "  length " << len << std::endl;
+		// Perform a recursive search
+		unsigned numVert = columns[adj.first].cols.front().numVertices;
 		
-		// Try to expand each cell that has a valid path
-		for (unsigned end = 0; end < columns.size(); end++)
-		{
-			// Reference, for brevity
-			const int& old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
-			
-			// Ignore cells with no valid path
-			if (old_num_induced == -1)
-			{
-				if (trace) std::cout << "    Skipping endpoint " << end << std::endl;
-				continue;
-			}
-			else
-			{
-				if (trace) std::cout << "    Enumerating endpoint " << end << std::endl;
-			}
-			
-			// Expand in every possible way
-			for (const auto& neighbor : columns[end].adjList)
-			{
-				unsigned adj = neighbor.first;
-				
-				// Reference, for brevity
-				int& new_num_induced = paths_info.lengths[len].info[adj].num_induced;
-				
-				if (new_num_induced < old_num_induced + (int)columns[adj].cols[0].numVertices)
-				{
-					// The second pair may need to be reconstructed
-					paths_info.lengths[len].info[adj] = path_info(
-						old_num_induced + columns[adj].cols[0].numVertices,
-						end, neighbor.second
-					);
-					
-					// Check to see if this is the best tile of this given length
-					fraction density(paths_info.lengths[len].info[adj].num_induced, n*len);
-					
-					if (density > bestRectangles[len].density)
-					{
-						bestRectangles[len] = extractRectangle(paths_info, len, adj);
-						
-						std::cout << "found (length " << len << "): "
-							<< bestRectangles[len].density << std::endl;
-					}
-				}
-			}
-		}
-	}
-	
-	if (trace)
-	{
-		for (unsigned len = 1; len < paths_info.lengths.size(); len++)
-		{
-			for (unsigned end = 0; end < columns.size(); end++)
-			{
-				const auto& ref = paths_info.lengths[len].info[end];
-				
-				if (ref.num_induced == -1)
-				{
-					std::cout << "X ";
-				}
-				else
-				{
-					std::cout << "(" << ref.num_induced << "," << ref.second_to_last
-						<< "," << ref.col_no << ") ";
-				}
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
+		t.columnPath.push_back(adj);
+		t.numVertices += numVert;
+		
+		enumerateTilesRecursive(t);
+		
+		t.columnPath.pop_back();
+		t.numVertices -= numVert;
 	}
 }
 
-/*------------------------------------
-Prints the maximum size and density of
-every rectangle sized 1xn through nxn.
-Also, prints the maximum density tile.
-------------------------------------*/
-
-void enumerate()
+void enumerateTiles()
 {
-	bestRectangles.resize(columns.size() + 1);
-
-	// For each starting vertex
-	for (unsigned start = 0; start < columns.size(); start++)
+	// Using each column as a starting point
+	for (unsigned i = 0; i < columns.size(); i++)
 	{
-		enumerateWithStart(start);
+		tile t(i);
+		enumerateTilesRecursive(t);
 	}
 }
 
@@ -767,5 +730,5 @@ int main(int argn, char** args)
 		}
 	}
 	
-	enumerate();
+	enumerateTiles();
 }
