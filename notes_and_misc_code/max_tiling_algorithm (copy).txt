@@ -1,0 +1,250 @@
+Pseudocode/overview:
+
+1) Generate all columns, with equivalence variations. 
+	Data structure: vector of vectors. Inner vector is "classes" of columns
+		which are symmetrical. Outer vector is all such classes. The first
+		column in the class is the "canonical" column, sort of the "face" of
+		the class.
+	
+	- Needed: ER enumeration algorithm (done)
+
+2) While generating columns, prune for rules and symmetries.
+	For the symmetries:
+		If a physical column, in integer form, is smaller than its opposite, then
+		take that one.
+		If they are equal, take the one with the "smaller" equivalence relation. We
+		will define an ordering on the equivalence relations later.
+		If both of those are equal, then the column is its own reflection.
+
+	- Needed: ER reversal algorithm
+		Designed, implemented, tested
+	- Needed: ER ordering algorithm
+		Designed, implemented, lightly tested
+	- Needed: Pruning and storage of symmetries
+		Designed, implemented, tested
+
+3) Construct an adjacency list representation of the graph formed by valid column successors.
+	i.e. For each column, determine all columns that can succeed it. It is possible that
+	multiple columns of the same physical form can follow, in that case we only need one of
+	them, there is a way to determine which one (will be looked at later).
+	A special note on symmetries: If a column cannot succeed another given column, check its
+	mirror as well. If the mirror can follow, make a note of that.
+
+	- Needed: Algorithm to determine if a column can succeed another one.
+		Sketched
+	- Needed: Algorithm to determine which variation of an ER can succeed a column.
+		Ideas, nothing sketched
+
+Work on that first, then do the rest.
+
+
+
+ER equivalence:
+
+ERs A and B are equivalent if A and B are the same size and for all 0 <= x,y < n,
+A.equiv(x,y) iff B.equiv(x,y).
+
+Define a "canonical group labeling".
+
+Algorithm for producing canonical group labeling:
+
+group_num = 0
+Initially label each element as -1
+for each item i
+	if leader(i) is labeled -1
+		label i and leader(i) as group_num++
+	else
+		label i as same label as leader(i)
+
+To compare two ERs, simply perform a lexicographic ordering of their canonical group labelings.
+
+
+Motivation/idea behind algorithm:
+
+A tiling is made up of a sequence of columns, and we can think of building a tile from left to right, since only the previous column affects what can be placed next, with one caveat that we will cover later. A tiling can only be in a given "state" (the rightmost column) once, since if we see the same state twice within the same tile, we should be able to splice out the middle section and make two smaller tiles. Since there are a finite number of columns, then the theoretical maximum width for a tile is this number, though in practice they will tend to be a lot smaller.
+
+The basic idea for the algorithm is to first determine all possible columns, then all possible successors to a column as preprocessing. We can view this as a directed graph, where u -> v means that column v can come to the left of column u without creating a cycle. Then, we enumerate all cycles in the graph, with each cycle creating a tile, and for each of them we can compute a tile's density. From this, we just select the tile(s) with maximum density.
+
+To address the caveat from before: There is a piece of information that we must carry from one column to the next, that being connected components. As an example, the column
+
+X
+_
+X
+
+has some ambiguity to it. If we put
+
+X
+X
+X
+
+before it, then we certainly cannot also put it after. To convey this information, we keep track of what components of the column are already connected, as an equivalence relation. In this case, we either have the two components connected, or not. We can express these, respectively, as [0,0] and [0,1]. ([0,0] represents both 'parts' of this column belonging to the same equivalence class)
+
+========================================================================
+
+Let us look at an example run of the algorithm, with n = 3. Start by coming up with all possible columns (and labeling them):
+
+_ _ _ _ X X X X
+_ _ X X _ _ X X
+_ X _ X _ X _ X
+
+0 1 2 3 4 5 6 7
+
+As mentioned before, we will need to consider the two cases for column 5, so we will split these into 5_[0,0] and 5_[0,1], which we will call 5_0 and 5_1 for brevity here.
+
+Next, for each column, create a list of possible columns that can follow it. Note that in checking if 5_0 ir 5_1 can come after a column, it only needs to check if adding 5 is acyclic. From there, it can use the graph itself plus the equivalence relations to determine which version of 5 it produces. We will look at the finer details of this later.
+
+Successors table:
+0: 0,1,2,3,4,5_1,6,7
+1: 0,1,2,3,4,5_1,6,7
+2: 0,1,2,3,4,5_1,6,7
+3: 0,1,2,4,5_1,6
+4: 0,1,2,3,4,5_1,6,7
+5_0: 0,1,2,3,4,5_0,6
+5_1: 0,1,2,3,4,5_1,6,7
+6: 0,1,2,3,4,5_1
+7: 0,1,2,4,5_0
+
+From here, all that is left to do is to enumerate all possible cycles. Starting with column 0, we have the following branches:
+
+0
+	0
+	1
+	2
+	3
+	4
+	5_1
+	6
+	7
+
+The first branch, 0 -> 0, is a full cycle, so we drop the last item (since it the same as the first), and thus {0} is a tiling, which has density 0 (there are no vertices in column 0).
+
+The second branch, 0 -> 1, can be extended to any of:
+
+0 -> 1
+	0
+	1
+	2
+	3
+	4
+	5_1
+	6
+	7
+
+0 -> 1 -> 0 creates tile {0,1}, with density 1/6. 0 -> 1 -> 1 is problematic, since we have a cycle, but not starting at the beginning. Thus, we only want to add columns that we have not already used, with the exception of the first tile (we always want to see if we can complete the cycle).
+
+We could continue in this way, but it is clear that even n = 3 has a large number of cases, so let us focus on optimizations next.
+
+======================================================================================================================
+
+We have a few results to prove:
+
+1) We can ignore any tiles that contain a column that has 3 consecutive empty rows.
+2) We can ignore any tiles that contain a column that has a block with 2 empty spaces both above and below
+
+For these proofs, we will fix our attention on 3 consecutive columns. If possible, we will increase the number of blocks. If not, we will shift a block from the right column into the middle.
+
+(We can think of the rows above and below the tiles as completely empty)
+
+Given a tile T:
+
+Case 1: There exists a column in T that has 3 consecutive empty spaces
+	
+	Case 1.1: Add a block if possible (if either block to the left or right of the center empty space is missing)
+	
+	?_?    ?_? (or the mirror image of this, if applicable)
+	?__ -> ?X_ (the addition only has one neighbor, thus must remain acyclic)
+	?_?    ?_?
+	
+	Case 1.2: If neither is missing, then shift the block to the right of it, only if that does not create any more 3-tall spaces.
+	
+	?_?    ?_?
+	X_X -> XX_ (the addition only has one neighbor, and removing vertices never creates cycles)
+	?_?    ?_?
+	
+	Case 1.3: If shifting would create more 3-tall space, then the block shifted would open up either the top or middle block.
+	
+		Case 1.3.1: Top block, this adds a block
+		
+			?_?    ?_? (Need to ensure this does not cause more gaps)
+			X_X -> XX_
+			?__    ?_X (the add on this row is always valid, since it has at most one neighbor, namely to the right.
+			??_    ??_
+		
+		Case 1.3.2: Not a top block, so must be a middle.
+			
+			If either of the spaces marked with * are empty, add a block to the side and shift as in case 1.2.
+		
+			??X?    ??X?
+			?__*    ?_X_
+			X_X? -> XX_? (both additions have one neighbor)
+			?__*    ?__*
+			??X?    ??X?
+			
+			Otherwise, shift.
+			
+			??X?    ??X?
+			?__X    ?__X
+			X_X? -> XXX_ (both additions have one neighbor)
+			?__X    ?__X
+			??X?    ??X?
+			
+	(Note that in all cases, the row with the bottom empty tile, and any below it, are not modified. Thus, this also applies in the case of 2 empty spaces at the top or bottom of the column)
+	
+	// VERIFY THIS
+	In every case, we eliminate the 3-tall gap completely. We can then repeat this process until there are no columns with 3-tall gaps.
+	
+	Thus, if T has a column with a 3-tall gap, then there exists either a tile of equal or greater density without 3-tall gaps. Thus, in enumerating, we can ignore columns with this property.
+	
+Case 2:
+	
+	
+	
+	
+	
+====== Ignore below	
+	
+Case 3: There exists 2 consecutive rows with the center of each row missing.
+	
+	Case 2.1: The rows are 'capped' by blocks on the top and bottom.
+	
+	?X?
+	?_?
+	?_?
+	?X?
+	
+	Since there are no cycles, at least one of the ?s must be empty.
+	
+		Case 2.1.1: One of the middle 4 ?s is empty
+			Resolution: If the opposite block is empty, then add a block in the middle. Otherwise, shift the block to the middle.
+		
+		?X?    ?X?
+		___ -> _X_ (the addition only has one neighbor, thus must remain acyclic)
+		?_?    ?_?
+		?X?    ?X?
+		
+		?X?    ?X?
+		__X -> _X_
+		?_?    ?_?
+		?X?    ?X?
+		
+		Case 2.1.2: None of the middle 4 ?s are empty, so one of the corners must be empty.
+			Resolution: 
+		
+		Exactly 1:
+		
+		_XX    _XX
+		X_X -> XX_     
+		X_X    X_X
+		XXX    XXX
+		
+		Exactly 2: (opposite corners)
+		
+		_XX    XX_
+		X_X -> XX_    
+		X_X    X_X
+		XX_    _XX
+
+
+
+
+

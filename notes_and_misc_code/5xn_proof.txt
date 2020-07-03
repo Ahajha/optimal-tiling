@@ -1,0 +1,93 @@
+Columns:
+
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ X X X X X X X X X X X X X X X X
+_ _ _ _ _ _ _ _ X X X X X X X X _ _ _ _ _ _ _ _ X X X X X X X X
+_ _ _ _ X X X X _ _ _ _ X X X X _ _ _ _ X X X X _ _ _ _ X X X X
+_ _ X X _ _ X X _ _ X X _ _ X X _ _ X X _ _ X X _ _ X X _ _ X X
+_ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X _ X
+
+0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P Q R S T U V
+
+(Assume both rules: Ignore columns with 3 consecutive empty spaces, and columns with a block with 2 empty spaces both above and below it)
+
+This removes: (17)
+
+_ _ _ _ _ _ _ _ _ _ _ X X X X X X
+_ _ _ _ _ _ _ _ X X X _ _ _ _ X X
+_ _ _ _ X X X X _ _ X _ _ _ X _ X
+_ _ X X _ _ X X _ _ _ _ _ X _ _ _
+_ X _ X _ X _ X _ X _ _ X _ _ _ _
+
+0 1 2 3 4 5 6 7 8 9 C G H I K O S
+
+And leaves: (15)
+
+_ _ _ _ _ X X X X X X X X X X
+X X X X X _ _ _ _ X X X X X X
+_ _ X X X _ X X X _ _ _ X X X
+X X _ X X X _ X X _ X X _ X X
+_ X X _ X X X _ X X _ X X _ X
+
+A B D E F J L M N P Q R T U V
+
+Next, remove symmetries:
+
+_ _ _ _ _ X X X X X
+X X X X X _ _ _ X X
+_ _ X X X _ X X _ X
+X X _ X X X _ X X X
+_ X X _ X X X X X X
+
+A B D E F J L N R V
+
+(B' = Q)
+(D' = M)
+(F' = T)
+(J' = P)
+(N' = U)
+
+This leaves us with 10 tiles. Next, rename these to the digits (for simplicity):
+
+_ _ _ _ _ X X X X X
+X X X X X _ _ _ X X
+_ _ X X X _ X X _ X
+X X _ X X X _ X X X
+_ X X _ X X X X X X
+
+0 1 2 3 4 5 6 7 8 9
+
+And add equivalence variations:
+
+0 -> [0,0] = 0_0, [0,1] = 0_1
+1 -> [0,0] = 1_0, [0,1] = 1_1
+2 -> [0,0] = 2_0, [0,1] = 2_1
+5 -> [0,0] = 5_0, [0,1] = 5_1
+6 -> [0,0,0] = 6_0, [0,0,1] = 6_1, [0,1,0] = 6_2, [0,1,2] = 6_3
+	(Note that 6 = 6', we can remove [1,0,0])
+7 -> [0,0] = 7_0, [0,1] = 7_1
+8 -> [0,0] = 8_0, [0,1] = 8_1
+
+Thus, we have 19 total columns.
+
+Successors table: (This could be a matrix, each value is either Yes, No, or only if Flipped (Y,N,F). In this case, the matrix would be symmetrical)
+
+0_0: 0_0, 1_0, 2_1, 5_1, 6_3, 7_1, 8_0
+0_1: 0_1, 1_1, 2_1, 3, 4, 5_1, 6_3, 7_1, 8_1, 9
+1_0: 0_0, 1_0', 2_0, 2_1' 5_0', 6_3, 7_0
+1_1: 0_1, 1_1', 2_1, 3, 5_1', 6_3, 7_1
+2_0: 
+2_1: 
+3:   
+4:   
+5_0: 
+5_1: 
+6_0: 
+6_1: 
+6_2: 
+6_3: 
+7_0: 
+7_1: 
+8_0: 
+8_1: 
+9:   0_0, 6_0
+

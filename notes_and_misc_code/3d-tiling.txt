@@ -1,0 +1,91 @@
+9 in 2D has 579 sub-tile classes (1D) (with some pruned)
+
+9 in 3D, as a 3x3:
+
+0 vertices: 1
+1 vertex:   3 (edge, corner, center)
+2 vertices:
+
+XX_ X_X X__ X__ X__ _X_ _X_ _X_
+___ ___ _X_ __X ___ X__ _X_ ___
+___ ___ ___ ___ __X ___ ___ _X_
+
+The 1st and 7th have 1 equivalence configuration each, the others have 2 each. Total of 14.
+
+3 vertices:
+
+XXX XX_ XX_ XX_ XX_ XX_ XX_ X_X X_X X_X X__ X__ X__ _X_ _X_
+___ X__ _X_ __X ___ ___ ___ _X_ ___ ___ _XX _X_ __X XX_ X_X
+___ ___ ___ ___ X__ _X_ __X ___ X__ _X_ ___ __X _X_ ___ ___
+1   1   1   2   2   2   2   5>4 5>4 5>4 2   5>4 5>4 1   5>4
+
+37 total
+
+4 vertices: todo
+5 vertices: todo
+
+6 vertices:
+
+XXX XXX XXX XXX XXX XXX XX_ XX_ XX_
+X_X X_X X__ X__ _X_ _X_ X_X _XX _XX
+X__ _X_ X_X _XX XX_ X_X _XX XX_ X_X
+1   2   2   2   1   5>4 2   1   2
+
+17 total.
+
+7 vertices:
+
+XXX XXX XXX
+X_X X_X _X_
+XX_ X_X XXX
+
+3 total.
+
+8 vertices: none
+9 vertices: none
+
+
+
+
+
+Smaller example: 4
+
+1D:
+
+Class 1:  ____
+Class 2:  X___ ___X
+Class 3:  _X__ __X_
+Class 4:  XX__ __XX
+Class 5:  X_X_ _X_X, config 0
+Class 6:  X_X_ _X_X, config 1
+Class 7:  X__X, config 0
+Class 8:  X__X, config 1
+Class 9:  _XX_, config 0
+Class 10: _XX_, config 1
+Class 11: XXX_ _XXX
+Class 12: XX_X X_XX, config 0
+Class 13: XX_X X_XX, config 1
+Class 14: XXXX
+
+2D:
+
+Class 1: __
+         __
+
+Class 2: X_ _X __ __
+         __ __ X_ _X
+
+Class 3: XX X_ _X __
+         __ X_ _X XX
+
+Class 4: X_ _X
+         _X X_, config 0
+
+Class 5: X_ _X
+         _X X_, config 1
+
+Class 6: XX XX X_ _X
+         X_ _X XX XX
+
+
+14 -> 6, great reduction.
