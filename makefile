@@ -32,8 +32,11 @@ rect: bin/optimal_rectangle
 rect_matrix: bin/optimal_rectangle_matrix
 	./bin/optimal_rectangle_matrix $(trace_flag)
 
-debug: bin/optimal_tiling
-	gdb --args ./bin/optimal_tiling $(size) -t
+cube: bin/optimal_cube
+	./bin/optimal_cube $(size) $(trace_flag)
+
+#debug: bin/optimal_tiling
+#	gdb --args ./bin/optimal_tiling $(size) -t
 
 #perf_run: $(OT_efile)
 #	perf record ./$(TE_efile) $(size)
