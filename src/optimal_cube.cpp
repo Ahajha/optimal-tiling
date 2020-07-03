@@ -3,6 +3,7 @@
 #include <vector>
 #include <compare>
 #include <list>
+#include <ctime>
 #include "equivRelation.hpp"
 #include "fraction.hpp"
 
@@ -698,6 +699,14 @@ void enumerateTiles()
 	// Using each column as a starting point
 	for (unsigned i = 0; i < columns.size(); i++)
 	{
+		// Reference, for brevity
+		const auto& col = columns[i].cols[0];
+		
+		// Ignore columns that have connected components, this means
+		// the equivalence class should be the last one in its given list.
+		// (This is based on the order they happen to be generated)
+		if (col.erConfig != erConfigs[col.numComponents].size() - 1) continue;
+	
 		tile t(i);
 		enumerateTilesRecursive(t);
 	}
@@ -705,6 +714,8 @@ void enumerateTiles()
 
 int main(int argn, char** args)
 {
+	auto start_time = clock();
+
 	parseArgs(argn, args);
 	
 	produceConfigs();
@@ -731,4 +742,7 @@ int main(int argn, char** args)
 	}
 	
 	enumerateTiles();
+	
+	std::cout << "Finished in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
+		<< " seconds" << std::endl;
 }
