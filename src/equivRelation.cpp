@@ -1,5 +1,7 @@
 #include "equivRelation.hpp"
 
+equivRelation::equivRelation() : elements(0) {}
+
 equivRelation::equivRelation(unsigned size) : elements(size)
 {
 	for (unsigned i = 0; i < size; i++)
@@ -63,7 +65,6 @@ std::strong_ordering equivRelation::operator<=>(const equivRelation& other) cons
 			return cgl1[i] <=> cgl2[i];
 	}
 	return std::strong_ordering::equal;
-	
 }
 
 std::ostream& operator<<(std::ostream& stream, const equivRelation& R)
@@ -98,7 +99,7 @@ std::vector<equivRelation> equivRelation::enumerate(unsigned n)
 		{
 			// For each group in R, there will be a new ER
 			// with the last member merged with that group.
-			for (int i = 0; i < n - 1; i++)
+			for (unsigned i = 0; i < n - 1; i++)
 			{
 				// Since we are looking for the unique groups, just look for the leaders.
 				if (R.elements[i].boss == i)
@@ -156,6 +157,24 @@ equivRelation equivRelation::append(const equivRelation& other) const
 	return result;
 }
 
+void equivRelation::operator+=(const equivRelation& other)
+{
+	unsigned oldSize = elements.size();
+
+	elements.resize(oldSize + other.elements.size());
+	
+	// For each element in result, numConstituents should be the same as
+	// the corresponding one in other, and the boss should be the
+	// same plus the number of elements in this.
+	for (unsigned i = 0; i < other.elements.size(); i++)
+	{
+		elements[oldSize + i].numConstituents =
+			other.elements[i].numConstituents;
+		elements[oldSize + i].boss =
+			other.elements[i].boss + oldSize;
+	}
+}
+
 equivRelation equivRelation::shave(unsigned n) const
 {
 	auto cgl = canonicalGroupLabeling();
@@ -183,6 +202,23 @@ equivRelation equivRelation::shave(unsigned n) const
 		
 		// Increment the number of constituents for the leader of i
 		result.elements[leaders[groupNum]].numConstituents++;
+	}
+	
+	return result;
+}
+
+unsigned equivRelation::size() const
+{
+	return elements.size();
+}
+
+unsigned equivRelation::numComponents() const
+{
+	unsigned result = 0;
+	
+	for (unsigned i = 0; i < elements.size(); i++)
+	{
+		if (elements[i].boss == i) result++;
 	}
 	
 	return result;

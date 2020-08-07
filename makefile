@@ -1,12 +1,12 @@
 $(shell mkdir -p obj bin)
 
 ifdef trace
-	trace_flag="-t"
+	trace_flag=-t
 else
 	trace_flag=
 endif
 
-CFLAGS= --std=c++2a -O3 -g
+CFLAGS= --std=c++2a -O3 -g -W -Wall
 
 CC=g++-10
 

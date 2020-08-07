@@ -9,7 +9,7 @@ class equivRelation
 {
 	public:
 	
-	equivRelation() {}
+	equivRelation();
 	
 	equivRelation(unsigned);
 	
@@ -37,6 +37,8 @@ class equivRelation
 	// of numbers will be mutually non-equivalent.
 	equivRelation append(const equivRelation&) const;
 	
+	// Similar to append, but modifies this instead.
+	void operator+=(const equivRelation&);
 	
 	// Returns the result of removing a given number of items from the
 	// end of this ER.
@@ -47,6 +49,12 @@ class equivRelation
 
 	// Prints the canonical group labeling of this ER to an output stream.
 	friend std::ostream& operator<<(std::ostream&, const equivRelation&);
+	
+	// Returns the number of elements in this ER.
+	unsigned size() const;
+	
+	// Returns the number of non-equivalent components of this ER.
+	unsigned numComponents() const;
 	
 	private:
 	

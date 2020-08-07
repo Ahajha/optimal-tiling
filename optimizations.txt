@@ -1,0 +1,142 @@
+Pruning of slices:
+
+1: Any slice that has a 'completely empty' vertex can be pruned. A completely empty vertex (CEV)
+	is a non-induced vertex that has no induced neighbors.
+	Proof: 
+	Case 1: Assume there exists a slice in a finite stack with a CEV.
+		Perform the following algorithm:
+		
+		while (there exists CEVs)
+		{
+			1: Find the CEV that is lowest in the stack
+			
+			2: If the vertex is missing a neighbor either above or below it,
+				induce the vertex, then stop.
+			
+			3: Otherwise, remove the vertex immediately above it and place it
+				at the current vertex.
+		}
+		
+		It is worth noting that if case 3 produces at least one CEV
+		above it, there exists a way such that the number of CEVs 'processed' by this
+		algorithm on that slice is at least the number that were there originally
+		+ the new ones created.
+		
+		Case 3 could potentially 'push' the CEV to a higher level, but keeps the same amount of
+		induced vertices.
+		
+		One of 2 outcomes occurs:
+		
+		1: 2 is eventually executed. In this case, we have produced a stack that is
+			better than the original, so we can conclude that in this case having
+			the CEV is non-optimal.
+		
+		2: 2 is not executed, only 3 some number of times. Here we produce a stack that
+			has the same number of vertices, but no CEVs.
+		
+		From these 2 options, we can conclude that if there exists an optimal stack
+		with CEVs, we can safely remove them and not get any worse results.
+		
+	Case 2: Assume there exists a slice in a tile. Treat this as an infinite repeating stack
+		(in one direction, so that it has a bottom).
+		
+		Lemma 1: Given a finite alphabet, an infinite string of characters from that alphabet,
+			and a positive integer L, there exists a member of the alphabet A such that there
+			are two instances A that are, for some integer k, k*L positions apart.
+		
+		Proof of Lemma 1:
+		We will use an adversarial algorithm to attempt to produce a string that fails this
+		requirement. First note that by the pidgeonhole principle, there must exist at least
+		one character in this string that occurs infinite times, we will call this character A.
+		
+		The adversairial algorithm will start by putting A in some position. Since the
+		algorithm is trying to prevent any more instances of A falling a multiple of L away,
+		it flags all spots that have the same remainder, modulo L. For example, marking spot 4
+		with L = 3 would mark 1,4,7,10,13, etc. Then, the algorithm repeats this process
+		continuously. After exactly L iterations of this algorithm, all modulus values have
+		been flagged, thus there are no locations to place the character A without causing
+		the above property to be true. Since there are infinite occurences of A, the algorithm
+		must continue, so on the L+1st round of this algorithm, the A that is placed must be
+		a multiple of L away from another instance of an A. QED.
+		
+		Perform the same algorithm as in case 1, except not stopping on case 2.
+		This produces a new infinite stack, choosing from a finite set of slices, which
+		we can represent as an infinite string of characters from a finite alphabet. Let L
+		be the length of the tile. By Lemma 1, there exists a slice in this infinite stack
+		that has an identical slice L*k positions away, for some integer k. From this, we can
+		make a tile L*k slices wide.
+		
+		We now compare this new tile with k instances of the original tile.
+		
+		Rule 3 from the algorithm does not change the number of vertices in the stack.
+		So long as both the 'current' and 'next' slices were within the range of the
+		new tile, the number of vertices within it could not have changed. The only case
+		in which rule 3 could have reduced the number of vertices is if the slice
+		preceding the start of the new tile had a vertex 'stolen' by the previous one.
+		In this case, this must also be true of the end slice and the start of the next tile,
+		since they are identical (they are a multiple of L apart)
+		meaning at the same time the end slice added a vertex for every vertex 'stolen'
+		from the first. Thus the number of vertices in the section correllating to the new
+		tile does not change by use of rule 3.
+		
+		Rule 2 from the algorithm strictly increases the number of vertices.
+		
+		Since the use of either rule does not decrease the number of vertices compared to
+		k instances of the original tile, then we have produced a (perhaps non-minimal) tile
+		that does not contain a CEV. Thus, we can conclude that if there exists an optimal
+		tile with CEVs, we can safely remove them and not get any worse results.
+
+2: Any slice that contains an 'island' vertex can be pruned. An 'island' vertex is an
+	induced vertex that has all neighbors non-adjacent, and should the 'island'
+	be removed, all neighbors would become CEVs.
+	
+	Proof:
+		The proof is similar to that of the previous pruning operation, but using a different
+		core algorithm:
+		
+		while (there exists 'islands')
+		{
+			1: Remove all CEVs, if any, via the previous algorithm.
+		
+			2: Get the 'island' lowest in the stack, and remove it.
+			
+			3: This produces some number of CEVs, perform the algorithm described in the
+				previous proof on each of those. Since they are all mutually non-adjacent,
+				the seperate instances of the algorithm will not interfere.
+			
+			4: If all CEVs used step 3, add a vertex directly above the original 'island'.
+		}
+		Remove all CEVs, if any, via the previous algorithm.
+		
+		The main thing to note here is that, once again, the number of vertices does not
+		decrease. In the case that all produced CEVs used step 3 of the previous algorithm,
+		it loses exactly one vertex, however it is then known that the vertex directly above
+		the original island cannot be induced, as it would create many cycles
+		TODO TODO TODO TODO TODO TODO TODO
+		
+		
+		
+		
+		Thoughts:
+		
+		Algorithm to remove an 'island', which is an induced vertex where all of its
+		neighbors are mutually non-adjacent, and should the 'island' be removed, would
+		all become CEVs.
+		
+		1: Remove the island, induce all of its neighbors.
+		
+		2: If the slice above it had all of the affected vertices induced, remove all
+			except the vertex above the island and one (arbitrary) neighbor.
+		   Otherwise, remove all of them and re-add the vertex above the island.
+		
+		Just looking at the slice in question, there are clearly no cycles created.
+		In case 2a, there already existed a path from the island to all second-level
+		neighbors, exactly one of those is restored, the others are broken.
+		In case 2b, every vertex that ends up induced has at most 1 neighbor.
+		
+		(Let k be the number of neighbors of the island)
+		
+		In case 2a, the number of induced vertices changes from 1 + 1 + k to k + 1 + 1,
+		unchanged.
+		In case 2b, the number of induced vertices changes from 1 + <(k+1) to k + 1,
+		non-descending.

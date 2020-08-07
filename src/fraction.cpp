@@ -11,7 +11,11 @@ std::strong_ordering fraction::operator<=>(const fraction& other) const
 	if (den == 0) return 0 <=> other.num;
 	if (other.den == 0) return num <=> 0;
 
-	return (num * other.den) <=> (other.num * den);
+	auto result = (num * other.den) <=> (other.num * den);
+	
+	// If they are equal, say the one with the smaller denominator
+	// is smaller. Otherwise, compare normally.
+	return (result == 0) ? other.den <=> den : result;
 }
 
 std::ostream& operator<<(std::ostream& stream, const fraction& f)

@@ -631,7 +631,7 @@ void enumerateWithStart(unsigned start)
 	// (This is based on the order they happen to be generated)
 	if (col.erConfig != erConfigs[col.numComponents].size() - 1) return;
 	
-	if (trace) std::cout << "Starting with class " << start << std::endl;
+	//if (trace) std::cout << "Starting with class " << start << std::endl;
 	
 	// Information matrix
 	path_info_matrix paths_info;
@@ -644,7 +644,7 @@ void enumerateWithStart(unsigned start)
 	// For each length
 	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
 	{
-		if (trace) std::cout << "  length " << len << std::endl;
+		//if (trace) std::cout << "  length " << len << std::endl;
 		
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < columns.size(); end++)
@@ -655,12 +655,12 @@ void enumerateWithStart(unsigned start)
 			// Ignore cells with no valid path
 			if (old_num_induced == -1)
 			{
-				if (trace) std::cout << "    Skipping endpoint " << end << std::endl;
+				//if (trace) std::cout << "    Skipping endpoint " << end << std::endl;
 				continue;
 			}
 			else
 			{
-				if (trace) std::cout << "    Enumerating endpoint " << end << std::endl;
+				//if (trace) std::cout << "    Enumerating endpoint " << end << std::endl;
 			}
 			
 			// Expand in every possible way
@@ -696,7 +696,7 @@ void enumerateWithStart(unsigned start)
 			}
 		}
 	}
-	
+	/*
 	if (trace)
 	{
 		for (unsigned len = 1; len < paths_info.lengths.size(); len++)
@@ -719,6 +719,7 @@ void enumerateWithStart(unsigned start)
 		}
 		std::cout << std::endl;
 	}
+	*/
 }
 
 /*------------------------------------
