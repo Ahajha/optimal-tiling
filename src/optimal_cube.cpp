@@ -21,6 +21,15 @@ bool trace = false;
 
 typedef char componentNumType;
 
+struct configuration
+{
+	equivRelation er;
+	unsigned vertexID;
+	
+	configuration(equivRelation e, unsigned vID) :
+		er(e), vertexID(vID) {}
+};
+
 // The physical configuration of the column.
 // Stored as an integer, the least significant
 // n bits represent the column, with a 1 being
@@ -39,16 +48,7 @@ struct physicalColumn
 	unsigned numComponents;
 	unsigned numVertices;
 	
-	struct configuredColumn
-	{
-		equivRelation er;
-		unsigned vertexID;
-		
-		configuredColumn(equivRelation e, unsigned vID) :
-			er(e), vertexID(vID) {}
-	};
-	
-	std::vector<configuredColumn> configs;
+	std::vector<configuration> configs;
 	
 	physicalColumn(unsigned p, unsigned vID) : componentNums(n), numComponents(0),
 		numVertices(0), configs()
@@ -184,16 +184,7 @@ struct slice
 	unsigned numComponents;
 	unsigned numVertices;
 	
-	struct configuredSlice
-	{
-		equivRelation er;
-		unsigned vertexID;
-		
-		configuredSlice(equivRelation e, unsigned vID) :
-			er(e), vertexID(vID) {}
-	};
-	
-	std::vector<configuredSlice> configs;
+	std::vector<configuration> configs;
 
 	slice(const pathWithoutSymmetries& p, unsigned vID) : numVertices(p.numVertices)
 	{
