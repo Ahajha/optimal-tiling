@@ -1040,24 +1040,31 @@ int main(int argn, char** args)
 	produceSlices();
 	
 	std::cout << slices.size() << " physical slices" << std::endl;
+	std::cout << "Generated in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
+		<< " seconds" << std::endl;
 	
 	fillInSliceAdjLists();
 	
 	std::cout << slice_graph.size() << " slice configurations" << std::endl;
+	std::cout << "Adjacency lists filled in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
+		<< " seconds" << std::endl;
 	std::cout << "Enumerating tiles" << std::endl;
 	
 	enumerate();
+	
 	// Without tracing, overwrite the running line of tile densities
 	if (!trace) std::cout << '\r';
 	
 	std::cout << "Finished in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
 		<< " seconds" << std::endl;
 	
+	/*
 	std::cout << "Best hypercube sizes:" << std::endl;
 	for (unsigned len = 1; len < bestHyperCubes.size(); len++)
 	{
 		std::cout << len << ": " << bestHyperCubes[len].density.num << std::endl;
 	}
+	*/
 	
 	std::cout << "Best tiling (rotations ignored):" << std::endl;
 	std::cout << "Density = " << bestTiling.density << std::endl;
