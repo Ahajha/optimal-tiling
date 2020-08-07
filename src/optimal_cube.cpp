@@ -139,42 +139,6 @@ std::vector<physicalColumn> columns;
 
 std::vector<vertex> column_graph;
 
-std::ostream& operator<<(std::ostream& stream, physicalColumn p)
-{
-	for (unsigned i = 0; i < n; i++)
-	{
-		stream << (p[i] ? 'X' : '_');
-	}
-	
-	if (trace)
-	{
-		stream << ",";
-		for (unsigned i = 0; i < n; i++)
-		{
-			if (p[i])
-			{
-				stream << ' ' << (int)p.componentNums[i];
-			}
-			else
-			{
-				stream << "  ";
-			}
-		}
-	}
-	
-	return stream;
-}
-
-std::ostream& operator<<(std::ostream& stream, const pathWithoutSymmetries& p)
-{
-	for (unsigned c : p.path)
-	{
-		stream << columns[column_graph[c].sliceNum] << std::endl;
-	}
-	
-	return stream;
-}
-
 struct slice
 {
 	// Outer index is the permutation, there are at most 8 of these.
@@ -255,6 +219,49 @@ struct slice
 	}
 };
 
+std::vector<slice> slices;
+
+std::vector<vertexWithSymmetries> slice_graph;
+
+// =======================================================================
+// Output functions
+
+std::ostream& operator<<(std::ostream& stream, physicalColumn p)
+{
+	for (unsigned i = 0; i < n; i++)
+	{
+		stream << (p[i] ? 'X' : '_');
+	}
+	
+	if (trace)
+	{
+		stream << ",";
+		for (unsigned i = 0; i < n; i++)
+		{
+			if (p[i])
+			{
+				stream << ' ' << (int)p.componentNums[i];
+			}
+			else
+			{
+				stream << "  ";
+			}
+		}
+	}
+	
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const pathWithoutSymmetries& p)
+{
+	for (unsigned c : p.path)
+	{
+		stream << columns[column_graph[c].sliceNum] << std::endl;
+	}
+	
+	return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const slice& s)
 {
 	for (unsigned i = 0; i < n; i++)
@@ -283,6 +290,9 @@ std::ostream& operator<<(std::ostream& stream, const slice& s)
 	return stream;
 }
 
+// =======================================================================
+// Various functions
+
 std::strong_ordering compareSymmetries(std::vector<componentNumType> sym1,
 	std::vector<componentNumType> sym2)
 {
@@ -303,13 +313,6 @@ std::strong_ordering compareSymmetries(std::vector<componentNumType> sym1,
 	}
 	return std::strong_ordering::equal;
 }
-
-std::vector<slice> slices;
-
-std::vector<vertexWithSymmetries> slice_graph;
-
-// =======================================================================
-// Various functions
 
 void parseArgs(int argn, char** args)
 {
