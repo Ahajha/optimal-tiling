@@ -754,16 +754,6 @@ bool slice_succeeds(unsigned vID, unsigned sliceNum, unsigned symmetryNum,
 	return true;
 }
 
-// Returns true iff v's adjacency list contains neighbor.
-bool contains(const vertexWithSymmetries& v, unsigned neighbor)
-{
-	for (const auto& adj : v.adjList)
-	{
-		if (adj.first == neighbor) return true;
-	}
-	return false;
-}
-
 void fillInSliceAdjLists()
 {
 	// Start by inserting the first 2^n vertices
@@ -779,13 +769,18 @@ void fillInSliceAdjLists()
 	// each iteration, but will eventually stop growing.
 	for (unsigned vID = 0; vID < slice_graph.size(); vID++)
 	{
+		// adjacentTo[x] means that vertex x can follow this vertex.
+		// The size given is an upper bound on the number of vertices that can exist after this
+		// adjacency list is filled (this is based on upper bounds on the number of iterations
+		// of the inner loops). The vector is default filled with false.
+		std::vector<bool> adjacentTo(slice_graph.size() + slices.size() * perms.size());
+		
 		// Go through each of the physical columns (as the afters),
 		// and see if it can succeed this configuration.
 		for (unsigned i = 0; i < slices.size(); i++)
 		{
 			// Go through each symmetry
-			unsigned symNum = 0;
-			for (; symNum < slices[i].componentNums.size(); symNum++)
+			for (unsigned symNum = 0; symNum < slices[i].componentNums.size(); symNum++)
 			{
 				if (slice_succeeds(vID,i,symNum,result))
 				{
@@ -795,13 +790,6 @@ void fillInSliceAdjLists()
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
-					// TODO: Find a way to avoid duplicates that is more efficient than
-					// doing a full scan of the vector each time you add something.
-					// TODO: To accomplish this, use a boolean vector, with a true/false
-					// value for each number to include/exclude it. The main issue is
-					// coming up with a reasonably efficient upper bound for the
-					// size of this vector.
-					
 					// Search for the result in the 'after' physical column's configs
 					bool found = false;
 					for (const auto& config : slices[i].configs)
@@ -810,8 +798,10 @@ void fillInSliceAdjLists()
 						{
 							found = true;
 							
-							if (!contains(slice_graph[vID], config.vertexID))
+							if (!adjacentTo[config.vertexID])
 							{
+								adjacentTo[config.vertexID] = true;
+								
 								slice_graph[vID].adjList.emplace_back(
 									config.vertexID, symNum
 								);
@@ -827,8 +817,10 @@ void fillInSliceAdjLists()
 						slice_graph.emplace_back(i,slices[i].configs.size() - 1);
 						
 						// Add the adjacency, which is now the last vertex.
-						if (!contains(slice_graph[vID], slice_graph.size() - 1))
+						if (!adjacentTo[slice_graph.size() - 1])
 						{
+							adjacentTo[slice_graph.size() - 1] = true;
+							
 							slice_graph[vID].adjList.emplace_back(
 								slice_graph.size() - 1, symNum
 							);
