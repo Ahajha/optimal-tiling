@@ -797,6 +797,10 @@ void fillInSliceAdjLists()
 					
 					// TODO: Find a way to avoid duplicates that is more efficient than
 					// doing a full scan of the vector each time you add something.
+					// TODO: To accomplish this, use a boolean vector, with a true/false
+					// value for each number to include/exclude it. The main issue is
+					// coming up with a reasonably efficient upper bound for the
+					// size of this vector.
 					
 					// Search for the result in the 'after' physical column's configs
 					bool found = false;
