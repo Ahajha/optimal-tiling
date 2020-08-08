@@ -891,22 +891,20 @@ struct path_info_matrix
 	path_info_matrix() : lengths(slice_graph.size() + 2) {}
 };
 
-hyperCube extractHyperCube(path_info_matrix paths_info, const unsigned len,
+hyperCube extractHyperCube(path_info_matrix paths_info, unsigned len,
 	unsigned end, fraction density)
 {
 	hyperCube h;
 	
+	h.slices.path.resize(len);
+	
 	unsigned currentVertex = end;
 	for (unsigned length = len; length > 0; length--)
 	{
-		h.slices.path.push_back(currentVertex);
+		h.slices.path[length - 1] = currentVertex;
 		
 		currentVertex = paths_info.lengths[length].info[currentVertex].second_to_last;
 	}
-	
-	// Since the items that should be pushed to the front are pushed to the back,
-	// reverse the vector.
-	std::reverse(h.slices.path.begin(),h.slices.path.end());
 	
 	h.density = density;
 	
@@ -928,8 +926,12 @@ void enumerateWithStart(unsigned start)
 	// Set the size of the 1-wide rectangle with just 1 column.
 	paths_info.lengths[1].info[start].num_induced = numVertices;
 	
-	// This 
-		
+	// Check to see if this is the best 1-tall hypercube
+	if (bestHyperCubes[1].density.num < numVertices)
+	{
+		bestHyperCubes[1] = extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
+	}
+	
 	// For each length
 	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
 	{
@@ -958,25 +960,27 @@ void enumerateWithStart(unsigned start)
 					new_info = path_info(old_num_induced + more_vertices, end);
 					
 					// Check to see if this is the best tile of this given length
-					fraction density(paths_info.lengths[len].info[adj].num_induced, n*n*len);
+					unsigned newNumVertices = paths_info.lengths[len].info[adj].num_induced;
 					
-					if (density > bestHyperCubes[len].density)
+					if (newNumVertices > bestHyperCubes[len].density.num)
 					{
+						fraction density(paths_info.lengths[len].info[adj].num_induced, n*n*len);
+						
 						bestHyperCubes[len] = extractHyperCube(paths_info, len, adj, density);
 					}
 					
 					// A cycle has been found, check to see if it is the new best
 					if (adj == start)
 					{
-						fraction tile_density(paths_info.lengths[len - 1].info[end].num_induced,
+						fraction density(paths_info.lengths[len - 1].info[end].num_induced,
 							n*n*(len - 1));
 						
-						if (tile_density > bestTiling.density)
+						if (density > bestTiling.density)
 						{
 							bestTiling = extractHyperCube(paths_info, len - 1,
-								end, tile_density);
+								end, density);
 							
-							std::cout << "\rfound: " << bestTiling.density;
+							std::cout << "\rfound: " << density;
 						}
 					}
 				}
