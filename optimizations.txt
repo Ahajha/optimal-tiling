@@ -1,3 +1,5 @@
+Note that these work for induced subforests, they may not work for induced subtrees.
+
 Pruning of slices:
 
 1: Any slice that has a 'completely empty' vertex can be pruned. A completely empty vertex (CEV)
@@ -87,7 +89,7 @@ Pruning of slices:
 		tile with CEVs, we can safely remove them and not get any worse results.
 
 2: Any slice that contains an 'island' vertex can be pruned. An 'island' vertex is an
-	induced vertex that has all neighbors non-adjacent, and should the 'island'
+	induced vertex that has all neighbors mutually non-adjacent, and should the 'island'
 	be removed, all neighbors would become CEVs.
 	
 	Proof:
@@ -96,47 +98,76 @@ Pruning of slices:
 		
 		while (there exists 'islands')
 		{
-			1: Remove all CEVs, if any, via the previous algorithm.
-		
-			2: Get the 'island' lowest in the stack, and remove it.
+			Remove all CEVs, if any, via the previous algorithm.
 			
-			3: This produces some number of CEVs, perform the algorithm described in the
+			Get the 'island' lowest in the stack.
+			
+			Case 1: If either the vertex above the island or any of its neighbors
+				are not induced:
+				Remove the island, induce all of its neighbors.
+				Induce the vertex above the island, remove any neighbors. 
+			
+			Case 2: The vertex above the island and all of its neighbors are induced.
+			
+				Case 2a: For each of the island's neighbors, there is some induced path
+				between the vertices above and below it that does not pass through
+				the vertex above the island:
+					(this implies the vertex below the island is not induced, if it were,
+					there would certainly be cycles)
+					Leave the island, induce all of its neighbors
+					Induce the vertex above the island, remove all of its neighbors
+			
+				Case 2b: (There is a vertex above one of the neighbors that either does not
+					have a path to the vertex 2 below it, or that path goes through the center
+					vertex, and consequently another neighbor, meaning should that second
+					neighbor be removed, there would no longer be a path)
+						Remove the island, induce all of its neighbors.
+						Induce the vertex above the island, along with the neighbor described
+						as having this property, remove the rest.
+			
+			This produces some number of CEVs, perform the algorithm described in the
 				previous proof on each of those. Since they are all mutually non-adjacent,
 				the seperate instances of the algorithm will not interfere.
-			
-			4: If all CEVs used step 3, add a vertex directly above the original 'island'.
 		}
 		Remove all CEVs, if any, via the previous algorithm.
 		
-		The main thing to note here is that, once again, the number of vertices does not
-		decrease. In the case that all produced CEVs used step 3 of the previous algorithm,
-		it loses exactly one vertex, however it is then known that the vertex directly above
-		the original island cannot be induced, as it would create many cycles
-		TODO TODO TODO TODO TODO TODO TODO
+		Proof the algorithm works:
 		
+		Let k be the number of neighbors.
 		
+		In case 1, all vertices added have at most 1 neighbor, so there cannot be any cycles.
+		The number of vertices goes from at most 1 + 1 + k to exactly 1 + 1 + k, so the
+		number of vertices cannot decrease.
 		
+		In case 2a, k-1 neighbors are removed from the top layer, k neighbors are added at the
+		middle layer, and the island is removed: +k - (k-1) -1 = 0, so the number of vertices
+		stays the same. Every path connecting the vertex above the island to the neighbors
+		below it went through the above neighbors, with them missing there are no paths.
+		Filling in the neighbors completes each of those paths, with no possibility of
+		cycles.
 		
-		Thoughts:
+		In case 2b, k neighbors are added, 1 is removed, and another k-1 are removed. Again,
+		the number of vertices does not change. The one upper neighbor that is kept, if it
+		had a path to the vertex 2 below it, no longer does, but that is replaced with
+		the vertex + the vertex immediately below it (+ the one below that, if it is induced).
+		The other k-1 neighbors have at most 1 neighbor.
 		
-		Algorithm to remove an 'island', which is an induced vertex where all of its
-		neighbors are mutually non-adjacent, and should the 'island' be removed, would
-		all become CEVs.
-		
-		1: Remove the island, induce all of its neighbors.
-		
-		2: If the slice above it had all of the affected vertices induced, remove all
-			except the vertex above the island and one (arbitrary) neighbor.
-		   Otherwise, remove all of them and re-add the vertex above the island.
-		
-		Just looking at the slice in question, there are clearly no cycles created.
-		In case 2a, there already existed a path from the island to all second-level
-		neighbors, exactly one of those is restored, the others are broken.
-		In case 2b, every vertex that ends up induced has at most 1 neighbor.
-		
-		(Let k be the number of neighbors of the island)
-		
-		In case 2a, the number of induced vertices changes from 1 + 1 + k to k + 1 + 1,
-		unchanged.
-		In case 2b, the number of induced vertices changes from 1 + <(k+1) to k + 1,
-		non-descending.
+		The rest of the proof proceeds similar to the previous optimization.
+
+Pruning of edges:
+
+1: If a vertex has an edge to 2 different configurations of the same slice, and one
+	configuration's ER is 'derived from' the other, remove the one that is derived.
+	
+	An ER A is 'derived from' another ER B if there is a sequence of merges that can be
+	done on B to reach A. Alternatively, x,y in B are equivalent implies x,y in A are
+	equivalent. Intuitively, this states that A is more connected than B.
+	
+	Proof: Consider looking at a stack, finite or infinite, where there is a slice that
+	could have chosen from 2 different configurations of the next one, and chose the
+	'derived' one. Should the 'derived from' configuration be chosen instead, the physical
+	slices after it could not be invalidated, as if anything, it only breaks connections.
+	The configurations after that may also become less connected as a result.
+	
+	Note that this may indirectly prune slice configurations (vertices) as well, should
+	there be very connected configurations that are not needed.
