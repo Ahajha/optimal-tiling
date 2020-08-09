@@ -851,17 +851,16 @@ void fillInSliceAdjLists()
 
 struct path_info
 {
-	// -1 for -inf
-	int num_induced;
+	unsigned num_induced;
 	
 	// The vertex that precedes this one in the optimal path.
 	unsigned second_to_last;
 	
 	unsigned start;
 	
-	path_info() : num_induced(-1), second_to_last(0), start(0) {}
+	path_info() : num_induced(0), second_to_last(0), start(0) {}
 	
-	path_info(int n_i, unsigned s_t_l, unsigned s) :
+	path_info(unsigned n_i, unsigned s_t_l, unsigned s) :
 		num_induced(n_i), second_to_last(s_t_l), start(s) {}
 };
 
@@ -917,7 +916,7 @@ Also, prints the maximum density tile.
 
 void enumerate()
 {
-	bestHyperCubes.resize(slice_graph.size() + 1);
+	bestHyperCubes.resize(slice_graph.size() + 2);
 	
 	// Information matrix
 	path_info_matrix paths_info;
@@ -953,12 +952,8 @@ void enumerate()
 		for (unsigned end = 0; end < slice_graph.size(); end++)
 		{
 			// Reference, for brevity
-			const int old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
+			const unsigned old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
 			const unsigned start = paths_info.lengths[len - 1].info[end].start;
-			
-			// Ignore cells with no valid path
-			// Will this ever happen now? TODO
-			if (old_num_induced == -1) continue;
 			
 			// Expand in every possible way
 			for (const auto& neighbor : slice_graph[end].adjList)
@@ -969,7 +964,7 @@ void enumerate()
 				path_info& new_info = paths_info.lengths[len].info[adj];
 				
 				// Number of vertices that are added with the new slice
-				int more_vertices = slices[slice_graph[adj].sliceNum].numVertices;
+				unsigned more_vertices = slices[slice_graph[adj].sliceNum].numVertices;
 				
 				if (new_info.num_induced < old_num_induced + more_vertices)
 				{
@@ -1012,18 +1007,10 @@ void enumerate()
 		{
 			const auto& len_info = paths_info.lengths[len];
 			
-			//for (unsigned end = 0; end < slice_graph.size(); end++)
 			for (const auto& end_info : len_info.info)
 			{
-				if (end_info.num_induced == -1)
-				{
-					std::cout << "X ";
-				}
-				else
-				{
-					std::cout << "(" << end_info.num_induced << ","
-						<< end_info.second_to_last << ") ";
-				}
+				std::cout << "(" << end_info.num_induced << ","
+					<< end_info.second_to_last << ") ";
 			}
 			std::cout << std::endl;
 		}
