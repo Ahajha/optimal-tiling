@@ -857,10 +857,12 @@ struct path_info
 	// The vertex that precedes this one in the optimal path.
 	unsigned second_to_last;
 	
-	path_info() : num_induced(-1), second_to_last(0) {}
+	unsigned start;
 	
-	path_info(int n_i, unsigned s_t_l) :
-		num_induced(n_i), second_to_last(s_t_l) {}
+	path_info() : num_induced(-1), second_to_last(0), start(0) {}
+	
+	path_info(int n_i, unsigned s_t_l, unsigned s) :
+		num_induced(n_i), second_to_last(s_t_l), start(s) {}
 };
 
 // All path info for one length and starting vertex.
@@ -907,37 +909,55 @@ hyperCube extractHyperCube(path_info_matrix paths_info, unsigned len,
 	return h;
 }
 
-// Helper for enumerate, does enumeration for a given start vertex.
-void enumerateWithStart(unsigned start)
+/*------------------------------------
+Prints the maximum size and density of
+every rectangle sized 1xn through nxn.
+Also, prints the maximum density tile.
+------------------------------------*/
+
+void enumerate()
 {
-	// Reference, for brevity
-	//const slice& slic = columns[start].cols[0];
-	const unsigned numVertices = slices[slice_graph[start].sliceNum].numVertices;
-	
-	if (trace) std::cout << "Starting with vertex " << start << std::endl;
+	bestHyperCubes.resize(slice_graph.size() + 1);
 	
 	// Information matrix
 	path_info_matrix paths_info;
-	
-	// Set the size of the 1-wide rectangle with just 1 column.
-	paths_info.lengths[1].info[start].num_induced = numVertices;
-	
-	// Check to see if this is the best 1-tall hypercube
-	if (bestHyperCubes[1].density.num < numVertices)
+
+	// For each starting slice (with default configs)
+	for (unsigned start = 0; start < slice_graph.size(); start++)
 	{
-		bestHyperCubes[1] = extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
+		// Reference, for brevity
+		const unsigned numVertices = slices[slice_graph[start].sliceNum].numVertices;
+		
+		// Set the size of the 1-wide rectangle with just 1 column.
+		paths_info.lengths[1].info[start].num_induced = numVertices;
+		
+		// Set the starting vertex
+		paths_info.lengths[1].info[start].start = start;
+		
+		// Check to see if this is the best 1-tall hypercube
+		if (bestHyperCubes[1].density.num < numVertices)
+		{
+			bestHyperCubes[1] = extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
+		}
 	}
 	
 	// For each length
 	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
 	{
+		if (trace) std::cout << "length = " << len;
+		
+		// This seems to not print without a flush
+		std::cout.flush();
+		
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice_graph.size(); end++)
 		{
 			// Reference, for brevity
-			const int& old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
+			const int old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
+			const unsigned start = paths_info.lengths[len - 1].info[end].start;
 			
 			// Ignore cells with no valid path
+			// Will this ever happen now? TODO
 			if (old_num_induced == -1) continue;
 			
 			// Expand in every possible way
@@ -953,7 +973,7 @@ void enumerateWithStart(unsigned start)
 				
 				if (new_info.num_induced < old_num_induced + more_vertices)
 				{
-					new_info = path_info(old_num_induced + more_vertices, end);
+					new_info = path_info(old_num_induced + more_vertices, end, start);
 					
 					// Check to see if this is the best tile of this given length
 					unsigned newNumVertices = paths_info.lengths[len].info[adj].num_induced;
@@ -982,6 +1002,8 @@ void enumerateWithStart(unsigned start)
 				}
 			}
 		}
+		
+		if (trace) std::cout << ", best hypercube has " << bestHyperCubes[len].density.num << std::endl;
 	}
 	/*
 	if (trace)
@@ -1008,23 +1030,6 @@ void enumerateWithStart(unsigned start)
 		std::cout << std::endl;
 	}
 	*/
-}
-
-/*------------------------------------
-Prints the maximum size and density of
-every rectangle sized 1xn through nxn.
-Also, prints the maximum density tile.
-------------------------------------*/
-
-void enumerate()
-{
-	bestHyperCubes.resize(slice_graph.size() + 1);
-
-	// For each starting slice (with default configs)
-	for (unsigned start = 0; start < slices.size(); start++)
-	{
-		enumerateWithStart(start);
-	}
 }
 
 int main(int argn, char** args)
