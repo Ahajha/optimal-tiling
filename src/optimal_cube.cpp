@@ -991,7 +991,15 @@ void enumerate()
 							bestTiling = extractHyperCube(paths_info, len - 1,
 								end, density);
 							
-							std::cout << "\rfound: " << density;
+							std::cout << ", found: " << density << std::endl;
+							
+							for (unsigned vertex : bestTiling.slices.path)
+							{
+								unsigned sliceNum = slice_graph[vertex].sliceNum;
+								std::cout << slices[sliceNum];
+								std::cout << slices[sliceNum].configs[slice_graph[vertex].configNum].er
+									<< std::endl << std::endl;
+							}
 						}
 					}
 				}
@@ -1037,6 +1045,32 @@ int main(int argn, char** args)
 	
 	fillInSliceAdjLists();
 	
+	// Print some information about what can come before a given vertex, and in what configurations.
+	// This is just to get an idea of how many extraneous edges exist.
+	unsigned v = 12;
+	
+	std::cout << "Vertex " << v << ":" << std::endl;
+	std::cout << slices[slice_graph[v].sliceNum] << std::endl;
+	for (const auto& config : slices[slice_graph[v].sliceNum].configs)
+	{
+		std::cout << config.vertexID << ": " << config.er << std::endl;
+	}
+	for (unsigned i = 0; i < slice_graph.size(); i++)
+	{
+		std::cout << i << ':';
+		for (const auto& adj : slice_graph[i].adjList)
+		{
+			if (slice_graph[adj.first].sliceNum == v)
+			{
+				std::cout << ' ' << adj.first;
+			}
+		}
+		std::cout << std::endl;
+	}
+	
+	
+	std::cout << std::endl;
+	
 	std::cout << slice_graph.size() << " slice configurations" << std::endl;
 	std::cout << "Adjacency lists filled in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
 		<< " seconds" << std::endl;
@@ -1049,14 +1083,6 @@ int main(int argn, char** args)
 	
 	std::cout << "Finished in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
 		<< " seconds" << std::endl;
-	
-	/*
-	std::cout << "Best hypercube sizes:" << std::endl;
-	for (unsigned len = 1; len < bestHyperCubes.size(); len++)
-	{
-		std::cout << len << ": " << bestHyperCubes[len].density.num << std::endl;
-	}
-	*/
 	
 	std::cout << "Best tiling (rotations ignored):" << std::endl;
 	std::cout << "Density = " << bestTiling.density << std::endl;
