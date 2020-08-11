@@ -1,0 +1,99 @@
+We need to store symmetries in a way that notes them as equivalent. Let's look at an example:
+
+_ _ X |     0
+X _ _ | 1    
+_ _ X |     2
+
+_ _ X |     2
+X _ _ | 1    
+_ _ X |     0
+
+This slice has 4 physically distinct symmetries, but each symmetry has 2 configurationally
+different versions. We can pick the lexicographically smallest one to be the 'representative'.
+(this would be the first one)
+
+This implies we need another dimension to the 'componentNums' array.
+
+The outer level represents each of the physically distinct symmetries.
+The middle level represents configurationally different versions.
+The inner level is the component numbers.
+
+When the symmetries are generated, instead of ignoring physical duplicates, check if it
+also an exact duplicate, and if not, add it in with the other similar one.
+
+===================
+
+To fill in the adjacency lists:
+
+It may be beneficial to have a 'meta-equivalence relation', which keeps track of equivalencies
+of equivalence relations. (eventually the regular ERs will be stored in a central structure,
+indexed). In the above example, configs 0 0 1 and 0 1 1 would be equivalent. Another future
+optimization (in this specific instance) will also remove the 0 0 0 config.
+
+0 1 2
+0 1 1
+0 1 0
+0 0 0
+0 0 1
+
+Will then turn into
+
+0 1 2
+0 1 1
+0 1 0
+
+Which represent, respectively:
+
+All separate
+One of the corner ones is connected with the edge one
+The corners are connected
+
+===================
+
+How to determine that two configs are equivalent?
+
+Use the 'succeeds' function with different versions of the same physical form. All
+configs that get produced are equivalent.
+
+This is a good starting point, but is naive. This would require us to check with every
+new physical-slice pair.
+
+Keep in mind that we wish to avoid generating all possible ERs of a given size, as this
+very quickly becomes impractical for large numbers. For 13 elements (the largest number
+needed for a 5x5), there are about 27.6 million different configurations. However, there
+are likely configurations that are unneeded.
+
+It is known that for n-tall columns not all configs are used, (reduces from the Bell
+numbers to the Catalan numbers), but perhaps for larger dimensions we could prove that
+they are all used. That would simplify things. To do this, we could use an inductive
+argument to show that if you can make a config 1 merge away, then we can do that merge,
+and show constructively how to achieve it. The key point is to not use vertices or edges
+that would be pruned, which may be more difficult to prove, and would require the proof
+to change for each future optimization.
+
+Perhaps instead, we could do this check with each new configuration.
+
+New idea: When a new config is generated, if we were to do a full enumeration, all the
+equivalent ones will be too. So we only need to do the extra check if we have a new config.
+
+Basic idea for the algorithm:
+
+for each slice A
+{
+	for each slice B
+	{
+		for each physically distinct symmetry of B
+		{
+			check if the symmetry of B can succeed A, if so let R be the equivalence relation
+			
+			if R is a known config of B, get that corresponding vertexID and add that to the
+				adjacency list.
+				(need to elaborate a bit on this step)
+			
+			else, generate all other ERs from this symmetry, add them all to the 'meta-ER', and
+			mark them as equivalent. (An ER may not be needed then, we would just have another
+			list-of-lists for the equivalence class classes) This will be the next vertex,
+			so add that to the graph and the adjacency list.
+		}
+	}
+}
