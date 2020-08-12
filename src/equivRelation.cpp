@@ -245,3 +245,21 @@ std::vector<unsigned> equivRelation::canonicalGroupLabeling() const
 	
 	return result;
 }
+
+std::size_t er_hash::operator()(const equivRelation& er)
+{
+	// This implementation is based off djb2, found at
+	// http://www.cse.yorku.ca/~oz/hash.html
+	
+	std::size_t hash = 5381;
+	
+	const auto cgl = er.canonicalGroupLabeling();
+	
+	for (auto c : cgl)
+	{
+		// Adding 1 here, just in case 0s mess with anything.
+		hash = ((hash << 5) + hash) + c + 1; /* hash * 33 + c */
+	}
+	
+	return hash;
+}

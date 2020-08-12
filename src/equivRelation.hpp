@@ -77,4 +77,11 @@ class equivRelation
 	std::vector<element> elements;
 };
 
+// Provides a hash function.
+struct er_hash
+{
+	// std::size_t is to adhere to the std::hash standard
+	std::size_t operator()(const equivRelation&);
+};
+
 #endif
