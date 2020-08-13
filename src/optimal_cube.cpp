@@ -19,15 +19,17 @@ unsigned n;
 
 bool trace = false;
 
+er_storage er_store;
+
 typedef char componentNumType;
 
 struct configuration
 {
-	equivRelation er;
+	unsigned erID;
 	unsigned vertexID;
 	
-	configuration(equivRelation e, unsigned vID) :
-		er(e), vertexID(vID) {}
+	configuration(unsigned e, unsigned vID) :
+		erID(e), vertexID(vID) {}
 };
 
 // The physical configuration of the column.
@@ -86,7 +88,7 @@ struct physicalColumn
 		}
 		
 		// Emplace the first config, which is with all elements in the ER non-equivalent.
-		configs.emplace_back(equivRelation(numComponents), vID);
+		configs.emplace_back(er_store(equivRelation(numComponents)), vID);
 	}
 	
 	bool operator[](unsigned i) const { return componentNums[i] >= 0; }
@@ -163,7 +165,7 @@ struct slice
 			
 			// Does this need to be this specific config, or will a default one work?
 			// It seems that this would produce the same result.
-			combination += columns[vert.sliceNum].configs[vert.configNum].er;
+			combination += er_store[columns[vert.sliceNum].configs[vert.configNum].erID];
 		}
 		
 		// Total offset before both columns, and offset between them.
@@ -215,7 +217,7 @@ struct slice
 		}
 		
 		// Emplace the first config, which is with all elements in the ER non-equivalent.
-		configs.emplace_back(equivRelation(numComponents), vID);
+		configs.emplace_back(er_store(equivRelation(numComponents)), vID);
 	}
 };
 
@@ -376,7 +378,7 @@ bool column_succeeds(unsigned vID, unsigned physColNo, equivRelation& result)
 	
 	if (trace) std::cout << "    " << after;
 	
-	const equivRelation& beforeConfig = before.configs[column_graph[vID].configNum].er;
+	const equivRelation& beforeConfig = er_store[before.configs[column_graph[vID].configNum].erID];
 
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
@@ -451,11 +453,13 @@ void fillInColumnAdjLists()
 			
 			if (trace) std::cout << " true, config = " << result << std::endl;
 			
+			unsigned erID = er_store(result);
+			
 			// Search for the result in the 'after' physical column's configs
 			bool found = false;
 			for (unsigned j = 0; j < columns[i].configs.size(); j++)
 			{
-				if (columns[i].configs[j].er == result)
+				if (columns[i].configs[j].erID == erID)
 				{
 					found = true;
 					column_graph[vID].adjList.push_back(columns[i].configs[j].vertexID);
@@ -466,7 +470,7 @@ void fillInColumnAdjLists()
 			// Need to make a new config and vertex, and add to the adjacency list.
 			if (!found)
 			{
-				columns[i].configs.emplace_back(result, column_graph.size());
+				columns[i].configs.emplace_back(erID, column_graph.size());
 				column_graph.emplace_back(i,columns[i].configs.size() - 1);
 				
 				// Add the adjacency, which is now the last vertex.
@@ -718,7 +722,7 @@ bool slice_succeeds(unsigned vID, unsigned sliceNum, unsigned symmetryNum,
 	const auto& afterCN = after.componentNums[symmetryNum];
 	const auto& beforeCN = before.componentNums.front();
 	
-	const equivRelation& beforeConfig = before.configs[slice_graph[vID].configNum].er;
+	const equivRelation& beforeConfig = er_store[before.configs[slice_graph[vID].configNum].erID];
 
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
@@ -790,11 +794,13 @@ void fillInSliceAdjLists()
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
+					unsigned erID = er_store(result);
+					
 					// Search for the result in the 'after' physical column's configs
 					bool found = false;
 					for (const auto& config : slices[i].configs)
 					{
-						if (config.er == result)
+						if (config.erID == erID)
 						{
 							found = true;
 							
@@ -813,7 +819,7 @@ void fillInSliceAdjLists()
 					// Need to make a new config and vertex, and add to the adjacency list.
 					if (!found)
 					{
-						slices[i].configs.emplace_back(result, slice_graph.size());
+						slices[i].configs.emplace_back(erID, slice_graph.size());
 						slice_graph.emplace_back(i,slices[i].configs.size() - 1);
 						
 						// Add the adjacency, which is now the last vertex.
@@ -997,7 +1003,7 @@ void enumerate()
 							{
 								unsigned sliceNum = slice_graph[vertex].sliceNum;
 								std::cout << slices[sliceNum];
-								std::cout << slices[sliceNum].configs[slice_graph[vertex].configNum].er
+								std::cout << er_store[slices[sliceNum].configs[slice_graph[vertex].configNum].erID]
 									<< std::endl << std::endl;
 							}
 						}
@@ -1047,13 +1053,13 @@ int main(int argn, char** args)
 	
 	// Print some information about what can come before a given vertex, and in what configurations.
 	// This is just to get an idea of how many extraneous edges exist.
-	unsigned v = 12;
+	unsigned v = 32;
 	
 	std::cout << "Vertex " << v << ":" << std::endl;
 	std::cout << slices[slice_graph[v].sliceNum] << std::endl;
 	for (const auto& config : slices[slice_graph[v].sliceNum].configs)
 	{
-		std::cout << config.vertexID << ": " << config.er << std::endl;
+		std::cout << config.vertexID << ": " << er_store[config.erID] << std::endl;
 	}
 	for (unsigned i = 0; i < slice_graph.size(); i++)
 	{
@@ -1090,7 +1096,7 @@ int main(int argn, char** args)
 	{
 		unsigned sliceNum = slice_graph[vertex].sliceNum;
 		std::cout << slices[sliceNum];
-		std::cout << slices[sliceNum].configs[slice_graph[vertex].configNum].er
+		std::cout << er_store[slices[sliceNum].configs[slice_graph[vertex].configNum].erID]
 			<< std::endl << std::endl;
 	}
 }

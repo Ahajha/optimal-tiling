@@ -274,7 +274,7 @@ const equivRelation& er_storage::operator[](unsigned index) const
 	return ers[index];
 }
 
-unsigned er_storage::operator[](const equivRelation& er)
+unsigned er_storage::operator()(const equivRelation& er)
 {
 	// Resize the table, if needed
 	if (table.size() < er.size() + 1) table.resize(er.size() + 1);

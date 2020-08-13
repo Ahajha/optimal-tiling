@@ -98,7 +98,12 @@ class er_storage
 	
 	// If the ER does not exist, adds it and gives
 	// its new index.
-	unsigned operator[](const equivRelation&);
+	
+	// This uses () instead of [] to avoid warnings
+	// related to overloading of the same operator
+	// (somehow an unsigned and equivRelation are
+	// too similar, and is ambiguous)
+	unsigned operator()(const equivRelation&);
 	
 	private:
 	
