@@ -246,10 +246,13 @@ std::vector<unsigned> equivRelation::canonicalGroupLabeling() const
 	return result;
 }
 
-std::size_t er_hash::operator()(const equivRelation& er)
+std::size_t er_hash::operator()(const equivRelation& er) const
 {
 	// This implementation is based off djb2, found at
 	// http://www.cse.yorku.ca/~oz/hash.html
+	
+	// This probably isn't the best hash function for this
+	// purpose, but it should be good enough.
 	
 	std::size_t hash = 5381;
 	
@@ -262,4 +265,34 @@ std::size_t er_hash::operator()(const equivRelation& er)
 	}
 	
 	return hash;
+}
+
+er_storage::er_storage() : table(), ers() {}
+
+const equivRelation& er_storage::operator[](unsigned index) const
+{
+	return ers[index];
+}
+
+unsigned er_storage::operator[](const equivRelation& er)
+{
+	// Resize the table, if needed
+	if (table.size() < er.size() + 1) table.resize(er.size() + 1);
+	
+	auto& sub_table = table[er.size()];
+	
+	auto search = sub_table.find(er);
+	
+	if (search == sub_table.end())
+	{
+		// Not found
+		sub_table[er] = ers.size();
+		ers.emplace_back(er);
+		return ers.size() - 1;
+	}
+	else
+	{
+		// Found
+		return search->second;
+	}
 }

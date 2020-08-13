@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <compare>
+#include <unordered_map>
 
 class equivRelation
 {
@@ -81,7 +82,33 @@ class equivRelation
 struct er_hash
 {
 	// std::size_t is to adhere to the std::hash standard
-	std::size_t operator()(const equivRelation&);
+	std::size_t operator()(const equivRelation&) const;
+};
+
+// Provides a central area to store all ER's. Provides constant
+// time exchanges between ERs and indexes.
+class er_storage
+{
+	public:
+	
+	er_storage();
+	
+	// Gets the ER at a given index.
+	const equivRelation& operator[](unsigned) const;
+	
+	// If the ER does not exist, adds it and gives
+	// its new index.
+	unsigned operator[](const equivRelation&);
+	
+	private:
+	
+	// Basic structure is first split by ER size,
+	// then hash to get the index.
+	// The size of this vector should be at least one more than the size of the
+	// largest ER stored in it. (5 elements -> index 5, which requires 6 elements)
+	std::vector<std::unordered_map<equivRelation,unsigned,er_hash>> table;
+	
+	std::vector<equivRelation> ers;
 };
 
 #endif
