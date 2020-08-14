@@ -143,19 +143,21 @@ std::vector<vertex> column_graph;
 
 struct slice
 {
-	// Outer index is the permutation, there are at most 8 of these.
-	// Uses the standard form of coord1 * n + coord2 for the index.
-	std::vector<std::vector<componentNumType>> componentNums;
+	// Inner vector is a vector of component numbers (or EMPTY/COMPLETELY_EMPTY).
+	// Middle vector is configs with the same physical form, but not identical.
+	// Outer vector is different physical forms.
+	std::vector<std::vector<std::vector<componentNumType>>> componentNums;
 	
 	unsigned numComponents;
 	unsigned numVertices;
 	
 	std::vector<configuration> configs;
 
-	slice(const pathWithoutSymmetries& p, unsigned vID) : numVertices(p.numVertices)
+	slice(const pathWithoutSymmetries& p, unsigned vID) : componentNums(1),
+		numVertices(p.numVertices)
 	{
-		componentNums.emplace_back(p.path.size() * n);
-	
+		componentNums.front().emplace_back(p.path.size() * n);
+		
 		equivRelation combination;
 		
 		// Append all of the configurations of each component column in succession.
@@ -208,7 +210,7 @@ struct slice
 		
 			for (unsigned j = 0; j < n; j++)
 			{
-				componentNums[0][pos++] = col[j]
+				componentNums[0][0][pos++] = col[j]
 					? cgl[col.componentNums[j] + base_offset]
 					: -1;
 			}
@@ -270,16 +272,16 @@ std::ostream& operator<<(std::ostream& stream, const slice& s)
 	{
 		for (unsigned j = 0; j < n; j++)
 		{
-			std::cout << ((s.componentNums.front()[i * n + j] >= 0) ? 'X' : '_') << ' ';
+			std::cout << ((s.componentNums[0][0][i * n + j] >= 0) ? 'X' : '_') << ' ';
 		}
 		
 		std::cout << "| ";
 		
 		for (unsigned j = 0; j < n; j++)
 		{
-			if (s.componentNums.front()[i * n + j] >= 0)
+			if (s.componentNums[0][0][i * n + j] >= 0)
 			{
-				std::cout << (int)s.componentNums.front()[i * n + j] << ' ';
+				std::cout << (int)s.componentNums[0][0][i * n + j] << ' ';
 			}
 			else
 			{
@@ -378,7 +380,8 @@ bool column_succeeds(unsigned vID, unsigned physColNo, equivRelation& result)
 	
 	if (trace) std::cout << "    " << after;
 	
-	const equivRelation& beforeConfig = er_store[before.configs[column_graph[vID].configNum].erID];
+	const equivRelation& beforeConfig =
+		er_store[before.configs[column_graph[vID].configNum].erID];
 
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
@@ -638,26 +641,50 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 		// than this one, then remove it. Start at index 1, since 0 is the identity.
 		for (unsigned i = 1; i < perms.size(); i++)
 		{
-			componentNums.emplace_back(applyPermutation(i, componentNums[0]));
-			
+			auto cn = applyPermutation(i, componentNums[0][0]);
+		
 			// If this new symmetry is lexicographically smaller than the original,
 			// then we can prune this one.
-			if (compareSymmetries(componentNums.back(), componentNums[0]) < 0)
+			if (compareSymmetries(cn, componentNums[0][0]) < 0)
 			{
 				slices.pop_back();
 				return;
 			}
 			
-			// Otherwise, ensure there are no duplicate symmetries
-			for (unsigned j = 0; j < componentNums.size() - 1; j++)
+			// Otherwise, place it in either:
+			// 1: A new vector in componentNums, if it is physically distinct from the rest.
+			// 2: In an existing vector in componentNums, if it physically the same
+			//    as another, but the vector itself is different.
+			// 3: Nowhere, if it is exactly the same as another vector.
+			for (auto& physicalForm : componentNums)
 			{
-				if (compareSymmetries(componentNums.back(), componentNums[j]) == 0)
+				// If these are same physically, check further inwards
+				if (compareSymmetries(cn, physicalForm.front()) == 0)
 				{
-					componentNums.pop_back();
-					break;
+					// This rechecks the first index, but this is necessary because
+					// compareSymmetries does a comparison of physical forms, here
+					// we need to check exact values.
+					for (auto& config : physicalForm)
+					{
+						// If an exact match already exists here, stop. (case 3)
+						// A goto is needed here to break out of two loops
+						if (cn == config) goto endloop;
+					}
+					
+					// Otherwise, put cn at the back of this array and stop. (case 2)
+					physicalForm.push_back(cn);
+					goto endloop;
 				}
 			}
 			
+			// If control reaches here, then no place was found for it, so put it in
+			// a new top-level vector. (case 1)
+			componentNums.emplace_back();
+			componentNums.back().push_back(cn);
+			
+			endloop:
+			
+			// todo: why is this here?	
 			std::cout.flush();
 		}
 		
@@ -665,13 +692,18 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 		{
 			std::cout << p;
 			
-			for (auto sym : componentNums)
+			for (unsigned i = 0; i < componentNums.size(); i++)
 			{
-				for (auto i : sym)
+				std::cout << i << ":" << std::endl;
+				for (auto& config : componentNums[i])
 				{
-					std::cout << (int)i << ' ';
+					for (auto j : config)
+					{
+						if (j < 0) std::cout << "_ ";
+						else       std::cout << (int)j << ' ';
+					}
+					std::cout << std::endl;
 				}
-				std::cout << std::endl;
 			}
 			std::cout << std::endl;
 		}
@@ -719,10 +751,12 @@ bool slice_succeeds(unsigned vID, unsigned sliceNum, unsigned symmetryNum,
 	const slice& before = slices[slice_graph[vID].sliceNum];
 	
 	// before uses the base configuration, always.
-	const auto& afterCN = after.componentNums[symmetryNum];
-	const auto& beforeCN = before.componentNums.front();
+	// TODO: after should iterate over all of these and pick a canonical form.
+	const auto& afterCN = after.componentNums[symmetryNum].front();
+	const auto& beforeCN = before.componentNums.front().front();
 	
-	const equivRelation& beforeConfig = er_store[before.configs[slice_graph[vID].configNum].erID];
+	const equivRelation& beforeConfig =
+		er_store[before.configs[slice_graph[vID].configNum].erID];
 
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
