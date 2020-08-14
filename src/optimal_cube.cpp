@@ -1007,7 +1007,7 @@ void enumerate()
 							for (unsigned vertex : bestTiling.slices.path)
 							{
 								unsigned sliceNum = slice_graph[vertex].sliceNum;
-								std::cout << slices[sliceNum] <<;
+								std::cout << slices[sliceNum] <<
 									er_store[slices[sliceNum]
 										.configs[slice_graph[vertex].configNum].erID
 									]
