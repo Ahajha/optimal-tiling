@@ -774,9 +774,10 @@ void fillInSliceAdjLists()
 	for (unsigned vID = 0; vID < slice_graph.size(); vID++)
 	{
 		// adjacentTo[x] means that vertex x can follow this vertex.
-		// The size given is an upper bound on the number of vertices that can exist after this
-		// adjacency list is filled (this is based on upper bounds on the number of iterations
-		// of the inner loops). The vector is default filled with false.
+		// The size given is an upper bound on the number of vertices that can
+		// exist after this adjacency list is filled (this is based on upper
+		// bounds on the number of iterations of the inner loops). The vector
+		// is default filled with false.
 		std::vector<bool> adjacentTo(slice_graph.size() + slices.size() * perms.size());
 		
 		// Go through each of the physical columns (as the afters),
@@ -942,7 +943,8 @@ void enumerate()
 		// Check to see if this is the best 1-tall hypercube
 		if (bestHyperCubes[1].density.num < numVertices)
 		{
-			bestHyperCubes[1] = extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
+			bestHyperCubes[1] =
+				extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
 		}
 	}
 	
@@ -958,7 +960,8 @@ void enumerate()
 		for (unsigned end = 0; end < slice_graph.size(); end++)
 		{
 			// Reference, for brevity
-			const unsigned old_num_induced = paths_info.lengths[len - 1].info[end].num_induced;
+			const unsigned old_num_induced =
+				paths_info.lengths[len - 1].info[end].num_induced;
 			const unsigned start = paths_info.lengths[len - 1].info[end].start;
 			
 			// Expand in every possible way
@@ -981,9 +984,11 @@ void enumerate()
 					
 					if (newNumVertices > bestHyperCubes[len].density.num)
 					{
-						fraction density(paths_info.lengths[len].info[adj].num_induced, n*n*len);
+						fraction density(paths_info.lengths[len].info[adj].num_induced,
+							n*n*len);
 						
-						bestHyperCubes[len] = extractHyperCube(paths_info, len, adj, density);
+						bestHyperCubes[len] =
+							extractHyperCube(paths_info, len, adj, density);
 					}
 					
 					// A cycle has been found, check to see if it is the new best
@@ -1002,8 +1007,10 @@ void enumerate()
 							for (unsigned vertex : bestTiling.slices.path)
 							{
 								unsigned sliceNum = slice_graph[vertex].sliceNum;
-								std::cout << slices[sliceNum];
-								std::cout << er_store[slices[sliceNum].configs[slice_graph[vertex].configNum].erID]
+								std::cout << slices[sliceNum] <<;
+									er_store[slices[sliceNum]
+										.configs[slice_graph[vertex].configNum].erID
+									]
 									<< std::endl << std::endl;
 							}
 						}
@@ -1012,7 +1019,9 @@ void enumerate()
 			}
 		}
 		
-		if (trace) std::cout << ", best hypercube has " << bestHyperCubes[len].density.num << std::endl;
+		if (trace) 
+			std::cout << ", best hypercube has " << bestHyperCubes[len].density.num
+				<< std::endl;
 	}
 	/*
 	if (trace)
@@ -1051,8 +1060,9 @@ int main(int argn, char** args)
 	
 	fillInSliceAdjLists();
 	
-	// Print some information about what can come before a given vertex, and in what configurations.
-	// This is just to get an idea of how many extraneous edges exist.
+	// Print some information about what can come before a given vertex,
+	// and in what configurations. This is just to get an idea of how many
+	// extraneous edges exist.
 	unsigned v = 32;
 	
 	std::cout << "Vertex " << v << ":" << std::endl;
