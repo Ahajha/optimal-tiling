@@ -355,6 +355,7 @@ void produceColumns()
 			std::cout << i << ": " << columns[i] << std::endl;
 		}
 	}
+	if (trace) std::cout << std::endl;
 }
 
 /*
@@ -414,66 +415,47 @@ void fillInColumnAdjLists()
 	// each iteration, but will eventually stop growing.
 	for (unsigned vID = 0; vID < column_graph.size(); vID++)
 	{
-		/*
-		// The 'before' physical column
-		const auto& col = columns[column_graph[vID].sliceNum];
-		const unsigned configNo = column_graph[vID].configNum;
-		
-		if (trace)
-		{
-			std::cout << col << ", config = " <<
-				col.configs[configNo].er << ":" << std::endl;
-		}
-		*/
 		// Go through each of the physical columns (as the afters),
 		// and see if it can succeed this configuration.
 		for (unsigned i = 0; i < columns.size(); i++)
 		{
 			// TODO simplify this call
-			if (!succeeds(columns[i].componentNums, columns[i].numComponents,
+			if (succeeds(columns[i].componentNums, columns[i].numComponents,
 				columns[column_graph[vID].sliceNum].componentNums,
 				column_graph[vID].erID, result))
 			{
-				if (trace) std::cout << " false" << std::endl;
-				continue;
-			}
-			
-			if (trace) std::cout << " true, config = " << result << std::endl;
-			
-			auto search = columns[i].er_map.find(result);
-			
-			if (search != columns[i].er_map.end())
-			{
-				// Found
-				column_graph[vID].adjList.push_back(search->second);
-			}
-			else
-			{
-				// Not found
-				column_graph[vID].adjList.push_back(column_graph.size());
+				auto search = columns[i].er_map.find(result);
 				
-				columns[i].er_map[result] = column_graph.size();
-				column_graph.emplace_back(i,result);
+				if (search != columns[i].er_map.end())
+				{
+					// Found
+					column_graph[vID].adjList.push_back(search->second);
+				}
+				else
+				{
+					// Not found
+					column_graph[vID].adjList.push_back(column_graph.size());
+					
+					columns[i].er_map[result] = column_graph.size();
+					column_graph.emplace_back(i,result);
+				}
 			}
 		}
-	}
-	
-	if (trace)
-	{
-		for (unsigned i = 0; i < column_graph.size(); i++)
+		
+		if (trace)
 		{
-			std::cout << i << ':';
+			std::cout << vID << ':';
 			
-			for (unsigned neighbor : column_graph[i].adjList)
+			for (unsigned neighbor : column_graph[vID].adjList)
 			{
 				std::cout << ' ' << neighbor;
 			}
 			
 			std::cout << std::endl;
 		}
-		
-		std::cout << std::endl;
 	}
+	
+	if (trace) std::cout << std::endl;
 }
 
 bool prune(pathWithoutSymmetries& p)
@@ -658,10 +640,7 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 			componentNums.emplace_back();
 			componentNums.back().push_back(cn);
 			
-			endloop:
-			
-			// todo: why is this here?	
-			std::cout.flush();
+			endloop: ;
 		}
 		
 		if (trace)
@@ -802,6 +781,8 @@ void fillInSliceAdjLists()
 			std::cout << std::endl;
 		}
 	}
+	
+	if (trace) std::cout << std::endl;
 }
 
 struct path_info
@@ -899,10 +880,7 @@ void enumerate()
 	// For each length
 	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
 	{
-		if (trace) std::cout << "length = " << len;
-		
-		// This seems to not print without a flush
-		std::cout.flush();
+		if (trace) std::cout << "length = " << len << ":" << std::endl;
 		
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice_graph.size(); end++)
@@ -950,7 +928,7 @@ void enumerate()
 							bestTiling = extractHyperCube(paths_info, len - 1,
 								end, density);
 							
-							std::cout << ", found: " << density << std::endl;
+							std::cout << "found: " << density << std::endl;
 							
 							for (unsigned vertex : bestTiling.slices.path)
 							{
@@ -967,8 +945,8 @@ void enumerate()
 		}
 		
 		if (trace) 
-			std::cout << ", best hypercube has " << bestHyperCubes[len].density.num
-				<< std::endl;
+			std::cout << "best hypercube has " << bestHyperCubes[len].density.num
+				<< " vertices" << std::endl;
 	}
 	/*
 	if (trace)
@@ -1033,28 +1011,27 @@ int main(int argn, char** args)
 	}
 	*/
 	
-	std::cout << std::endl;
-	
 	std::cout << slice_graph.size() << " slice configurations" << std::endl;
 	std::cout << "Adjacency lists filled in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
 		<< " seconds" << std::endl;
-	std::cout << "Enumerating tiles" << std::endl;
+	std::cout << "Enumerating tiles" << std::endl << std::endl;
 	
 	enumerate();
 	
-	// Without tracing, overwrite the running line of tile densities
-	if (!trace) std::cout << '\r';
-	
-	std::cout << "Finished in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
+	std::cout << std::endl << "Finished in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
 		<< " seconds" << std::endl;
 	
-	std::cout << "Best tiling (rotations ignored):" << std::endl;
-	std::cout << "Density = " << bestTiling.density << std::endl;
-	for (unsigned vertex : bestTiling.slices.path)
+	// The log gets a bit cluttered with tracing, so print this again. This would be recent without tracing.
+	if (trace)
 	{
-		unsigned sliceNum = slice_graph[vertex].sliceNum;
-		std::cout << slices[sliceNum];
-		std::cout << er_store[slice_graph[vertex].erID]
-			<< std::endl << std::endl;
+		std::cout << "Best tiling (rotations ignored):" << std::endl;
+		std::cout << "Density = " << bestTiling.density << std::endl;
+		for (unsigned vertex : bestTiling.slices.path)
+		{
+			unsigned sliceNum = slice_graph[vertex].sliceNum;
+			std::cout << slices[sliceNum];
+			std::cout << er_store[slice_graph[vertex].erID]
+				<< std::endl << std::endl;
+		}
 	}
 }
