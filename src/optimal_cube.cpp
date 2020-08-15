@@ -775,47 +775,34 @@ void fillInSliceAdjLists()
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
-					// Search for the result in the 'after' physical column's configs
-					bool found = false;
+					auto search = slices[i].er_map.find(result);
 					
-					// This isn't using a map properly, but just to keep the code as
-					// similar as possible for now:
-					for (const auto& config : slices[i].er_map)
+					unsigned adjacent;
+					
+					if (search != slices[i].er_map.end())
 					{
-						if (config.first == result)
-						{
-							found = true;
-							
-							if (!adjacentTo[config.second])
-							{
-								adjacentTo[config.second] = true;
-								
-								slice_graph[vID].adjList.emplace_back(
-									config.second, symNum
-								);
-							}
-							break;
-						}
+						// Found
+						adjacent = search->second;
 					}
-					
-					// TODO: If a new config is needed, generate all ERs that are the same
-					// by iterating through all variations of this physical form.
-					
-					// Need to make a new config and vertex, and add to the adjacency list.
-					if (!found)
+					else
 					{
+						// Not found
+						
+						// TODO: If a new config is needed, generate all
+						// ERs that are the same by iterating through all
+						// variations of this physical form.
+						
+						adjacent = slice_graph.size();
+						
 						slices[i].er_map[result] = slice_graph.size();
 						slice_graph.emplace_back(i,result);
+					}
+					
+					if (!adjacentTo[adjacent])
+					{
+						adjacentTo[adjacent] = true;
 						
-						// Add the adjacency, which is now the last vertex.
-						if (!adjacentTo[slice_graph.size() - 1])
-						{
-							adjacentTo[slice_graph.size() - 1] = true;
-							
-							slice_graph[vID].adjList.emplace_back(
-								slice_graph.size() - 1, symNum
-							);
-						}
+						slice_graph[vID].adjList.emplace_back(adjacent, symNum);
 					}
 				}
 			}
