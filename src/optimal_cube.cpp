@@ -749,15 +749,24 @@ void fillInSliceAdjLists()
 					else
 					{
 						// Not found
-						
-						// TODO: If a new config is needed, generate all
-						// ERs that are the same by iterating through all
-						// variations of this physical form.
-						
 						adjacent = slice_graph.size();
 						
-						slices[i].er_map[result] = slice_graph.size();
+						slices[i].er_map[result] = adjacent;
 						slice_graph.emplace_back(i,result);
+						
+						// Iterate through all other versions of this
+						// physical symmetry, map any generated configs
+						// to the new vertex.
+						for (unsigned j = 1; j < slices[i].componentNums[symNum].size(); j++)
+						{
+							// No need to check the result, since the same physical configuration
+							// will also work.
+							succeeds(slices[i].componentNums[symNum][j], slices[i].numComponents,
+								slices[slice_graph[vID].sliceNum].componentNums.front().front(),
+								slice_graph[vID].erID, result);
+							
+							slices[i].er_map[result] = adjacent;
+						}
 					}
 					
 					if (!adjacentTo[adjacent])
