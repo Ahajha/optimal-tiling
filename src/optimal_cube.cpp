@@ -366,54 +366,41 @@ void produceColumns()
 }
 
 /*
-If the physical column numbered 'physColNo' can succeed the vertex
-numbered 'vID', returns true and places into 'result' the equivalence
-relation that the successor would need to be configured with.
-Otherwise, returns false.
+If the component vector 'afterCN' (which has 'afterNumComponents' components)
+can succeed the vertex vID, returns true and places into 'result' the equivalence
+relation that the successor would need to be configured with. Otherwise, returns false.
 */
 
-bool column_succeeds(unsigned vID, unsigned physColNo, equivRelation& result)
+bool succeeds(const std::vector<componentNumType>& afterCN,
+	unsigned afterNumComponents, const std::vector<componentNumType>& beforeCN,
+	unsigned beforeConfigID, equivRelation& result)
 {
-	// Reference these, for brevity
-	const physicalColumn& after = columns[physColNo];
-	const physicalColumn& before = columns[column_graph[vID].sliceNum];
+	const equivRelation& beforeConfig = er_store[beforeConfigID];
 	
-	if (trace) std::cout << "    " << after;
-	
-	const equivRelation& beforeConfig =
-		er_store[before.configs[column_graph[vID].configNum].erID];
-
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
 	// the second part.
-	const unsigned offset = after.numComponents;
+	equivRelation combination = equivRelation(afterNumComponents).append(beforeConfig);
 	
-	equivRelation combination = equivRelation(offset).append(beforeConfig);
-	
-	for (unsigned i = 0; i < n; i++)
+	for (unsigned i = 0; i < afterCN.size(); i++)
 	{
 		// If both vertices exist
-		if (after[i] && before[i])
+		if (afterCN[i] >= 0 && beforeCN[i] >= 0)
 		{
 			// Check if their associated equivalence classes
 			// are already equivalent. If so, this would
 			// cause a cycle, so return false.
-			
-			if (combination.equivalent(after.componentNums[i],
-				offset + before.componentNums[i]))
-			{
+			if (combination.equivalent(afterCN[i], afterNumComponents + beforeCN[i]))
 				return false;
-			}
 			
 			// Otherwise, merge them.
-			combination.merge(after.componentNums[i], offset + before.componentNums[i]);
+			combination.merge(afterCN[i], afterNumComponents + beforeCN[i]);
 		}
 	}
 	
 	// Result is acyclic, so produce the ER that should be used
 	// by shaving off the last 'before.numComponents' items.
-	
-	result = combination.shave(before.numComponents);
+	result = combination.shave(beforeConfig.size());
 	
 	return true;
 }
@@ -448,7 +435,10 @@ void fillInColumnAdjLists()
 		// and see if it can succeed this configuration.
 		for (unsigned i = 0; i < columns.size(); i++)
 		{
-			if (!column_succeeds(vID,i,result))
+			if (!succeeds(columns[i].componentNums, columns[i].numComponents,
+				columns[column_graph[vID].sliceNum].componentNums,
+				columns[column_graph[vID].sliceNum].configs[column_graph[vID].configNum].erID,
+				result))
 			{
 				if (trace) std::cout << " false" << std::endl;
 				continue;
@@ -1097,7 +1087,8 @@ int main(int argn, char** args)
 	// Print some information about what can come before a given vertex,
 	// and in what configurations. This is just to get an idea of how many
 	// extraneous edges exist.
-	unsigned v = 32;
+	/*
+	unsigned v = 2;
 	
 	std::cout << "Vertex " << v << ":" << std::endl;
 	std::cout << slices[slice_graph[v].sliceNum] << std::endl;
@@ -1117,7 +1108,7 @@ int main(int argn, char** args)
 		}
 		std::cout << std::endl;
 	}
-	
+	*/
 	
 	std::cout << std::endl;
 	
