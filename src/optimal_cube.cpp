@@ -435,6 +435,7 @@ void fillInColumnAdjLists()
 		// and see if it can succeed this configuration.
 		for (unsigned i = 0; i < columns.size(); i++)
 		{
+			// TODO simplify this call
 			if (!succeeds(columns[i].componentNums, columns[i].numComponents,
 				columns[column_graph[vID].sliceNum].componentNums,
 				columns[column_graph[vID].sliceNum].configs[column_graph[vID].configNum].erID,
@@ -732,56 +733,6 @@ void produceSlices()
 	}
 }
 
-// symmetryNum identifies which index in componentNums to use. (which symmetry)
-bool slice_succeeds(unsigned vID, unsigned sliceNum, unsigned symmetryNum,
-	equivRelation& result)
-{
-	// Reference these, for brevity
-	const slice& after = slices[sliceNum];
-	const slice& before = slices[slice_graph[vID].sliceNum];
-	
-	// before uses the base configuration, always.
-	// TODO: after should iterate over all of these and pick a canonical form.
-	const auto& afterCN = after.componentNums[symmetryNum].front();
-	const auto& beforeCN = before.componentNums.front().front();
-	
-	const equivRelation& beforeConfig =
-		er_store[before.configs[slice_graph[vID].configNum].erID];
-
-	// The equivalence relation corresponding to 'after' is the first
-	// part of the combined ER, the one corresponding to 'before' is
-	// the second part.
-	const unsigned offset = after.numComponents;
-	
-	equivRelation combination = equivRelation(offset).append(beforeConfig);
-	
-	for (unsigned i = 0; i < afterCN.size(); i++)
-	{
-		// If both vertices exist
-		if (afterCN[i] >= 0 && beforeCN[i] >= 0)
-		{
-			// Check if their associated equivalence classes
-			// are already equivalent. If so, this would
-			// cause a cycle, so return false.
-			
-			if (combination.equivalent(afterCN[i], offset + beforeCN[i]))
-			{
-				return false;
-			}
-			
-			// Otherwise, merge them.
-			combination.merge(afterCN[i], offset + beforeCN[i]);
-		}
-	}
-	
-	// Result is acyclic, so produce the ER that should be used
-	// by shaving off the last 'before.numComponents' items.
-	
-	result = combination.shave(before.numComponents);
-	
-	return true;
-}
-
 void fillInSliceAdjLists()
 {
 	// Start by inserting the first 2^n vertices
@@ -811,13 +762,19 @@ void fillInSliceAdjLists()
 			// Go through each symmetry
 			for (unsigned symNum = 0; symNum < slices[i].componentNums.size(); symNum++)
 			{
-				if (slice_succeeds(vID,i,symNum,result))
+				// TODO simplify this call
+				if (succeeds(slices[i].componentNums[symNum].front(), slices[i].numComponents,
+					slices[slice_graph[vID].sliceNum].componentNums.front().front(),
+					slices[slice_graph[vID].sliceNum].configs[slice_graph[vID].configNum]
+						.erID, result))
 				{
 					// This is in this block so that multiple configurations of a slice
 					// can be added to the adjacency list.
 					
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
+					
+					// TODO: If a new config
 					
 					unsigned erID = er_store(result);
 					
@@ -840,6 +797,9 @@ void fillInSliceAdjLists()
 							break;
 						}
 					}
+					
+					// TODO: If a new config is needed, generate all ERs that are the same
+					// by iterating through all variations of this physical form.
 					
 					// Need to make a new config and vertex, and add to the adjacency list.
 					if (!found)
