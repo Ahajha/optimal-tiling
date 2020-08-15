@@ -24,15 +24,6 @@ er_storage er_store;
 
 typedef char componentNumType;
 
-struct configuration
-{
-	unsigned erID;
-	unsigned vertexID;
-	
-	configuration(unsigned e, unsigned vID) :
-		erID(e), vertexID(vID) {}
-};
-
 // The physical configuration of the column.
 // Stored as an integer, the least significant
 // n bits represent the column, with a 1 being
@@ -51,10 +42,11 @@ struct physicalColumn
 	unsigned numComponents;
 	unsigned numVertices;
 	
-	std::vector<configuration> configs;
+	// Maps ER IDs to vertex IDs.
+	std::unordered_map<unsigned,unsigned> er_map;
 	
 	physicalColumn(unsigned p, unsigned vID) : componentNums(n), numComponents(0),
-		numVertices(0), configs()
+		numVertices(0)
 	{
 		bool lastWasSpace = true;
 		
@@ -88,8 +80,8 @@ struct physicalColumn
 			}
 		}
 		
-		// Emplace the first config, which is with all elements in the ER non-equivalent.
-		configs.emplace_back(er_store(equivRelation(numComponents)), vID);
+		// Map the default config to the given vertex ID.
+		er_map[er_store(equivRelation(numComponents))] = vID;
 	}
 	
 	bool operator[](unsigned i) const { return componentNums[i] >= 0; }
@@ -104,10 +96,10 @@ struct vertex
 	std::vector<unsigned> adjList;
 	
 	unsigned sliceNum;
-	unsigned configNum;
+	unsigned erID;
 	
-	vertex(unsigned sn, unsigned cn) :
-		sliceNum(sn), configNum(cn) {}
+	vertex(unsigned sn, unsigned e) :
+		sliceNum(sn), erID(e) {}
 };
 
 struct vertexWithSymmetries
@@ -165,11 +157,9 @@ struct slice
 		// Append all of the configurations of each component column in succession.
 		for (unsigned vID : p.path)
 		{
-			const auto& vert = column_graph[vID];
-			
 			// Does this need to be this specific config, or will a default one work?
 			// It seems that this would produce the same result.
-			combination += er_store[columns[vert.sliceNum].configs[vert.configNum].erID];
+			combination += er_store[column_graph[vID].erID];
 		}
 		
 		// Total offset before both columns, and offset between them.
@@ -414,7 +404,7 @@ void fillInColumnAdjLists()
 	// Start by inserting the first 2^n vertices
 	for (unsigned i = 0; i < columns.size(); i++)
 	{
-		column_graph.emplace_back(i,0);
+		column_graph.emplace_back(i,er_store(equivRelation(columns[i].numComponents)));
 	}
 	
 	// Out-parameter for 'succeeds' function calls
@@ -442,8 +432,7 @@ void fillInColumnAdjLists()
 			// TODO simplify this call
 			if (!succeeds(columns[i].componentNums, columns[i].numComponents,
 				columns[column_graph[vID].sliceNum].componentNums,
-				columns[column_graph[vID].sliceNum].configs[column_graph[vID].configNum].erID,
-				result))
+				column_graph[vID].erID, result))
 			{
 				if (trace) std::cout << " false" << std::endl;
 				continue;
@@ -451,26 +440,20 @@ void fillInColumnAdjLists()
 			
 			if (trace) std::cout << " true, config = " << result << std::endl;
 			
-			// Search for the result in the 'after' physical column's configs
-			bool found = false;
-			for (unsigned j = 0; j < columns[i].configs.size(); j++)
-			{
-				if (columns[i].configs[j].erID == result)
-				{
-					found = true;
-					column_graph[vID].adjList.push_back(columns[i].configs[j].vertexID);
-					break;
-				}
-			}
+			auto search = columns[i].er_map.find(result);
 			
-			// Need to make a new config and vertex, and add to the adjacency list.
-			if (!found)
+			if (search != columns[i].er_map.end())
 			{
-				columns[i].configs.emplace_back(result, column_graph.size());
-				column_graph.emplace_back(i,columns[i].configs.size() - 1);
+				// Found
+				column_graph[vID].adjList.push_back(search->second);
+			}
+			else
+			{
+				// Not found
+				column_graph[vID].adjList.push_back(column_graph.size());
 				
-				// Add the adjacency, which is now the last vertex.
-				column_graph[vID].adjList.push_back(column_graph.size() - 1);
+				columns[i].er_map[result] = column_graph.size();
+				column_graph.emplace_back(i,result);
 			}
 		}
 	}
