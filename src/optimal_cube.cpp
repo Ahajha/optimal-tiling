@@ -367,13 +367,15 @@ void produceColumns()
 
 /*
 If the component vector 'afterCN' (which has 'afterNumComponents' components)
-can succeed the vertex vID, returns true and places into 'result' the equivalence
-relation that the successor would need to be configured with. Otherwise, returns false.
+can succeed the component vector 'beforeCN', preconfigured with ER number
+'beforeConfigID', returns true and places into 'result' the number of the
+equivalence relation that the successor would need to be configured with.
+Otherwise, returns false.
 */
 
 bool succeeds(const std::vector<componentNumType>& afterCN,
 	unsigned afterNumComponents, const std::vector<componentNumType>& beforeCN,
-	unsigned beforeConfigID, equivRelation& result)
+	unsigned beforeConfigID, unsigned& result)
 {
 	const equivRelation& beforeConfig = er_store[beforeConfigID];
 	
@@ -400,7 +402,7 @@ bool succeeds(const std::vector<componentNumType>& afterCN,
 	
 	// Result is acyclic, so produce the ER that should be used
 	// by shaving off the last 'before.numComponents' items.
-	result = combination.shave(beforeConfig.size());
+	result = er_store(combination.shave(beforeConfig.size()));
 	
 	return true;
 }
@@ -414,7 +416,7 @@ void fillInColumnAdjLists()
 	}
 	
 	// Out-parameter for 'succeeds' function calls
-	equivRelation result;
+	unsigned result;
 	
 	// Fill in each adjacency list. column_graph.size() may change with
 	// each iteration, but will eventually stop growing.
@@ -447,13 +449,11 @@ void fillInColumnAdjLists()
 			
 			if (trace) std::cout << " true, config = " << result << std::endl;
 			
-			unsigned erID = er_store(result);
-			
 			// Search for the result in the 'after' physical column's configs
 			bool found = false;
 			for (unsigned j = 0; j < columns[i].configs.size(); j++)
 			{
-				if (columns[i].configs[j].erID == erID)
+				if (columns[i].configs[j].erID == result)
 				{
 					found = true;
 					column_graph[vID].adjList.push_back(columns[i].configs[j].vertexID);
@@ -464,7 +464,7 @@ void fillInColumnAdjLists()
 			// Need to make a new config and vertex, and add to the adjacency list.
 			if (!found)
 			{
-				columns[i].configs.emplace_back(erID, column_graph.size());
+				columns[i].configs.emplace_back(result, column_graph.size());
 				column_graph.emplace_back(i,columns[i].configs.size() - 1);
 				
 				// Add the adjacency, which is now the last vertex.
@@ -742,7 +742,7 @@ void fillInSliceAdjLists()
 	}
 	
 	// Out-parameter for 'succeeds' function calls
-	equivRelation result;
+	unsigned result;
 	
 	// Fill in each adjacency list. slice_graph.size() may change with
 	// each iteration, but will eventually stop growing.
@@ -776,13 +776,11 @@ void fillInSliceAdjLists()
 					
 					// TODO: If a new config
 					
-					unsigned erID = er_store(result);
-					
 					// Search for the result in the 'after' physical column's configs
 					bool found = false;
 					for (const auto& config : slices[i].configs)
 					{
-						if (config.erID == erID)
+						if (config.erID == result)
 						{
 							found = true;
 							
@@ -804,7 +802,7 @@ void fillInSliceAdjLists()
 					// Need to make a new config and vertex, and add to the adjacency list.
 					if (!found)
 					{
-						slices[i].configs.emplace_back(erID, slice_graph.size());
+						slices[i].configs.emplace_back(result, slice_graph.size());
 						slice_graph.emplace_back(i,slices[i].configs.size() - 1);
 						
 						// Add the adjacency, which is now the last vertex.
