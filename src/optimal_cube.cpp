@@ -5,6 +5,7 @@
 #include <list>
 #include <ctime>
 #include <array>
+#include <unordered_map>
 #include "equivRelation.hpp"
 #include "fraction.hpp"
 
@@ -116,10 +117,10 @@ struct vertexWithSymmetries
 	std::vector<std::pair<unsigned,unsigned>> adjList;
 	
 	unsigned sliceNum;
-	unsigned configNum;
+	unsigned erID;
 	
-	vertexWithSymmetries(unsigned sn, unsigned cn) :
-		sliceNum(sn), configNum(cn) {}
+	vertexWithSymmetries(unsigned sn, unsigned e) :
+		sliceNum(sn), erID(e) {}
 };
 
 struct pathWithoutSymmetries
@@ -151,7 +152,8 @@ struct slice
 	unsigned numComponents;
 	unsigned numVertices;
 	
-	std::vector<configuration> configs;
+	// Maps ER IDs to vertex IDs.
+	std::unordered_map<unsigned,unsigned> er_map;
 
 	slice(const pathWithoutSymmetries& p, unsigned vID) : componentNums(1),
 		numVertices(p.numVertices)
@@ -218,8 +220,8 @@ struct slice
 			base_offset += col.numComponents;
 		}
 		
-		// Emplace the first config, which is with all elements in the ER non-equivalent.
-		configs.emplace_back(er_store(equivRelation(numComponents)), vID);
+		// Map the default config to the given vertex ID.
+		er_map[er_store(equivRelation(numComponents))] = vID;
 	}
 };
 
@@ -738,7 +740,7 @@ void fillInSliceAdjLists()
 	// Start by inserting the first 2^n vertices
 	for (unsigned i = 0; i < slices.size(); i++)
 	{
-		slice_graph.emplace_back(i,0);
+		slice_graph.emplace_back(i,er_store(equivRelation(slices[i].numComponents)));
 	}
 	
 	// Out-parameter for 'succeeds' function calls
@@ -765,8 +767,7 @@ void fillInSliceAdjLists()
 				// TODO simplify this call
 				if (succeeds(slices[i].componentNums[symNum].front(), slices[i].numComponents,
 					slices[slice_graph[vID].sliceNum].componentNums.front().front(),
-					slices[slice_graph[vID].sliceNum].configs[slice_graph[vID].configNum]
-						.erID, result))
+					slice_graph[vID].erID, result))
 				{
 					// This is in this block so that multiple configurations of a slice
 					// can be added to the adjacency list.
@@ -774,22 +775,23 @@ void fillInSliceAdjLists()
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
-					// TODO: If a new config
-					
 					// Search for the result in the 'after' physical column's configs
 					bool found = false;
-					for (const auto& config : slices[i].configs)
+					
+					// This isn't using a map properly, but just to keep the code as
+					// similar as possible for now:
+					for (const auto& config : slices[i].er_map)
 					{
-						if (config.erID == result)
+						if (config.first == result)
 						{
 							found = true;
 							
-							if (!adjacentTo[config.vertexID])
+							if (!adjacentTo[config.second])
 							{
-								adjacentTo[config.vertexID] = true;
+								adjacentTo[config.second] = true;
 								
 								slice_graph[vID].adjList.emplace_back(
-									config.vertexID, symNum
+									config.second, symNum
 								);
 							}
 							break;
@@ -802,8 +804,8 @@ void fillInSliceAdjLists()
 					// Need to make a new config and vertex, and add to the adjacency list.
 					if (!found)
 					{
-						slices[i].configs.emplace_back(result, slice_graph.size());
-						slice_graph.emplace_back(i,slices[i].configs.size() - 1);
+						slices[i].er_map[result] = slice_graph.size();
+						slice_graph.emplace_back(i,result);
 						
 						// Add the adjacency, which is now the last vertex.
 						if (!adjacentTo[slice_graph.size() - 1])
@@ -818,23 +820,17 @@ void fillInSliceAdjLists()
 				}
 			}
 		}
-	}
-	
-	if (trace)
-	{
-		for (unsigned i = 0; i < slice_graph.size(); i++)
+		if (trace)
 		{
-			std::cout << i << ':';
+			std::cout << vID << ':';
 			
-			for (auto neighbor : slice_graph[i].adjList)
+			for (auto neighbor : slice_graph[vID].adjList)
 			{
 				std::cout << ' ' << neighbor.first;
 			}
 			
 			std::cout << std::endl;
 		}
-		
-		std::cout << std::endl;
 	}
 }
 
@@ -989,10 +985,9 @@ void enumerate()
 							for (unsigned vertex : bestTiling.slices.path)
 							{
 								unsigned sliceNum = slice_graph[vertex].sliceNum;
+								
 								std::cout << slices[sliceNum] <<
-									er_store[slices[sliceNum]
-										.configs[slice_graph[vertex].configNum].erID
-									]
+									er_store[slice_graph[vertex].erID]
 									<< std::endl << std::endl;
 							}
 						}
@@ -1089,7 +1084,7 @@ int main(int argn, char** args)
 	{
 		unsigned sliceNum = slice_graph[vertex].sliceNum;
 		std::cout << slices[sliceNum];
-		std::cout << er_store[slices[sliceNum].configs[slice_graph[vertex].configNum].erID]
+		std::cout << er_store[slice_graph[vertex].erID]
 			<< std::endl << std::endl;
 	}
 }
