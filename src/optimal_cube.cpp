@@ -833,7 +833,7 @@ struct path_info_matrix
 	path_info_matrix() : lengths(slice_graph.size() + 2) {}
 };
 
-hyperCube extractHyperCube(path_info_matrix paths_info, unsigned len,
+hyperCube extractHyperCube(const path_info_matrix& paths_info, unsigned len,
 	unsigned end, fraction density)
 {
 	hyperCube h;
@@ -891,6 +891,9 @@ void enumerate()
 	{
 		if (trace) std::cout << "length = " << len << ":" << std::endl;
 		
+		// End vertex of the stack with the most vertices
+		unsigned bestEndVertex = 0;
+		
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice_graph.size(); end++)
 		{
@@ -917,13 +920,9 @@ void enumerate()
 					// Check to see if this is the best tile of this given length
 					unsigned newNumVertices = paths_info.lengths[len].info[adj].num_induced;
 					
-					if (newNumVertices > bestHyperCubes[len].density.num)
+					if (newNumVertices > paths_info.lengths[len].info[bestEndVertex].num_induced)
 					{
-						fraction density(paths_info.lengths[len].info[adj].num_induced,
-							n*n*len);
-						
-						bestHyperCubes[len] =
-							extractHyperCube(paths_info, len, adj, density);
+						bestEndVertex = adj;
 					}
 					
 					// A cycle has been found, check to see if it is the new best
@@ -953,15 +952,19 @@ void enumerate()
 			}
 		}
 		
-		if (trace) 
-			std::cout << "best hypercube has " << bestHyperCubes[len].density.num
-				<< " vertices" << std::endl;
-	}
-	/*
-	if (trace)
-	{
-		for (unsigned len = 1; len < paths_info.lengths.size(); len++)
+		if (trace)
 		{
+			std::cout << "best hypercube has " << paths_info.lengths[len].info[bestEndVertex].num_induced
+				<< " vertices" << std::endl;
+			
+			/*
+			// Cleanup of a few random print statements, not working yet
+			
+			fraction density(paths_info.lengths[len].info[bestEndVertex].num_induced,
+				n*n*len);
+			
+			auto bestCube = extractHyperCube(paths_info, len, adj, density);
+			
 			const auto& len_info = paths_info.lengths[len];
 			
 			for (const auto& end_info : len_info.info)
@@ -970,10 +973,9 @@ void enumerate()
 					<< end_info.second_to_last << ") ";
 			}
 			std::cout << std::endl;
+			*/
 		}
-		std::cout << std::endl;
 	}
-	*/
 }
 
 int main(int argn, char** args)
