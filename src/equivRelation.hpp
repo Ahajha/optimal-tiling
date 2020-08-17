@@ -46,7 +46,7 @@ class equivRelation
 	equivRelation shave(unsigned) const;
 
 	// Returns the canonical group labeling of this.
-	std::vector<unsigned> canonicalGroupLabeling() const;
+	std::vector<unsigned>& canonicalGroupLabeling() const;
 
 	// Prints the canonical group labeling of this ER to an output stream.
 	friend std::ostream& operator<<(std::ostream&, const equivRelation&);
@@ -85,6 +85,11 @@ class equivRelation
 	};
 	
 	std::vector<element> elements;
+	
+	mutable std::vector<unsigned> cgl;
+	mutable bool changed;
+	
+	void updateCGL() const;
 };
 
 // Provides a hash function.

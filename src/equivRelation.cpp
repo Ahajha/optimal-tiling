@@ -1,11 +1,14 @@
 #include "equivRelation.hpp"
 
-equivRelation::equivRelation() : elements(0) {}
+equivRelation::equivRelation() : elements(0), changed(true) {}
 
-equivRelation::equivRelation(unsigned size) : elements(size)
+equivRelation::equivRelation(unsigned size) : elements(size), cgl(size), changed(false)
 {
 	for (unsigned i = 0; i < size; i++)
+	{
 		elements[i] = element(i);
+		cgl[i] = i;
+	}
 }
 
 void equivRelation::merge(unsigned x, unsigned y)
@@ -26,6 +29,7 @@ void equivRelation::merge(unsigned x, unsigned y)
 			elements[leadY].numConstituents = 0;
 			elements[leadY].boss = leadX;
 		}
+		changed = true;
 	}
 }
 
@@ -37,14 +41,15 @@ bool equivRelation::equivalent(unsigned x, unsigned y) const
 void equivRelation::addElement()
 {
 	elements.emplace_back(elements.size());
+	changed = true;
 }
 
 bool equivRelation::operator==(const equivRelation& other) const
 {
 	if (elements.size() != other.elements.size()) return false;
 	
-	auto cgl1 = canonicalGroupLabeling();
-	auto cgl2 = other.canonicalGroupLabeling();
+	const auto& cgl1 = canonicalGroupLabeling();
+	const auto& cgl2 = other.canonicalGroupLabeling();
 	
 	return cgl1 == cgl2;
 }
@@ -54,8 +59,8 @@ std::strong_ordering equivRelation::operator<=>(const equivRelation& other) cons
 	if (elements.size() != other.elements.size())
 		return elements.size() <=> other.elements.size();
 	
-	auto cgl1 = canonicalGroupLabeling();
-	auto cgl2 = other.canonicalGroupLabeling();
+	const auto& cgl1 = canonicalGroupLabeling();
+	const auto& cgl2 = other.canonicalGroupLabeling();
 	
 	// I would implement this as just "return cgl1 <=> cgl2;",
 	// but that does not work, for some unknown reason.
@@ -69,7 +74,7 @@ std::strong_ordering equivRelation::operator<=>(const equivRelation& other) cons
 
 std::ostream& operator<<(std::ostream& stream, const equivRelation& R)
 {
-	auto cgl = R.canonicalGroupLabeling();
+	const auto& cgl = R.canonicalGroupLabeling();
 	
 	for (unsigned label : cgl) stream << label << ' ';
 	
@@ -154,6 +159,8 @@ equivRelation equivRelation::append(const equivRelation& other) const
 			other.elements[i].boss + elements.size();
 	}
 	
+	result.changed = true;
+	
 	return result;
 }
 
@@ -173,11 +180,13 @@ void equivRelation::operator+=(const equivRelation& other)
 		elements[oldSize + i].boss =
 			other.elements[i].boss + oldSize;
 	}
+	
+	changed = true;
 }
 
 equivRelation equivRelation::shave(unsigned n) const
 {
-	auto cgl = canonicalGroupLabeling();
+	const auto& cgl = canonicalGroupLabeling();
 	
 	std::vector<unsigned> leaders;
 	
@@ -204,6 +213,8 @@ equivRelation equivRelation::shave(unsigned n) const
 		result.elements[leaders[groupNum]].numConstituents++;
 	}
 	
+	result.changed = true;
+	
 	return result;
 }
 
@@ -229,8 +240,8 @@ bool equivRelation::finerThan(const equivRelation& other) const
 	// Maps set numbers in the first to set numbers in the second.
 	std::vector<unsigned> map(numComponents(), (unsigned)(-1));
 	
-	auto cgl1 = canonicalGroupLabeling();
-	auto cgl2 = other.canonicalGroupLabeling();
+	const auto& cgl1 = canonicalGroupLabeling();
+	const auto& cgl2 = other.canonicalGroupLabeling();
 	
 	for (unsigned i = 0; i < size(); i++)
 	{
@@ -251,10 +262,23 @@ bool equivRelation::coarserThan(const equivRelation& other) const
 	return other.finerThan(*this);
 }
 
-std::vector<unsigned> equivRelation::canonicalGroupLabeling() const
+std::vector<unsigned>& equivRelation::canonicalGroupLabeling() const
 {
-	std::vector<unsigned> result(elements.size());
-	std::fill(result.begin(), result.end(), (unsigned)(-1));
+	if (changed)
+	{
+		updateCGL();
+		changed = false;
+	}
+	
+	return cgl;
+}
+
+void equivRelation::updateCGL() const
+{
+	// This is possible if this ER was constructed 'manually'
+	if (cgl.size() != elements.size()) cgl.resize(elements.size());
+	
+	std::fill(cgl.begin(), cgl.end(), (unsigned)(-1));
 	
 	unsigned group_num = 0;
 	for (unsigned i = 0; i < elements.size(); i++)
@@ -264,13 +288,11 @@ std::vector<unsigned> equivRelation::canonicalGroupLabeling() const
 		// get overwritten again.
 	
 		unsigned lead = leader(i);
-		if (result[lead] == (unsigned)(-1))
-			result[lead] = group_num++;
+		if (cgl[lead] == (unsigned)(-1))
+			cgl[lead] = group_num++;
 		
-		result[i] = result[lead];
+		cgl[i] = cgl[lead];
 	}
-	
-	return result;
 }
 
 std::size_t er_hash::operator()(const equivRelation& er) const
