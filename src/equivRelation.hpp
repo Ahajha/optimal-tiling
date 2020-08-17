@@ -57,6 +57,15 @@ class equivRelation
 	// Returns the number of non-equivalent components of this ER.
 	unsigned numComponents() const;
 	
+	// Returns true if this is 'finer' than another ER, false if not.
+	// Assumes this and the other ER are the same size.
+	// Based on definition given at
+	// https://en.wikipedia.org/wiki/Equivalence_relation
+	bool finerThan(const equivRelation&) const;
+	
+	// Returns true if this is 'coarser' than another ER, false if not.
+	bool coarserThan(const equivRelation&) const;
+	
 	private:
 	
 	unsigned leader(unsigned) const;

@@ -224,6 +224,33 @@ unsigned equivRelation::numComponents() const
 	return result;
 }
 
+bool equivRelation::finerThan(const equivRelation& other) const
+{
+	// Maps set numbers in the first to set numbers in the second.
+	std::vector<unsigned> map(numComponents(), (unsigned)(-1));
+	
+	auto cgl1 = canonicalGroupLabeling();
+	auto cgl2 = other.canonicalGroupLabeling();
+	
+	for (unsigned i = 0; i < size(); i++)
+	{
+		// If this group has not been mapped to a group in the other set,
+		// map it. If it has but is different, return false.
+		if (map[cgl1[i]] == (unsigned)(-1))
+		{
+			map[cgl1[i]] = cgl2[i];
+		}
+		else if (map[cgl1[i]] != cgl2[i]) return false;
+	}
+	
+	return true;
+}
+	
+bool equivRelation::coarserThan(const equivRelation& other) const
+{
+	return other.finerThan(*this);
+}
+
 std::vector<unsigned> equivRelation::canonicalGroupLabeling() const
 {
 	std::vector<unsigned> result(elements.size());
