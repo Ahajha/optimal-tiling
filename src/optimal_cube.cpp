@@ -897,10 +897,8 @@ void enumerate()
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice_graph.size(); end++)
 		{
-			// Reference, for brevity
-			const unsigned old_num_induced =
-				paths_info.lengths[len - 1].info[end].num_induced;
-			const unsigned start = paths_info.lengths[len - 1].info[end].start;
+			auto [old_num_induced,dummy,start] =
+				paths_info.lengths[len - 1].info[end];
 			
 			// Expand in every possible way
 			for (const auto& neighbor : slice_graph[end].adjList)
