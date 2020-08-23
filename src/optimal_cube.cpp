@@ -697,6 +697,90 @@ void produceSlices()
 	}
 }
 
+void fillSliceVertex(unsigned vID)
+{
+	// Out-parameter for 'succeeds' function calls
+	unsigned result;
+	
+	// adjacentTo[x] means that vertex x can follow this vertex.
+	// The size given is an upper bound on the number of vertices that can
+	// exist after this adjacency list is filled (this is based on upper
+	// bounds on the number of iterations of the inner loops). The vector
+	// is default filled with false.
+	std::vector<bool> adjacentTo(slice_graph.size() + slices.size() * perms.size());
+	
+	// Go through each of the physical columns (as the afters),
+	// and see if it can succeed this configuration.
+	for (unsigned i = 0; i < slices.size(); i++)
+	{
+		// Go through each symmetry
+		for (unsigned symNum = 0; symNum < slices[i].componentNums.size(); symNum++)
+		{
+			// TODO simplify this call
+			if (succeeds(slices[i].componentNums[symNum].front(), slices[i].numComponents,
+				slices[slice_graph[vID].sliceNum].componentNums.front().front(),
+				slice_graph[vID].erID, result))
+			{
+				// This is in this block so that multiple configurations of a slice
+				// can be added to the adjacency list.
+				
+				// TODO: Exclude configs that are 'supersets'
+				// of other configs (and prove this is valid).
+				
+				auto search = slices[i].er_map.find(result);
+				
+				unsigned adjacent;
+				
+				if (search != slices[i].er_map.end())
+				{
+					// Found
+					adjacent = search->second;
+				}
+				else
+				{
+					// Not found
+					adjacent = slice_graph.size();
+					
+					slices[i].er_map[result] = adjacent;
+					slice_graph.emplace_back(i,result);
+					
+					// Iterate through all other versions of this
+					// physical symmetry, map any generated configs
+					// to the new vertex.
+					for (unsigned j = 1; j < slices[i].componentNums[symNum].size(); j++)
+					{
+						// No need to check the result, since the same physical configuration
+						// will also work.
+						succeeds(slices[i].componentNums[symNum][j], slices[i].numComponents,
+							slices[slice_graph[vID].sliceNum].componentNums.front().front(),
+							slice_graph[vID].erID, result);
+						
+						slices[i].er_map[result] = adjacent;
+					}
+				}
+				
+				if (!adjacentTo[adjacent])
+				{
+					adjacentTo[adjacent] = true;
+					
+					slice_graph[vID].adjList.emplace_back(adjacent, symNum);
+				}
+			}
+		}
+	}
+	if (trace)
+	{
+		std::cout << vID << ':';
+		
+		for (auto neighbor : slice_graph[vID].adjList)
+		{
+			std::cout << ' ' << neighbor.first;
+		}
+		
+		std::cout << std::endl;
+	}
+}
+
 void fillInSliceAdjLists()
 {
 	// Start by inserting the first 2^n vertices
@@ -705,90 +789,11 @@ void fillInSliceAdjLists()
 		slice_graph.emplace_back(i,er_store(equivRelation(slices[i].numComponents)));
 	}
 	
-	// Out-parameter for 'succeeds' function calls
-	unsigned result;
-	
 	// Fill in each adjacency list. slice_graph.size() may change with
 	// each iteration, but will eventually stop growing.
 	for (unsigned vID = 0; vID < slice_graph.size(); vID++)
 	{
-		// adjacentTo[x] means that vertex x can follow this vertex.
-		// The size given is an upper bound on the number of vertices that can
-		// exist after this adjacency list is filled (this is based on upper
-		// bounds on the number of iterations of the inner loops). The vector
-		// is default filled with false.
-		std::vector<bool> adjacentTo(slice_graph.size() + slices.size() * perms.size());
-		
-		// Go through each of the physical columns (as the afters),
-		// and see if it can succeed this configuration.
-		for (unsigned i = 0; i < slices.size(); i++)
-		{
-			// Go through each symmetry
-			for (unsigned symNum = 0; symNum < slices[i].componentNums.size(); symNum++)
-			{
-				// TODO simplify this call
-				if (succeeds(slices[i].componentNums[symNum].front(), slices[i].numComponents,
-					slices[slice_graph[vID].sliceNum].componentNums.front().front(),
-					slice_graph[vID].erID, result))
-				{
-					// This is in this block so that multiple configurations of a slice
-					// can be added to the adjacency list.
-					
-					// TODO: Exclude configs that are 'supersets'
-					// of other configs (and prove this is valid).
-					
-					auto search = slices[i].er_map.find(result);
-					
-					unsigned adjacent;
-					
-					if (search != slices[i].er_map.end())
-					{
-						// Found
-						adjacent = search->second;
-					}
-					else
-					{
-						// Not found
-						adjacent = slice_graph.size();
-						
-						slices[i].er_map[result] = adjacent;
-						slice_graph.emplace_back(i,result);
-						
-						// Iterate through all other versions of this
-						// physical symmetry, map any generated configs
-						// to the new vertex.
-						for (unsigned j = 1; j < slices[i].componentNums[symNum].size(); j++)
-						{
-							// No need to check the result, since the same physical configuration
-							// will also work.
-							succeeds(slices[i].componentNums[symNum][j], slices[i].numComponents,
-								slices[slice_graph[vID].sliceNum].componentNums.front().front(),
-								slice_graph[vID].erID, result);
-							
-							slices[i].er_map[result] = adjacent;
-						}
-					}
-					
-					if (!adjacentTo[adjacent])
-					{
-						adjacentTo[adjacent] = true;
-						
-						slice_graph[vID].adjList.emplace_back(adjacent, symNum);
-					}
-				}
-			}
-		}
-		if (trace)
-		{
-			std::cout << vID << ':';
-			
-			for (auto neighbor : slice_graph[vID].adjList)
-			{
-				std::cout << ' ' << neighbor.first;
-			}
-			
-			std::cout << std::endl;
-		}
+		fillSliceVertex(vID);
 	}
 	
 	if (trace) std::cout << std::endl;
