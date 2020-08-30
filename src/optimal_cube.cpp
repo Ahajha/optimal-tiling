@@ -508,42 +508,13 @@ bool prune(pathWithoutSymmetries& p)
 	return false;
 }
 
-static constexpr unsigned numPermutations(unsigned n)
-{
-	// Answer is 2^n * n!
-	
-	unsigned result = 1;
-	
-	for (unsigned i = 0; i < n; i++)
-	{
-		result *= (n * (i + 1));
-	}
-	
-	return result;
-}
-
-// n >= 1
-template<unsigned N>
-static constexpr auto permutations()
-{
-	// For now, just hardcode in the 8 values needed for 3 dimensions.
-	// In the future, for higher dimensions, look into one of these algorithms:
-	// https://en.wikipedia.org/wiki/Heap%27s_algorithm#cite_note-3
-	// https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
-	
-	std::array<std::array<char,N>,numPermutations(N)> result;
-	
-	char src[8][2] = { {1,2},{1,-2},{-1,-2},{-1,2},{2,1},{2,-1},{-2,-1},{-2,1} };
-	
-	for (unsigned i = 0; i < result.size(); i++)
-	{
-		result[i] = std::to_array(src[i]);
-	}
-	
-	return result;
-}
-
-static constexpr auto perms = permutations<2>();
+// For now, just hardcode in the 8 values needed for 3 dimensions.
+// In the future, for higher dimensions, look into one of these algorithms:
+// https://en.wikipedia.org/wiki/Heap%27s_algorithm#cite_note-3
+// https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+// In the future, this will just be a constant vector produced at runtime based on the input.
+static const std::vector<std::vector<char>> perms =
+	{ {1,2},{1,-2},{-1,-2},{-1,2},{2,1},{2,-1},{-2,-1},{-2,1} };
 
 // pID is the index of the permutation to apply in perms.
 std::vector<componentNumType> applyPermutation(unsigned pID,
