@@ -58,7 +58,7 @@ struct column
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
-	column(unsigned p, unsigned vID) : componentNums(n), numComponents(0),
+	column(unsigned p) : componentNums(n), numComponents(0),
 		numVertices(0)
 	{
 		bool lastWasSpace = true;
@@ -92,9 +92,6 @@ struct column
 				componentNums[i] = COMPLETELY_EMPTY;
 			}
 		}
-		
-		// Map the default config to the given vertex ID.
-		er_map[er_store(equivRelation(numComponents))] = vID;
 	}
 	
 	bool operator[](unsigned i) const { return componentNums[i] >= 0; }
@@ -104,6 +101,12 @@ struct column
 	
 	// Gets a column associated with a vertex ID.
 	static column& lookup(unsigned vID) { return columns[graph[vID].sliceNum]; }
+	
+	static void addVertex(unsigned colID, unsigned erID)
+	{
+		columns[colID].er_map[erID] = graph.size();
+		graph.emplace_back(colID,erID);
+	}
 };
 
 std::vector<vertex> column::graph = {};
@@ -137,7 +140,7 @@ struct slice
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 
-	slice(const pathWithoutSymmetries& p, unsigned vID) : componentNums(1),
+	slice(const pathWithoutSymmetries& p) : componentNums(1),
 		numVertices(p.numVertices)
 	{
 		componentNums.front().emplace_back(p.path.size() * n);
@@ -199,9 +202,6 @@ struct slice
 			
 			base_offset += col.numComponents;
 		}
-		
-		// Map the default config to the given vertex ID.
-		er_map[er_store(equivRelation(numComponents))] = vID;
 	}
 	
 	static std::vector<vertex> graph;
@@ -209,6 +209,12 @@ struct slice
 	
 	// Gets a slice associated with a vertex ID.
 	static slice& lookup(unsigned vID) { return slices[graph[vID].sliceNum]; }
+	
+	static void addVertex(unsigned sliceID, unsigned erID)
+	{
+		slices[sliceID].er_map[erID] = graph.size();
+		graph.emplace_back(sliceID,erID);
+	}
 };
 
 std::vector<vertex> slice::graph = {};
@@ -357,7 +363,7 @@ void produceColumns()
 	
 	for (unsigned i = 0; i < numCols; i++)
 	{
-		column::columns.emplace_back(i,i);
+		column::columns.emplace_back(i);
 		
 		if (trace)
 		{
@@ -414,7 +420,7 @@ void fillInColumnAdjLists()
 	// Start by inserting the first 2^n vertices
 	for (unsigned i = 0; i < column::columns.size(); i++)
 	{
-		column::graph.emplace_back(i,er_store(equivRelation(column::columns[i].numComponents)));
+		column::addVertex(i,er_store(equivRelation(column::columns[i].numComponents)));
 	}
 	
 	// Out-parameter for 'succeeds' function calls
@@ -444,8 +450,7 @@ void fillInColumnAdjLists()
 					// Not found
 					column::graph[vID].adjList.push_back(column::graph.size());
 					
-					column::columns[i].er_map[result] = column::graph.size();
-					column::graph.emplace_back(i,result);
+					column::addVertex(i,result);
 				}
 			}
 		}
@@ -580,7 +585,7 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 	if (p.path.size() == n)
 	{	
 		// convert to a slice
-		slice::slices.emplace_back(p,slice::slices.size());
+		slice::slices.emplace_back(p);
 		
 		// Reference, for brevity
 		auto& componentNums = slice::slices.back().componentNums;
@@ -767,7 +772,7 @@ void fillInSliceAdjLists()
 	// Start by inserting the first 2^n vertices
 	for (unsigned i = 0; i < slice::slices.size(); i++)
 	{
-		slice::graph.emplace_back(i,er_store(equivRelation(slice::slices[i].numComponents)));
+		slice::addVertex(i,er_store(equivRelation(slice::slices[i].numComponents)));
 	}
 	
 	// Fill in each adjacency list. slice::graph.size() may change with
