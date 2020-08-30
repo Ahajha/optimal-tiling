@@ -301,6 +301,18 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<vertex>& graph)
 	return stream;
 }
 
+std::ostream& operator<<(std::ostream& stream, const hyperCube& hc)
+{
+	for (unsigned vertex : hc.slices.path)
+	{
+		unsigned sliceNum = slice::graph[vertex].sliceNum;
+		std::cout << slice::slices[sliceNum];
+		std::cout << er_store[slice::graph[vertex].erID]
+			<< std::endl << std::endl;
+	}
+	return stream;
+}
+
 // =======================================================================
 // Various functions
 
@@ -894,15 +906,7 @@ void enumerate()
 								end, density);
 							
 							std::cout << "found: " << density << std::endl;
-							
-							for (unsigned vertex : bestTiling.slices.path)
-							{
-								unsigned sliceNum = slice::graph[vertex].sliceNum;
-								
-								std::cout << slice::slices[sliceNum] <<
-									er_store[slice::graph[vertex].erID]
-									<< std::endl << std::endl;
-							}
+							std::cout << bestTiling;
 						}
 					}
 				}
@@ -994,12 +998,6 @@ int main(int argn, char** args)
 	{
 		std::cout << "Best tiling (rotations ignored):" << std::endl;
 		std::cout << "Density = " << bestTiling.density << std::endl;
-		for (unsigned vertex : bestTiling.slices.path)
-		{
-			unsigned sliceNum = slice::graph[vertex].sliceNum;
-			std::cout << slice::slices[sliceNum];
-			std::cout << er_store[slice::graph[vertex].erID]
-				<< std::endl << std::endl;
-		}
+		std::cout << bestTiling;
 	}
 }
