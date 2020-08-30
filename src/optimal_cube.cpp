@@ -141,7 +141,7 @@ struct slice
 		unsigned totalComponents = 0;
 		for (unsigned vID : p.path)
 		{
-			totalComponents += column::columns[column::graph[vID].sliceNum].numComponents;
+			totalComponents += column::lookup(vID).numComponents;
 		}
 		
 		equivRelation combination(totalComponents);
@@ -152,8 +152,8 @@ struct slice
 		// Iterate over each pair of adjacent columns
 		for (unsigned i = 0; i < p.path.size() - 1; i++)
 		{	
-			const auto& col1 = column::columns[column::graph[p.path[i]].sliceNum];
-			const auto& col2 = column::columns[column::graph[p.path[i + 1]].sliceNum];
+			const auto& col1 = column::lookup(p.path[i]);
+			const auto& col2 = column::lookup(p.path[i + 1]);
 			
 			offset = col1.numComponents;
 			
