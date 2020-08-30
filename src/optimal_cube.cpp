@@ -737,8 +737,7 @@ void fillSliceVertex(unsigned vID)
 					// Not found
 					adjacent = slice::graph.size();
 					
-					slice::slices[i].er_map[result] = adjacent;
-					slice::graph.emplace_back(i,result);
+					slice::addVertex(i,result);
 					
 					// Iterate through all other versions of this
 					// physical symmetry, map any generated configs
