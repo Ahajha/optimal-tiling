@@ -253,20 +253,18 @@ struct path_info_matrix
 
 struct hyperCube
 {
-	pathWithoutSymmetries slices;
+	std::vector<unsigned> slices;
 	fraction density;
 	
 	hyperCube() {}
 	
 	hyperCube(const path_info_matrix& paths_info, unsigned len,
-		unsigned end, fraction dens) : density(dens)
+		unsigned end, fraction dens) : slices(len), density(dens)
 	{
-		slices.path.resize(len);
-		
 		unsigned currentVertex = end;
 		for (unsigned length = len; length > 0; length--)
 		{
-			slices.path[length - 1] = currentVertex;
+			slices[length - 1] = currentVertex;
 			
 			currentVertex = paths_info.lengths[length].info[currentVertex].second_to_last;
 		}
@@ -359,7 +357,7 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<vertex>& graph)
 
 std::ostream& operator<<(std::ostream& stream, const hyperCube& hc)
 {
-	for (unsigned vertex : hc.slices.path)
+	for (unsigned vertex : hc.slices)
 	{
 		stream << slice::lookup(vertex) << er_store[slice::graph[vertex].erID]
 			<< std::endl << std::endl;
