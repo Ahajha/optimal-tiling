@@ -24,6 +24,10 @@ er_storage er_store;
 
 typedef char componentNumType;
 
+// Named constants
+constexpr static int EMPTY = -1;
+constexpr static int COMPLETELY_EMPTY = -2;
+
 // The physical configuration of the column.
 // Stored as an integer, the least significant
 // n bits represent the column, with a 1 being
@@ -34,9 +38,6 @@ struct physicalColumn
 {
 	// Assumes number of used bits is n.
 	// Contains a component number, or EMPTY or COMPLETELY_EMPTY
-	constexpr static int EMPTY = -1;
-	constexpr static int COMPLETELY_EMPTY = -2;
-	
 	std::vector<componentNumType> componentNums;
 	
 	unsigned numComponents;
@@ -470,8 +471,7 @@ bool prune(pathWithoutSymmetries& p)
 		
 		for (unsigned i = 0; i < n; i++)
 		{
-			if (prev2[i] == physicalColumn::COMPLETELY_EMPTY &&
-				prev1[i] < 0)
+			if (prev2[i] == COMPLETELY_EMPTY && prev1[i] < 0)
 			{
 				return true;
 			}
@@ -488,8 +488,7 @@ bool prune(pathWithoutSymmetries& p)
 		
 		for (unsigned i = 0; i < n; i++)
 		{
-			if (prev2[i] == physicalColumn::COMPLETELY_EMPTY &&
-				prev1[i] < 0 && prev3[i] < 0)
+			if (prev2[i] == COMPLETELY_EMPTY && prev1[i] < 0 && prev3[i] < 0)
 			{
 				return true;
 			}
@@ -503,8 +502,7 @@ bool prune(pathWithoutSymmetries& p)
 		
 		for (unsigned i = 0; i < n; i++)
 		{
-			if (prev1[i] == physicalColumn::COMPLETELY_EMPTY &&
-				prev2[i] < 0)
+			if (prev1[i] == COMPLETELY_EMPTY && prev2[i] < 0)
 			{
 				return true;
 			}
