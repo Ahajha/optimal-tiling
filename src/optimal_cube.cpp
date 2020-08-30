@@ -118,15 +118,6 @@ struct pathWithoutSymmetries
 	unsigned numVertices;
 };
 
-struct hyperCube
-{
-	pathWithoutSymmetries slices;
-	fraction density;
-};
-
-std::vector<hyperCube> bestHyperCubes;
-hyperCube bestTiling;
-
 struct slice
 {
 	// Inner vector is a vector of component numbers (or EMPTY/COMPLETELY_EMPTY).
@@ -219,6 +210,71 @@ struct slice
 
 std::vector<vertex> slice::graph = {};
 std::vector<slice> slice::slices = {};
+
+// Structures relating to the enumeration algorithm
+struct path_info
+{
+	unsigned num_induced;
+	
+	// The vertex that precedes this one in the optimal path.
+	unsigned second_to_last;
+	
+	unsigned start;
+	
+	path_info() : num_induced(0), second_to_last(0), start(0) {}
+	
+	path_info(unsigned n_i, unsigned s_t_l, unsigned s) :
+		num_induced(n_i), second_to_last(s_t_l), start(s) {}
+};
+
+// All path info for one length and starting vertex.
+// .info[s] gives the information about the path from
+// the predetermined start column to s, of a predetermined length.
+struct path_info_vector
+{
+	std::vector<path_info> info;
+	
+	path_info_vector() : info(slice::graph.size()) {}
+};
+
+// .lengths[len].info[e] gives
+// the info block for the densest path from
+// the given start column to e of length len.
+struct path_info_matrix
+{
+	std::vector<path_info_vector> lengths;
+	
+	// This +2 is just a buffer, it might only need to be +1.
+	// Experimentally, most results rarely need more than length 10
+	// (in 2 dimensions), but I have not proven this to be a valid
+	// pruning method.
+	path_info_matrix() : lengths(slice::graph.size() + 2) {}
+};
+
+struct hyperCube
+{
+	pathWithoutSymmetries slices;
+	fraction density;
+	
+	hyperCube() {}
+	
+	hyperCube(const path_info_matrix& paths_info, unsigned len,
+		unsigned end, fraction dens) : density(dens)
+	{
+		slices.path.resize(len);
+		
+		unsigned currentVertex = end;
+		for (unsigned length = len; length > 0; length--)
+		{
+			slices.path[length - 1] = currentVertex;
+			
+			currentVertex = paths_info.lengths[length].info[currentVertex].second_to_last;
+		}
+	}
+};
+
+std::vector<hyperCube> bestHyperCubes;
+hyperCube bestTiling;
 
 // =======================================================================
 // Output functions
@@ -765,65 +821,6 @@ void fillInSliceAdjLists()
 	if (trace) std::cout << slice::graph << std::endl;
 }
 
-struct path_info
-{
-	unsigned num_induced;
-	
-	// The vertex that precedes this one in the optimal path.
-	unsigned second_to_last;
-	
-	unsigned start;
-	
-	path_info() : num_induced(0), second_to_last(0), start(0) {}
-	
-	path_info(unsigned n_i, unsigned s_t_l, unsigned s) :
-		num_induced(n_i), second_to_last(s_t_l), start(s) {}
-};
-
-// All path info for one length and starting vertex.
-// .info[s] gives the information about the path from
-// the predetermined start column to s, of a predetermined length.
-struct path_info_vector
-{
-	std::vector<path_info> info;
-	
-	path_info_vector() : info(slice::graph.size()) {}
-};
-
-// .lengths[len].info[e] gives
-// the info block for the densest path from
-// the given start column to e of length len.
-struct path_info_matrix
-{
-	std::vector<path_info_vector> lengths;
-	
-	// This +2 is just a buffer, it might only need to be +1.
-	// Experimentally, most results rarely need more than length 10
-	// (in 2 dimensions), but I have not proven this to be a valid
-	// pruning method.
-	path_info_matrix() : lengths(slice::graph.size() + 2) {}
-};
-
-hyperCube extractHyperCube(const path_info_matrix& paths_info, unsigned len,
-	unsigned end, fraction density)
-{
-	hyperCube h;
-	
-	h.slices.path.resize(len);
-	
-	unsigned currentVertex = end;
-	for (unsigned length = len; length > 0; length--)
-	{
-		h.slices.path[length - 1] = currentVertex;
-		
-		currentVertex = paths_info.lengths[length].info[currentVertex].second_to_last;
-	}
-	
-	h.density = density;
-	
-	return h;
-}
-
 /*------------------------------------
 Prints the maximum size and density of
 every rectangle sized 1xn through nxn.
@@ -852,8 +849,7 @@ void enumerate()
 		// Check to see if this is the best 1-tall hypercube
 		if (bestHyperCubes[1].density.num < numVertices)
 		{
-			bestHyperCubes[1] =
-				extractHyperCube(paths_info, 1, start, fraction(numVertices,1));
+			bestHyperCubes[1] = hyperCube(paths_info, 1, start, fraction(numVertices,1));
 		}
 	}
 	
@@ -900,7 +896,7 @@ void enumerate()
 						
 						if (density > bestTiling.density)
 						{
-							bestTiling = extractHyperCube(paths_info, len - 1,
+							bestTiling = hyperCube(paths_info, len - 1,
 								end, density);
 							
 							std::cout << "found: " << density << std::endl;
@@ -922,7 +918,7 @@ void enumerate()
 			fraction density(paths_info.lengths[len].info[bestEndVertex].num_induced,
 				n*n*len);
 			
-			auto bestCube = extractHyperCube(paths_info, len, adj, density);
+			auto bestCube = hyperCube(paths_info, len, adj, density);
 			
 			const auto& len_info = paths_info.lengths[len];
 			
