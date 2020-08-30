@@ -34,7 +34,7 @@ constexpr static int COMPLETELY_EMPTY = -2;
 // filled in, and a 0 being empty.
 // For example, XX_XX_X would be 1101101
 
-struct physicalColumn
+struct column
 {
 	// Assumes number of used bits is n.
 	// Contains a component number, or EMPTY or COMPLETELY_EMPTY
@@ -46,7 +46,7 @@ struct physicalColumn
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
-	physicalColumn(unsigned p, unsigned vID) : componentNums(n), numComponents(0),
+	column(unsigned p, unsigned vID) : componentNums(n), numComponents(0),
 		numVertices(0)
 	{
 		bool lastWasSpace = true;
@@ -131,7 +131,7 @@ struct hyperCube
 std::vector<hyperCube> bestHyperCubes;
 hyperCube bestTiling;
 
-std::vector<physicalColumn> columns;
+std::vector<column> columns;
 
 std::vector<vertex> column_graph;
 
@@ -223,7 +223,7 @@ std::vector<vertexWithSymmetries> slice_graph;
 // =======================================================================
 // Output functions
 
-std::ostream& operator<<(std::ostream& stream, physicalColumn p)
+std::ostream& operator<<(std::ostream& stream, column p)
 {
 	for (unsigned i = 0; i < n; i++)
 	{
