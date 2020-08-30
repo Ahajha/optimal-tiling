@@ -281,6 +281,20 @@ std::ostream& operator<<(std::ostream& stream, const slice& s)
 	return stream;
 }
 
+std::ostream& operator<<(std::ostream& stream, const std::vector<vertex>& graph)
+{
+	for (unsigned vID = 0; vID < graph.size(); vID++)
+	{
+		std::cout << vID << ':';		
+		for (unsigned adj : graph[vID].adjList)
+		{
+			std::cout << ' ' << adj;
+		}
+		std::cout << std::endl;
+	}
+	return stream;
+}
+
 // =======================================================================
 // Various functions
 
@@ -435,21 +449,9 @@ void fillInColumnAdjLists()
 				}
 			}
 		}
-		
-		if (trace)
-		{
-			std::cout << vID << ':';
-			
-			for (unsigned neighbor : column::graph[vID].adjList)
-			{
-				std::cout << ' ' << neighbor;
-			}
-			
-			std::cout << std::endl;
-		}
 	}
 	
-	if (trace) std::cout << std::endl;
+	if (trace) std::cout << column::graph << std::endl;
 }
 
 bool prune(pathWithoutSymmetries& p)
@@ -758,17 +760,6 @@ void fillSliceVertex(unsigned vID)
 			}
 		}
 	}
-	if (trace)
-	{
-		std::cout << vID << ':';
-		
-		for (auto adj : slice::graph[vID].adjList)
-		{
-			std::cout << ' ' << adj;
-		}
-		
-		std::cout << std::endl;
-	}
 }
 
 void fillInSliceAdjLists()
@@ -786,7 +777,7 @@ void fillInSliceAdjLists()
 		fillSliceVertex(vID);
 	}
 	
-	if (trace) std::cout << std::endl;
+	if (trace) std::cout << slice::graph << std::endl;
 }
 
 struct path_info
