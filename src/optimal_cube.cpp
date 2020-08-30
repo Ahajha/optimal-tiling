@@ -153,15 +153,15 @@ struct slice
 	{
 		componentNums.front().emplace_back(p.path.size() * n);
 		
-		equivRelation combination;
-		
-		// Append all of the configurations of each component column in succession.
+		// Count the total number of components in all slices. We don't need
+		// to concatenate the exact ERs, just the number of components is needed.
+		unsigned totalComponents = 0;
 		for (unsigned vID : p.path)
 		{
-			// Does this need to be this specific config, or will a default one work?
-			// It seems that this would produce the same result.
-			combination += er_store[column_graph[vID].erID];
+			totalComponents += columns[column_graph[vID].sliceNum].numComponents;
 		}
+		
+		equivRelation combination(totalComponents);
 		
 		// Total offset before both columns, and offset between them.
 		unsigned base_offset = 0, offset;
