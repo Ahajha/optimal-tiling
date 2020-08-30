@@ -103,19 +103,6 @@ struct vertex
 		sliceNum(sn), erID(e) {}
 };
 
-struct vertexWithSymmetries
-{
-	// first is the vertex number, second is the number of the first symmetry
-	// that can follow the slice.
-	std::vector<std::pair<unsigned,unsigned>> adjList;
-	
-	unsigned sliceNum;
-	unsigned erID;
-	
-	vertexWithSymmetries(unsigned sn, unsigned e) :
-		sliceNum(sn), erID(e) {}
-};
-
 struct pathWithoutSymmetries
 {
 	std::vector<unsigned> path;
@@ -218,7 +205,7 @@ struct slice
 
 std::vector<slice> slices;
 
-std::vector<vertexWithSymmetries> slice_graph;
+std::vector<vertex> slice_graph;
 
 // =======================================================================
 // Output functions
@@ -761,7 +748,7 @@ void fillSliceVertex(unsigned vID)
 				{
 					adjacentTo[adjacent] = true;
 					
-					slice_graph[vID].adjList.emplace_back(adjacent, symNum);
+					slice_graph[vID].adjList.push_back(adjacent);
 				}
 			}
 		}
@@ -770,9 +757,9 @@ void fillSliceVertex(unsigned vID)
 	{
 		std::cout << vID << ':';
 		
-		for (auto neighbor : slice_graph[vID].adjList)
+		for (auto adj : slice_graph[vID].adjList)
 		{
-			std::cout << ' ' << neighbor.first;
+			std::cout << ' ' << adj;
 		}
 		
 		std::cout << std::endl;
@@ -904,10 +891,8 @@ void enumerate()
 				paths_info.lengths[len - 1].info[end];
 			
 			// Expand in every possible way
-			for (const auto& neighbor : slice_graph[end].adjList)
+			for (unsigned adj : slice_graph[end].adjList)
 			{
-				unsigned adj = neighbor.first;
-				
 				// Reference, for brevity
 				path_info& new_info = paths_info.lengths[len].info[adj];
 				
