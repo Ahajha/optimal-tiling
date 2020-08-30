@@ -101,6 +101,9 @@ struct column
 	
 	static std::vector<vertex> graph;
 	static std::vector<column> columns;
+	
+	// Gets a column associated with a vertex ID.
+	static column& lookup(unsigned vID) { return columns[graph[vID].sliceNum]; }
 };
 
 std::vector<vertex> column::graph = {};
@@ -203,6 +206,9 @@ struct slice
 	
 	static std::vector<vertex> graph;
 	static std::vector<slice> slices;
+	
+	// Gets a slice associated with a vertex ID.
+	static slice& lookup(unsigned vID) { return slices[graph[vID].sliceNum]; }
 };
 
 std::vector<vertex> slice::graph = {};
@@ -241,7 +247,7 @@ std::ostream& operator<<(std::ostream& stream, const pathWithoutSymmetries& p)
 {
 	for (unsigned c : p.path)
 	{
-		stream << column::columns[column::graph[c].sliceNum] << std::endl;
+		stream << column::lookup(c) << std::endl;
 	}
 	
 	return stream;
@@ -410,8 +416,7 @@ void fillInColumnAdjLists()
 		{
 			// TODO simplify this call
 			if (succeeds(column::columns[i].componentNums, column::columns[i].numComponents,
-				column::columns[column::graph[vID].sliceNum].componentNums,
-				column::graph[vID].erID, result))
+				column::lookup(vID).componentNums, column::graph[vID].erID, result))
 			{
 				auto search = column::columns[i].er_map.find(result);
 				
@@ -454,8 +459,8 @@ bool prune(pathWithoutSymmetries& p)
 	
 	if (p.path.size() == 2) // Check first column
 	{
-		const auto& prev1 = column::columns[column::graph[p.path[1]].sliceNum].componentNums;
-		const auto& prev2 = column::columns[column::graph[p.path[0]].sliceNum].componentNums;
+		const auto& prev1 = column::lookup(p.path[1]).componentNums;
+		const auto& prev2 = column::lookup(p.path[0]).componentNums;
 		
 		for (unsigned i = 0; i < n; i++)
 		{
@@ -467,12 +472,9 @@ bool prune(pathWithoutSymmetries& p)
 	}
 	else if (p.path.size() > 2) // Check any middle column
 	{
-		const auto& prev1 =
-			column::columns[column::graph[p.path[p.path.size()-1]].sliceNum].componentNums;
-		const auto& prev2 =
-			column::columns[column::graph[p.path[p.path.size()-2]].sliceNum].componentNums;
-		const auto& prev3 =
-			column::columns[column::graph[p.path[p.path.size()-3]].sliceNum].componentNums;
+		const auto& prev1 = column::lookup(p.path[p.path.size()-1]).componentNums;
+		const auto& prev2 = column::lookup(p.path[p.path.size()-2]).componentNums;
+		const auto& prev3 = column::lookup(p.path[p.path.size()-3]).componentNums;
 		
 		for (unsigned i = 0; i < n; i++)
 		{
@@ -485,8 +487,8 @@ bool prune(pathWithoutSymmetries& p)
 	
 	if (p.path.size() == n) // Check last column
 	{
-		const auto& prev1 = column::columns[column::graph[p.path[n-1]].sliceNum].componentNums;
-		const auto& prev2 = column::columns[column::graph[p.path[n-2]].sliceNum].componentNums;
+		const auto& prev1 = column::lookup(p.path[n-1]).componentNums;
+		const auto& prev2 = column::lookup(p.path[n-2]).componentNums;
 		
 		for (unsigned i = 0; i < n; i++)
 		{
@@ -655,7 +657,7 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 	// Iterate using each available adjacent column.
 	for (unsigned adj : column::graph[p.path.back()].adjList)
 	{
-		unsigned numVertices = column::columns[column::graph[adj].sliceNum].numVertices;
+		unsigned numVertices = column::lookup(adj).numVertices;
 	
 		p.path.push_back(adj);
 		p.numVertices += numVertices;
@@ -705,7 +707,7 @@ void fillSliceVertex(unsigned vID)
 			// TODO simplify this call
 			if (succeeds(slice::slices[i].componentNums[symNum].front(),
 				slice::slices[i].numComponents,
-				slice::slices[slice::graph[vID].sliceNum].componentNums.front().front(),
+				slice::lookup(vID).componentNums.front().front(),
 				slice::graph[vID].erID, result))
 			{
 				// This is in this block so that multiple configurations of a slice
@@ -740,7 +742,7 @@ void fillSliceVertex(unsigned vID)
 						// will also work.
 						succeeds(slice::slices[i].componentNums[symNum][j],
 							slice::slices[i].numComponents,
-							slice::slices[slice::graph[vID].sliceNum].componentNums.front().front(),
+							slice::lookup(vID).componentNums.front().front(),
 							slice::graph[vID].erID, result);
 						
 						slice::slices[i].er_map[result] = adjacent;
@@ -863,7 +865,7 @@ void enumerate()
 	for (unsigned start = 0; start < slice::graph.size(); start++)
 	{
 		// Reference, for brevity
-		const unsigned numVertices = slice::slices[slice::graph[start].sliceNum].numVertices;
+		const unsigned numVertices = slice::lookup(start).numVertices;
 		
 		// Set the size of the 1-wide rectangle with just 1 column.
 		paths_info.lengths[1].info[start].num_induced = numVertices;
@@ -900,7 +902,7 @@ void enumerate()
 				path_info& new_info = paths_info.lengths[len].info[adj];
 				
 				// Number of vertices that are added with the new slice
-				unsigned more_vertices = slice::slices[slice::graph[adj].sliceNum].numVertices;
+				unsigned more_vertices = slice::lookup(adj).numVertices;
 				
 				if (new_info.num_induced < old_num_induced + more_vertices)
 				{
@@ -992,8 +994,8 @@ int main(int argn, char** args)
 	unsigned v = 2;
 	
 	std::cout << "Vertex " << v << ":" << std::endl;
-	std::cout << slice::slices[slice::graph[v].sliceNum] << std::endl;
-	for (const auto& config : slice::slices[slice::graph[v].sliceNum].configs)
+	std::cout << slice::lookup(v) << std::endl;
+	for (const auto& config : slice::lookup(v).configs)
 	{
 		std::cout << config.vertexID << ": " << er_store[config.erID] << std::endl;
 	}
