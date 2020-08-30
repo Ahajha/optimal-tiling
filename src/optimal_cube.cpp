@@ -265,23 +265,23 @@ std::ostream& operator<<(std::ostream& stream, const slice& s)
 	{
 		for (unsigned j = 0; j < n; j++)
 		{
-			std::cout << ((s.componentNums[0][0][i * n + j] >= 0) ? 'X' : '_') << ' ';
+			stream << ((s.componentNums[0][0][i * n + j] >= 0) ? 'X' : '_') << ' ';
 		}
 		
-		std::cout << "| ";
+		stream << "| ";
 		
 		for (unsigned j = 0; j < n; j++)
 		{
 			if (s.componentNums[0][0][i * n + j] >= 0)
 			{
-				std::cout << (int)s.componentNums[0][0][i * n + j] << ' ';
+				stream << (int)s.componentNums[0][0][i * n + j] << ' ';
 			}
 			else
 			{
-				std::cout << "  ";
+				stream << "  ";
 			}
 		}
-		std::cout << std::endl;
+		stream << std::endl;
 	}
 	
 	return stream;
@@ -291,12 +291,12 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<vertex>& graph)
 {
 	for (unsigned vID = 0; vID < graph.size(); vID++)
 	{
-		std::cout << vID << ':';		
+		stream << vID << ':';
 		for (unsigned adj : graph[vID].adjList)
 		{
-			std::cout << ' ' << adj;
+			stream << ' ' << adj;
 		}
-		std::cout << std::endl;
+		stream << std::endl;
 	}
 	return stream;
 }
@@ -305,9 +305,7 @@ std::ostream& operator<<(std::ostream& stream, const hyperCube& hc)
 {
 	for (unsigned vertex : hc.slices.path)
 	{
-		unsigned sliceNum = slice::graph[vertex].sliceNum;
-		std::cout << slice::slices[sliceNum];
-		std::cout << er_store[slice::graph[vertex].erID]
+		stream << slice::lookup(vertex) << er_store[slice::graph[vertex].erID]
 			<< std::endl << std::endl;
 	}
 	return stream;
