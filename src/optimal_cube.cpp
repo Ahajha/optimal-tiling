@@ -227,29 +227,9 @@ struct path_info
 		num_induced(n_i), second_to_last(s_t_l), start(s) {}
 };
 
-// All path info for one length and starting vertex.
-// .info[s] gives the information about the path from
-// the predetermined start column to s, of a predetermined length.
-struct path_info_vector
-{
-	std::vector<path_info> info;
-	
-	path_info_vector() : info(slice::graph.size()) {}
-};
-
-// .lengths[len].info[e] gives
-// the info block for the densest path from
-// the given start column to e of length len.
-struct path_info_matrix
-{
-	std::vector<path_info_vector> lengths;
-	
-	// This +2 is just a buffer, it might only need to be +1.
-	// Experimentally, most results rarely need more than length 10
-	// (in 2 dimensions), but I have not proven this to be a valid
-	// pruning method.
-	path_info_matrix() : lengths(slice::graph.size() + 2) {}
-};
+// Index [len][end] gives info about the 'len' long path with
+// 'end' as the last vertex.
+typedef std::vector<std::vector<path_info>> path_info_matrix;
 
 struct hyperCube
 {
@@ -266,7 +246,7 @@ struct hyperCube
 		{
 			slices[length - 1] = currentVertex;
 			
-			currentVertex = paths_info.lengths[length].info[currentVertex].second_to_last;
+			currentVertex = paths_info[length][currentVertex].second_to_last;
 		}
 	}
 };
@@ -829,8 +809,17 @@ void enumerate()
 {
 	bestHyperCubes.resize(slice::graph.size() + 2);
 	
-	// Information matrix
-	path_info_matrix paths_info;
+	// Information matrix, size is nearly square. The inner vector needs to be
+	// the same size as the slice graph. The outer vector needs to be one larger,
+	// so that when enumerating tiles, all tiles with all slices would technically
+	// be accounted for.
+	
+	// TODO: The outer vector likely can be smaller, experimentally no maximum tiles
+	// have been longer than 10. Perhaps grow slowly, occasionally checking for
+	// duplicate slices.
+	path_info_matrix paths_info(
+		slice::graph.size() + 1, std::vector<path_info>(slice::graph.size())
+	);
 
 	// For each starting slice (with default configs)
 	for (unsigned start = 0; start < slice::graph.size(); start++)
@@ -839,10 +828,10 @@ void enumerate()
 		const unsigned numVertices = slice::lookup(start).numVertices;
 		
 		// Set the size of the 1-wide rectangle with just 1 column.
-		paths_info.lengths[1].info[start].num_induced = numVertices;
+		paths_info[1][start].num_induced = numVertices;
 		
 		// Set the starting vertex
-		paths_info.lengths[1].info[start].start = start;
+		paths_info[1][start].start = start;
 		
 		// Check to see if this is the best 1-tall hypercube
 		if (bestHyperCubes[1].density.num < numVertices)
@@ -852,7 +841,7 @@ void enumerate()
 	}
 	
 	// For each length
-	for (unsigned len = 2; len < paths_info.lengths.size(); len++)
+	for (unsigned len = 2; len < paths_info.size(); len++)
 	{
 		if (trace) std::cout << "length = " << len << ":" << std::endl;
 		
@@ -862,14 +851,13 @@ void enumerate()
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice::graph.size(); end++)
 		{
-			auto [old_num_induced,dummy,start] =
-				paths_info.lengths[len - 1].info[end];
+			auto [old_num_induced,dummy,start] = paths_info[len - 1][end];
 			
 			// Expand in every possible way
 			for (unsigned adj : slice::graph[end].adjList)
 			{
 				// Reference, for brevity
-				path_info& new_info = paths_info.lengths[len].info[adj];
+				path_info& new_info = paths_info[len][adj];
 				
 				// Number of vertices that are added with the new slice
 				unsigned more_vertices = slice::lookup(adj).numVertices;
@@ -879,9 +867,9 @@ void enumerate()
 					new_info = path_info(old_num_induced + more_vertices, end, start);
 					
 					// Check to see if this is the best tile of this given length
-					unsigned newNumVertices = paths_info.lengths[len].info[adj].num_induced;
+					unsigned newNumVertices = paths_info[len][adj].num_induced;
 					
-					if (newNumVertices > paths_info.lengths[len].info[bestEndVertex].num_induced)
+					if (newNumVertices > paths_info[len][bestEndVertex].num_induced)
 					{
 						bestEndVertex = adj;
 					}
@@ -889,7 +877,7 @@ void enumerate()
 					// A cycle has been found, check to see if it is the new best
 					if (adj == start)
 					{
-						fraction density(paths_info.lengths[len - 1].info[end].num_induced,
+						fraction density(paths_info[len - 1][end].num_induced,
 							n*n*(len - 1));
 						
 						if (density > bestTiling.density)
@@ -907,20 +895,17 @@ void enumerate()
 		
 		if (trace)
 		{
-			std::cout << "best hypercube has " << paths_info.lengths[len].info[bestEndVertex].num_induced
+			std::cout << "best hypercube has " << paths_info[len][bestEndVertex].num_induced
 				<< " vertices" << std::endl;
 			
 			/*
 			// Cleanup of a few random print statements, not working yet
 			
-			fraction density(paths_info.lengths[len].info[bestEndVertex].num_induced,
-				n*n*len);
+			fraction density(paths_info[len][bestEndVertex].num_induced, n*n*len);
 			
 			auto bestCube = hyperCube(paths_info, len, adj, density);
 			
-			const auto& len_info = paths_info.lengths[len];
-			
-			for (const auto& end_info : len_info.info)
+			for (const auto& end_info : paths_info[len].info)
 			{
 				std::cout << "(" << end_info.num_induced << ","
 					<< end_info.second_to_last << ") ";
