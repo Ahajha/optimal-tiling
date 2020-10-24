@@ -124,7 +124,7 @@ void nested_monte_carlo(int id, Subtree& S,
 			S.rem(x);
 		}
 		while (!border.empty());
-			
+		
 		std::swap(border, defs::lists[id][S.numInduced]);
 		
 		defs::vertexID nextVertex = bestPath.pop_front();
