@@ -14,7 +14,6 @@ template<class T, T N>
 class indexedList;
 
 struct Subtree;
-struct Graph;
 
 namespace defs
 {
