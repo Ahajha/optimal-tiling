@@ -1,7 +1,6 @@
 #ifndef INDEXED_LIST_HPP
 #define INDEXED_LIST_HPP
 
-#include <cstddef>
 #include <array>
 #include "defs.hpp"
 
@@ -11,42 +10,44 @@ with the benefits of both. It requires a fixed set of
 integers 0-N (excluding N) to be the only candidates
 for the list, without repeats. All insertions and
 removals are in constant time.
+
+T is the type used for indexing.
 */
 
-template<std::size_t N>
+template<class T, T N>
 class indexedList
 {
 	private:
 	
 	struct index;
-
+	
 	public:
 	
-	indexedList();
-
+	[[nodiscard]] constexpr indexedList();
+	
 	// Returns true if x was removed, and false if x did not already exist here.
 	// Remove and both pop methods assume there is at least one item in the list.
-	bool remove(defs::vertexID);
+	constexpr bool remove(T);
 	
-	void push_front(defs::vertexID);
-	void push_back (defs::vertexID);
+	constexpr void push_front(T);
+	constexpr void push_back (T);
 	
-	defs::vertexID  pop_front ();
-	defs::vertexID  pop_back  ();
+	constexpr T pop_front ();
+	constexpr T pop_back  ();
 	
-	bool empty() const;
+	[[nodiscard]] constexpr bool empty() const;
 	
-	bool exists(defs::vertexID) const;
+	[[nodiscard]] constexpr bool exists(T) const;
 	
-	void clear();
+	constexpr void clear();
 	
 	// Removes a random item from the list and returns it, uniformly distributed.
 	// Assumes there is an item to remove.
-	defs::vertexID removeRandom();
+	constexpr T removeRandom();
 	
-	unsigned size() const;
+	[[nodiscard]] constexpr T size() const;
 	
-	void print();
+	void print() const;
 	
 	friend class iterator;
 	
@@ -54,56 +55,58 @@ class indexedList
 	{
 		public:
 		
-		iterator(std::array<index, N>& li, defs::vertexID x) : currentNode(x), list(li) {}
+		[[nodiscard]] constexpr iterator(std::array<index, N>& li, T x) :
+			currentNode(x), list(li) {}
 		
-		iterator& operator++()
+		constexpr iterator& operator++()
 		{
 			if (currentNode != defs::EMPTY)
 				currentNode = list[currentNode].next;
 			return *this;
 		}
 		
-		iterator  operator++(int)
+		constexpr iterator  operator++(int)
 		{
 			iterator it = *this;
 			++*this;
 			return it;
 		}
 		
-		bool operator !=(const iterator& i)
+		[[nodiscard]] constexpr bool operator==(const iterator& i)
 		{
-			return currentNode != i.currentNode;
+			return currentNode == i.currentNode;
 		}
 		
-		defs::vertexID operator*() { return currentNode; }
+		[[nodiscard]] constexpr T operator*() { return currentNode; }
 		
 		private:
 		
-		defs::vertexID currentNode;
+		T currentNode;
 		const std::array<index, N>& list;
 	};
 	
-	iterator begin() { return iterator(list,head); }
-	iterator end  () { return iterator(list,defs::EMPTY); }
+	[[nodiscard]] constexpr iterator begin() { return iterator(list, head); }
+	[[nodiscard]] constexpr iterator end  () { return iterator(list, defs::EMPTY); }
 	
-	template <std::size_t X>
-	friend void swap(indexedList<X>&,indexedList<X>&);
+	template<class T_, T_ N_>
+	constexpr friend void swap(indexedList<T_,N_>&, indexedList<T_,N_>&);
 	
 	private:
 	
 	struct index
 	{
 		bool inList;
-		defs::vertexID next, prev;
+		T next, prev;
 		
-		index() : inList(false), next(defs::EMPTY), prev(defs::EMPTY) {}
+		[[nodiscard]] constexpr index() :
+			inList(false), next(defs::EMPTY), prev(defs::EMPTY) {}
 	};
 	
 	unsigned numItems;
 	
 	std::array<index, N> list;
 	
-	defs::vertexID head, tail;
+	T head, tail;
 };
 
 #include "indexedList.tpp"

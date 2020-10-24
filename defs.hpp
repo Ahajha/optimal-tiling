@@ -10,7 +10,7 @@
 // This file contains basic type definitions along with headers for some functions
 // shared between different programs, and 'global' variables.
 
-template <std::size_t N>
+template<class T, T N>
 class indexedList;
 
 struct Subtree;
@@ -46,7 +46,7 @@ namespace defs
 	// then swapped back to restore. A call to branch can find the list it should
 	// use by going to lists[id][S.numInduced].
 	extern std::vector<
-		std::array<indexedList<defs::numVertices>, defs::numVertices>
+		std::array<indexedList<vertexID, numVertices>, numVertices>
 	> lists;
 	
 	// Used to store the number of leaves seen thus far
@@ -60,11 +60,11 @@ namespace defs
 	float threadSeconds();
 	
 	// Updates the border of S after adding x.
-	void update(Subtree& S, indexedList<numVertices>& border,
+	void update(Subtree& S, indexedList<vertexID, numVertices>& border,
 		vertexID x, std::stack<action>& previous_actions);
 	
 	// Restores the border of S after removing x.
-	void restore(indexedList<numVertices>& border,
+	void restore(indexedList<vertexID, numVertices>& border,
 		std::stack<action>& previous_actions);
 	
 	// After confirming S has a greater number of blocks than seen before,

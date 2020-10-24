@@ -3,11 +3,12 @@
 #include <random>
 #include <iostream>
 
-template <std::size_t N>
-indexedList<N>::indexedList() : numItems(0), list(), head(defs::EMPTY), tail(defs::EMPTY) {}
+template<class T, T N>
+constexpr indexedList<T,N>::indexedList() :
+	numItems(0), list(), head(defs::EMPTY), tail(defs::EMPTY) {}
 
-template <std::size_t N>
-bool indexedList<N>::remove(defs::vertexID x)
+template<class T, T N>
+constexpr bool indexedList<T,N>::remove(T x)
 {
 	if (!list[x].inList) return false;
 	
@@ -31,8 +32,8 @@ bool indexedList<N>::remove(defs::vertexID x)
 	return true;
 }
 
-template <std::size_t N>
-void indexedList<N>::push_front(defs::vertexID x)
+template<class T, T N>
+constexpr void indexedList<T,N>::push_front(T x)
 {
 	list[x].inList = true;
 	list[x].next = head;
@@ -52,8 +53,8 @@ void indexedList<N>::push_front(defs::vertexID x)
 	++numItems;
 }
 
-template <std::size_t N>
-void indexedList<N>::push_back(defs::vertexID x)
+template<class T, T N>
+constexpr void indexedList<T,N>::push_back(T x)
 {
 	list[x].inList = true;
 	list[x].next = defs::EMPTY;
@@ -73,34 +74,34 @@ void indexedList<N>::push_back(defs::vertexID x)
 	++numItems;
 }
 
-template <std::size_t N>
-defs::vertexID indexedList<N>::pop_front()
+template<class T, T N>
+constexpr T indexedList<T,N>::pop_front()
 {
-	defs::vertexID x = head;
+	T x = head;
 	remove(head);
 	return x;
 }
 
-template <std::size_t N>
-defs::vertexID indexedList<N>::pop_back()
+template<class T, T N>
+constexpr T indexedList<T,N>::pop_back()
 {
-	defs::vertexID x = tail;
+	T x = tail;
 	remove(tail);
 	return x;
 }
 
-template <std::size_t N>
-bool indexedList<N>::empty() const
+template<class T, T N>
+constexpr bool indexedList<T,N>::empty() const
 {
 	return head == defs::EMPTY;
 }
 
-template <std::size_t N>
-void swap(indexedList<N>& list1, indexedList<N>& list2)
+template<class T, T N>
+constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 {
 	// Loop follows the second list, since this constantly swaps the
 	// next item information into the other list.
-	for (int x = list1.head; x != defs::EMPTY; x = list2.list[x].next)
+	for (T x = list1.head; x != defs::EMPTY; x = list2.list[x].next)
 	{
 		std::swap(list1.list[x],list2.list[x]);
 	}
@@ -111,7 +112,7 @@ void swap(indexedList<N>& list1, indexedList<N>& list2)
 	// (!list2.list[x].inList || list1.list[x].inList), which negates to
 	// (list2.list[x].inList && !list1.list[x].inList).
 	// After the (potential) swap, the next cell will always be in list1.
-	for (int x = list2.head; x != defs::EMPTY; x = list1.list[x].next)
+	for (T x = list2.head; x != defs::EMPTY; x = list1.list[x].next)
 	{
 		if (list2.list[x].inList && !list1.list[x].inList)
 		{
@@ -124,31 +125,31 @@ void swap(indexedList<N>& list1, indexedList<N>& list2)
 	std::swap(list1.tail,list2.tail);
 }
 
-template <std::size_t N>
-bool indexedList<N>::exists(defs::vertexID x) const
+template<class T, T N>
+constexpr bool indexedList<T,N>::exists(T x) const
 {
 	return list[x].inList;
 }
 
-template <std::size_t N>
-void indexedList<N>::clear()
+template<class T, T N>
+constexpr void indexedList<T,N>::clear()
 {
 	head = tail = defs::EMPTY;
 }
 
-template <std::size_t N>
-unsigned indexedList<N>::size() const
+template<class T, T N>
+constexpr T indexedList<T,N>::size() const
 {
 	return numItems;
 }
 
-template <std::size_t N>
-defs::vertexID indexedList<N>::removeRandom()
+template<class T, T N>
+constexpr T indexedList<T,N>::removeRandom()
 {
-	defs::vertexID toRemove = rand() % numItems;
+	T toRemove = rand() % numItems;
 	
-	defs::vertexID valueToRemove = head;
-	for (unsigned i = 0; i < toRemove; i++)
+	T valueToRemove = head;
+	for (T i = 0; i < toRemove; i++)
 		valueToRemove = list[valueToRemove].next;
 	
 	remove(valueToRemove);
@@ -156,11 +157,11 @@ defs::vertexID indexedList<N>::removeRandom()
 	return valueToRemove;
 }
 
-template <std::size_t N>
-void indexedList<N>::print()
+template<class T, T N>
+void indexedList<T,N>::print() const
 {
 	/*
-	for (defs::vertexID x = head; x != EMPTY; x = list[x].next)
+	for (T x = head; x != EMPTY; x = list[x].next)
 	{
 		std::cout << x << " ";
 	}
