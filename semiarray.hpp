@@ -16,7 +16,7 @@ class semiarray : public std::array<T,N>
 	
 	[[nodiscard]] constexpr semiarray() : _size(0) {}
 	
-	constexpr void insert(T t) { this->operator[](size++) = t; }
+	constexpr void insert(T t) { this->operator[](_size++) = t; }
 	
 	[[nodiscard]] constexpr auto     end()       { return std::array<T,N>::begin()  + _size; }
 	[[nodiscard]] constexpr auto    cend() const { return std::array<T,N>::cbegin() + _size; }

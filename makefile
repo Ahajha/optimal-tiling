@@ -33,7 +33,7 @@ CFLAGS= --std=c++20 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthre
 
 CC=g++-10
 
-all: $(MC_efile)
+all: $(MC_efile) $(TE_efile)
 
 run: $(TE_efile)
 	./$(TE_efile) results/results_$(sizeString).txt
