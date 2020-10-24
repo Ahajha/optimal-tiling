@@ -1,37 +1,51 @@
 #include "graph.hpp"
 
-int Graph::get_x(defs::vertexID coord) { return coord % SIZEX; }
-int Graph::get_y(defs::vertexID coord) { return (coord / SIZEX) % SIZEY; }
-int Graph::get_z(defs::vertexID coord) { return coord / (SIZEX*SIZEY); }
-
-defs::vertexID Graph::_west (defs::vertexID i)
-	{ return (get_x(i) == 0)         ? defs::EMPTY : i - 1;             }
-	
-defs::vertexID Graph::_east (defs::vertexID i)
-	{ return (get_x(i) == SIZEX - 1) ? defs::EMPTY : i + 1;             }
-
-defs::vertexID Graph::_south(defs::vertexID i)
-	{ return (get_y(i) == 0)         ? defs::EMPTY : i - SIZEX;         }
-
-defs::vertexID Graph::_north(defs::vertexID i)
-	{ return (get_y(i) == SIZEY - 1) ? defs::EMPTY : i + SIZEX;         }
-
-defs::vertexID Graph::_down (defs::vertexID i)
-	{ return (get_z(i) == 0)         ? defs::EMPTY : i - (SIZEX*SIZEY); }
-
-defs::vertexID Graph::_up   (defs::vertexID i)
-	{ return (get_z(i) == SIZEZ - 1) ? defs::EMPTY : i + (SIZEX*SIZEY); }
-
-Graph::graphVertex::graphVertex(defs::vertexID i)
+// Returns the number of vertices that would be in the graph if
+// it were truncated to a given number of dimensions Note that
+// if d == dim_array.size(), this is just the number of vertices.
+constexpr defs::vertexID Graph::sizeof_dim(unsigned d)
 {
-	directions[WEST ] = _west (i);
-	directions[EAST ] = _east (i);
-	
-	directions[SOUTH] = _south(i);
-	directions[NORTH] = _north(i);
-	
-	directions[DOWN ] = _down (i);
-	directions[UP   ] = _up   (i);
+	unsigned result = 1;
+	for (unsigned i = 0; i < d; ++i)
+	{
+		result *= dim_array[i];
+	}
+	return result;
+}
+
+// Gets a specific dimension of the coordinate of c. Valid values of
+// d are 0 <= d < dim_array.size()
+constexpr defs::vertexID Graph::get_coord(unsigned d, defs::vertexID c)
+{
+	return (c / sizeof_dim(d)) % dim_array[d];
+}
+
+// Returns the vertexID of the vertex "forward" in a
+// dimension d from c, if it exists, EMPTY if not.
+constexpr defs::vertexID Graph::forward  (unsigned d, defs::vertexID c)
+{
+	return (get_coord(d,c) == dim_array[d] - 1)
+		? defs::EMPTY : c + sizeof_dim(d);
+}
+
+// Returns the vertexID of the vertex "backward" in a
+// dimension d from c, if it exists, EMPTY if not.
+constexpr defs::vertexID Graph::backward (unsigned d, defs::vertexID c)
+{
+	return (get_coord(d,c) == 0)
+		? defs::EMPTY : c - sizeof_dim(d);
+}
+
+Graph::graphVertex::graphVertex(defs::vertexID c)
+{
+	// The highest dimension has the largest and smallest neighbors.
+	// The second highest dimension has the second largest
+	// and second smallest neighbors, etc.
+	for (unsigned d = 0; d < dim_array.size(); ++d)
+	{
+		directions[dim_array.size() - d - 1] = backward(d,c);
+		directions[dim_array.size() + d    ] = forward (d,c);
+	}
 	
 	// Neighbors need to be in ascending order of ID
 	for (defs::vertexID n : directions)
@@ -41,7 +55,7 @@ Graph::graphVertex::graphVertex(defs::vertexID i)
 
 bool Graph::onOuterShell(defs::vertexID i)
 {
-	return vertices[i].neighbors.size() != 6;
+	return vertices[i].neighbors.size() != dim_array.size() * 2;
 }
 
 std::array<Graph::graphVertex, SIZEX*SIZEY*SIZEZ> Graph::makeVertices()

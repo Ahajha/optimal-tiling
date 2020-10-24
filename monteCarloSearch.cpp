@@ -10,7 +10,7 @@
 void simpleUpdate(Subtree& S,
 	indexedList<defs::vertexID, defs::numVertices>& border, defs::vertexID x)
 {
-	for (defs::vertexID y : defs::G.vertices[x].neighbors)
+	for (defs::vertexID y : Graph::vertices[x].neighbors)
 	{
 		if (S.cnt(y) > 1)
 		{

@@ -12,6 +12,9 @@ by SIZEX, SIZEY, and SIZEZ.
 
 class Graph
 {
+	// Will eventually be removed in favor of a template
+	static constexpr std::array<defs::vertexID, 3> dim_array = { SIZEX,SIZEY,SIZEZ };
+	
 	public:
 	
 	struct graphVertex
@@ -22,11 +25,17 @@ class Graph
 		// is no vertex in a given direction.
 		
 		std::vector<defs::vertexID> neighbors;
-		std::array <defs::vertexID, 6> directions;
+		std::array <defs::vertexID, dim_array.size() * 2> directions;
 		
 		graphVertex() {}
 		graphVertex(defs::vertexID);
 	};
+	
+	private:
+	
+	static std::array<graphVertex, SIZEX*SIZEY*SIZEZ> makeVertices();
+	
+	public:
 	
 	enum direction
 	{
@@ -42,33 +51,16 @@ class Graph
 		WEST  = 2
 	};
 	
-	private:
-	
-	static std::array<graphVertex, SIZEX*SIZEY*SIZEZ> makeVertices();
-	
-	public:
-	
 	// Index of a given vertex is its ID
-	static inline std::array<graphVertex, defs::numVertices> vertices
-		= makeVertices();
+	const static inline std::array<graphVertex, defs::numVertices> vertices = makeVertices();
 	
-	static bool onOuterShell(defs::vertexID);
+	[[nodiscard]] static bool onOuterShell(defs::vertexID);
 	
-	private:
+	[[nodiscard]] static constexpr defs::vertexID sizeof_dim(unsigned d);
+	[[nodiscard]] static constexpr defs::vertexID get_coord (unsigned d, defs::vertexID c);
 	
-	static int get_x(defs::vertexID);
-	static int get_y(defs::vertexID);
-	static int get_z(defs::vertexID);
-	
-	// Returns the index of the vertex in a given
-	// direction, or EMPTY if such a vertex does
-	// not exist.
-	static defs::vertexID _west (defs::vertexID);
-	static defs::vertexID _east (defs::vertexID);
-	static defs::vertexID _north(defs::vertexID);
-	static defs::vertexID _south(defs::vertexID);
-	static defs::vertexID _down (defs::vertexID);
-	static defs::vertexID _up   (defs::vertexID);
+	[[nodiscard]] static constexpr defs::vertexID forward   (unsigned d, defs::vertexID c);
+	[[nodiscard]] static constexpr defs::vertexID backward  (unsigned d, defs::vertexID c);
 };
 
 #endif
