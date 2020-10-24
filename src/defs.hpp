@@ -18,15 +18,15 @@ struct Graph;
 
 namespace defs
 {
-	typedef int vertexID;
+	typedef unsigned vertexID;
 	
-	constexpr vertexID EMPTY = -1;
+	constexpr vertexID EMPTY = (unsigned)-1;
 	constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
 	
 	enum action_type { add, rem, stop };
 	struct action { action_type type; vertexID v; };
 	
-	extern const unsigned NUM_THREADS;
+	extern const int NUM_THREADS;
 	
 	// Thread pool
 	extern ctpl::thread_pool pool;

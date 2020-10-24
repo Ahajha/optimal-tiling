@@ -89,7 +89,7 @@ int main(int num_args, char** args)
 		std::this_thread::sleep_for (std::chrono::seconds(1));
 		
 		unsigned long long total = 0;
-		for (unsigned i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
+		for (int i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
 		
 		defs::IOmutex.lock();
 		

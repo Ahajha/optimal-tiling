@@ -6,7 +6,7 @@
 #include <thread>
 #include <iostream>
 
-const unsigned defs::NUM_THREADS = std::thread::hardware_concurrency();
+const int defs::NUM_THREADS = std::thread::hardware_concurrency();
 
 ctpl::thread_pool defs::pool(NUM_THREADS);
 
