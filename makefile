@@ -29,7 +29,7 @@ TE_ofile=obj/treeEnumerator_$(sizeString).o
 GH_ofile=obj/graph_$(sizeString).o
 DF_ofile=obj/defs_$(sizeString).o
 
-IL_files=indexedList.hpp indexedList.tpp
+IL_files=src/indexedList.hpp src/indexedList.tpp
 
 MC_efile=bin/monteCarloSearch_$(sizeString)_level$(level)
 TE_efile=bin/treeEnumerator_$(sizeString)
@@ -59,18 +59,18 @@ analyze: bin/analyze
 
 $(MC_efile): $(MC_ofile) $(ST_ofile) $(GH_ofile) $(DF_ofile)
 $(TE_efile): $(TE_ofile) $(ST_ofile) $(GH_ofile) $(DF_ofile)
-bin/analyze: analyzer.cpp
+bin/analyze: src/analyzer.cpp
 
 bin/%:
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(MC_ofile): monteCarloSearch.cpp $(IL_files) defs.hpp
+$(MC_ofile): src/monteCarloSearch.cpp $(IL_files) src/defs.hpp
 	$(CC) $(CFLAGS) $(SIZE_MACRO) $(LEVEL_MACRO) -c $< -o $@
 
-$(ST_ofile): subTree.cpp subTree.hpp graph.hpp defs.hpp
-$(GH_ofile): graph.cpp graph.hpp defs.hpp
-$(DF_ofile): defs.cpp defs.hpp subTree.hpp graph.hpp
-$(TE_ofile): treeEnumerator.cpp $(IL_files)
+$(ST_ofile): src/subTree.cpp src/subTree.hpp src/graph.hpp src/defs.hpp
+$(GH_ofile): src/graph.cpp src/graph.hpp src/defs.hpp
+$(DF_ofile): src/defs.cpp src/defs.hpp src/subTree.hpp src/graph.hpp
+$(TE_ofile): src/treeEnumerator.cpp $(IL_files)
 
 obj/%:
 	$(CC) $(CFLAGS) $(SIZE_MACRO) -c $< -o $@

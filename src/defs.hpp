@@ -1,7 +1,7 @@
 #ifndef DEFS_HPP
 #define DEFS_HPP
 
-#include "CTPL/ctpl_stl.h"
+#include "../CTPL/ctpl_stl.h"
 
 #include <stack>
 #include <ctime>

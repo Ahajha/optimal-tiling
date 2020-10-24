@@ -1,6 +1,6 @@
+#include "defs.hpp"
 #include "subTree.hpp"
 #include "indexedList.hpp"
-#include "CTPL/ctpl_stl.h"
 
 #include <stack>
 #include <iostream>
