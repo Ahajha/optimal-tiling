@@ -101,7 +101,7 @@ bool Subtree::validate(defs::vertexID i) const
 	for (unsigned d = 0; d < 3; ++d)
 	{
 		// 5 - d gets the opposite direction
-		if (!exists(dirs[    d]) && !exists(dirs[5 - d]))
+		if (!exists(dirs[d]) && !exists(dirs[5 - d]))
 			return false;
 	}
 	return true;	
