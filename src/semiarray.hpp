@@ -16,11 +16,13 @@ class semiarray : public std::array<T,N>
 	
 	[[nodiscard]] constexpr semiarray() : _size(0) {}
 	
-	constexpr void insert(T t) { this->operator[](_size++) = t; }
+	constexpr void push_back(T t) { this->operator[](_size++) = t; }
 	
 	[[nodiscard]] constexpr auto     end()       { return std::array<T,N>::begin()  + _size; }
+	[[nodiscard]] constexpr auto     end() const { return std::array<T,N>::begin()  + _size; }
 	[[nodiscard]] constexpr auto    cend() const { return std::array<T,N>::cbegin() + _size; }
 	[[nodiscard]] constexpr auto  rbegin()       { return std::array<T,N>::rend()   - _size; }
+	[[nodiscard]] constexpr auto  rbegin() const { return std::array<T,N>::rend()   - _size; }
 	[[nodiscard]] constexpr auto crbegin() const { return std::array<T,N>::crend()  - _size; }
 	
 	[[nodiscard]] constexpr T back() const { return this->operator[](_size - 1); }

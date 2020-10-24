@@ -2,7 +2,7 @@
 #define GRAPH_HPP
 
 #include <array>
-#include <vector>
+#include "semiarray.hpp"
 #include "defs.hpp"
 
 /*
@@ -24,8 +24,8 @@ class Graph
 		// the direction enum below, EMPTY means there
 		// is no vertex in a given direction.
 		
-		std::vector<defs::vertexID> neighbors;
-		std::array <defs::vertexID, dim_array.size() * 2> directions;
+		semiarray <defs::vertexID, dim_array.size() * 2> neighbors;
+		std::array<defs::vertexID, dim_array.size() * 2> directions;
 		
 		graphVertex() {}
 		graphVertex(defs::vertexID);
