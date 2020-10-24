@@ -8,8 +8,6 @@
 #include "defs.hpp"
 #include "graph.hpp"
 
-extern const Graph G;
-
 // Represents an induced subtree
 struct Subtree
 {

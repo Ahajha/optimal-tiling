@@ -42,12 +42,17 @@ class Graph
 		WEST  = 2
 	};
 	
+	private:
+	
+	static std::array<graphVertex, SIZEX*SIZEY*SIZEZ> makeVertices();
+	
+	public:
+	
 	// Index of a given vertex is its ID
-	std::array<graphVertex, defs::numVertices> vertices;
+	static inline std::array<graphVertex, defs::numVertices> vertices
+		= makeVertices();
 	
-	Graph();
-	
-	bool onOuterShell(defs::vertexID) const;
+	static bool onOuterShell(defs::vertexID);
 	
 	private:
 	

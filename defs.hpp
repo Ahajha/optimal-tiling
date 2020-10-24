@@ -26,8 +26,6 @@ namespace defs
 	enum action_type { add, rem, stop };
 	struct action { action_type type; vertexID v; };
 	
-	extern const Graph G;
-	
 	extern const unsigned NUM_THREADS;
 	
 	// Thread pool

@@ -6,8 +6,6 @@
 #include <thread>
 #include <iostream>
 
-const Graph defs::G;
-
 const unsigned defs::NUM_THREADS = std::thread::hardware_concurrency();
 
 ctpl::thread_pool defs::pool(NUM_THREADS);
@@ -31,7 +29,7 @@ std::mutex defs::IOmutex;
 void defs::update(Subtree& S, indexedList<vertexID, numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
 {
-	for (vertexID y : G.vertices[x].neighbors)
+	for (vertexID y : Graph::vertices[x].neighbors)
 	{
 		// Pushes the current action, will need
 		// to do the opposite action to reverse.

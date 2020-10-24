@@ -39,15 +39,19 @@ Graph::graphVertex::graphVertex(defs::vertexID i)
 			neighbors.push_back(n);
 }
 
-Graph::Graph()
-{
-	for (defs::vertexID i = 0; i < defs::numVertices; i++)
-	{
-		vertices[i] = graphVertex(i);
-	}
-}
-
-bool Graph::onOuterShell(defs::vertexID i) const
+bool Graph::onOuterShell(defs::vertexID i)
 {
 	return vertices[i].neighbors.size() != 6;
+}
+
+std::array<Graph::graphVertex, SIZEX*SIZEY*SIZEZ> Graph::makeVertices()
+{
+	std::array<graphVertex, SIZEX*SIZEY*SIZEZ> vertices_;
+	
+	for (defs::vertexID i = 0; i < vertices_.size(); i++)
+	{
+		vertices_[i] = graphVertex(i);
+	}
+	
+	return vertices_;
 }
