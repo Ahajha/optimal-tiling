@@ -29,7 +29,7 @@ IL_files=indexedList.hpp indexedList.tpp
 MC_efile=bin/monteCarloSearch_$(sizeString)_level$(level)
 TE_efile=bin/treeEnumerator_$(sizeString)
 
-CFLAGS= --std=c++20 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3
+CFLAGS= --std=c++20 -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ) -pthread -O3 -Wall -Wextra
 
 CC=g++-10
 
