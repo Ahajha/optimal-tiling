@@ -90,20 +90,21 @@ Subtree::Subtree(defs::vertexID r) : numInduced(0), root(r), vertices()
 }
 
 bool Subtree::validate(defs::vertexID i) const
+	// TODO: Requires dimension 2 or 3, use
+	// if constexpr for different versions
 {
-	if (cnt(i) != 4)
-		return cnt(i) < 4;
+	if (cnt(i) != 4) return cnt(i) < 4;
 	
-	auto& directions = Graph::vertices[i].directions;
+	auto& dirs = Graph::vertices[i].directions;
 	
 	// Ensure all axis have at least one neighbor
-	return
-		(exists(directions[Graph::WEST ]) ||
-		 exists(directions[Graph::EAST ])) &&
-		(exists(directions[Graph::NORTH]) || 
-		 exists(directions[Graph::SOUTH])) &&
-		(exists(directions[Graph::UP   ]) ||
-		 exists(directions[Graph::DOWN ]));
+	for (unsigned d = 0; d < 3; ++d)
+	{
+		// 5 - d gets the opposite direction
+		if (!exists(dirs[d]) && !exists(dirs[5 - d]))
+			return false;
+	}
+	return true;	
 }
 
 bool Subtree::hasEnclosedSpace() const

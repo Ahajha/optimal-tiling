@@ -44,7 +44,8 @@ struct Subtree
 	
 	void writeToFile(std::string filename) const;
 	
-	// Returns true iff i does not have 4 neighbors in any plane.
+	// Defined only for dimensions 2 and 3. A vertex is valid
+	// if it has at most one axis with both neighbors.
 	bool validate(defs::vertexID i) const;
 	
 	// Returns true iff there is at least one block whose

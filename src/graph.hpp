@@ -2,7 +2,7 @@
 #define GRAPH_HPP
 
 #include <array>
-#include <vector>
+#include "semiarray.hpp"
 #include "defs.hpp"
 
 /*
@@ -24,8 +24,8 @@ class Graph
 		// the direction enum below, EMPTY means there
 		// is no vertex in a given direction.
 		
-		std::vector<defs::vertexID> neighbors;
-		std::array <defs::vertexID, dim_array.size() * 2> directions;
+		semiarray <defs::vertexID, dim_array.size() * 2> neighbors;
+		std::array<defs::vertexID, dim_array.size() * 2> directions;
 		
 		graphVertex() {}
 		graphVertex(defs::vertexID);
@@ -36,20 +36,6 @@ class Graph
 	static std::array<graphVertex, SIZEX*SIZEY*SIZEZ> makeVertices();
 	
 	public:
-	
-	enum direction
-	{
-		// These are not arbitrary, they are in order of ascending ID.
-		// Up and down     : z axis
-		// North and south : y axis
-		// East and west   : x axis
-		UP    = 5,
-		DOWN  = 0,
-		NORTH = 4,
-		SOUTH = 1,
-		EAST  = 3,
-		WEST  = 2
-	};
 	
 	// Index of a given vertex is its ID
 	const static inline std::array<graphVertex, defs::numVertices> vertices = makeVertices();
