@@ -5,7 +5,7 @@
 
 template<class T, T N>
 constexpr indexedList<T,N>::indexedList() :
-	numItems(0), list(), head(defs::EMPTY), tail(defs::EMPTY) {}
+	numItems(0), list(), head(EMPTY), tail(EMPTY) {}
 
 template<class T, T N>
 constexpr bool indexedList<T,N>::remove(T x)
@@ -14,12 +14,12 @@ constexpr bool indexedList<T,N>::remove(T x)
 	
 	list[x].inList = false;
 	
-	if (list[x].next != defs::EMPTY)
+	if (list[x].next != EMPTY)
 		list[list[x].next].prev = list[x].prev;
 	else // Tail of the list
 		tail = list[x].prev;
 	
-	if (list[x].prev != defs::EMPTY)
+	if (list[x].prev != EMPTY)
 		list[list[x].prev].next = list[x].next;
 	else // Head of the list
 		head = list[x].next;
@@ -37,9 +37,9 @@ constexpr void indexedList<T,N>::push_front(T x)
 {
 	list[x].inList = true;
 	list[x].next = head;
-	list[x].prev = defs::EMPTY;
+	list[x].prev = EMPTY;
 	
-	if (head == defs::EMPTY)
+	if (head == EMPTY)
 	{
 		tail = x;
 	}
@@ -57,10 +57,10 @@ template<class T, T N>
 constexpr void indexedList<T,N>::push_back(T x)
 {
 	list[x].inList = true;
-	list[x].next = defs::EMPTY;
+	list[x].next = EMPTY;
 	list[x].prev = tail;
 	
-	if (tail == defs::EMPTY)
+	if (tail == EMPTY)
 	{
 		head = x;
 	}
@@ -93,15 +93,17 @@ constexpr T indexedList<T,N>::pop_back()
 template<class T, T N>
 constexpr bool indexedList<T,N>::empty() const
 {
-	return head == defs::EMPTY;
+	return head == EMPTY;
 }
 
 template<class T, T N>
 constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 {
+	constexpr T EMPTY = indexedList<T,N>::EMPTY;
+
 	// Loop follows the second list, since this constantly swaps the
 	// next item information into the other list.
-	for (T x = list1.head; x != defs::EMPTY; x = list2.list[x].next)
+	for (T x = list1.head; x != EMPTY; x = list2.list[x].next)
 	{
 		std::swap(list1.list[x],list2.list[x]);
 	}
@@ -112,7 +114,7 @@ constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 	// (!list2.list[x].inList || list1.list[x].inList), which negates to
 	// (list2.list[x].inList && !list1.list[x].inList).
 	// After the (potential) swap, the next cell will always be in list1.
-	for (T x = list2.head; x != defs::EMPTY; x = list1.list[x].next)
+	for (T x = list2.head; x != EMPTY; x = list1.list[x].next)
 	{
 		if (list2.list[x].inList && !list1.list[x].inList)
 		{
@@ -134,7 +136,7 @@ constexpr bool indexedList<T,N>::exists(T x) const
 template<class T, T N>
 constexpr void indexedList<T,N>::clear()
 {
-	head = tail = defs::EMPTY;
+	head = tail = EMPTY;
 }
 
 template<class T, T N>
@@ -170,7 +172,7 @@ void indexedList<T,N>::print() const
 	std::cout << "(default cells omitted)" << std::endl;
 	for (unsigned i = 0; i < N; i++)
 	{
-		if (list[i].inList || list[i].next != defs::EMPTY || list[i].prev != defs::EMPTY)
+		if (list[i].inList || list[i].next != EMPTY || list[i].prev != EMPTY)
 			std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
 				<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
 	}

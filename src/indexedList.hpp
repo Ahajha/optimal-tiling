@@ -2,7 +2,6 @@
 #define INDEXED_LIST_HPP
 
 #include <array>
-#include "defs.hpp"
 
 /*
 An indexedList is an array/doubly linked list hybrid,
@@ -20,6 +19,8 @@ class indexedList
 	private:
 	
 	struct index;
+	
+	constexpr static T EMPTY = std::numeric_limits<T>::max();
 	
 	public:
 	
@@ -60,7 +61,7 @@ class indexedList
 		
 		constexpr iterator& operator++()
 		{
-			if (currentNode != defs::EMPTY)
+			if (currentNode != EMPTY)
 				currentNode = list[currentNode].next;
 			return *this;
 		}
@@ -72,12 +73,12 @@ class indexedList
 			return it;
 		}
 		
-		[[nodiscard]] constexpr bool operator==(const iterator& i)
+		[[nodiscard]] constexpr bool operator==(const iterator& i) const
 		{
 			return currentNode == i.currentNode;
 		}
 		
-		[[nodiscard]] constexpr T operator*() { return currentNode; }
+		[[nodiscard]] constexpr T operator*() const { return currentNode; }
 		
 		private:
 		
@@ -86,7 +87,7 @@ class indexedList
 	};
 	
 	[[nodiscard]] constexpr iterator begin() { return iterator(list, head); }
-	[[nodiscard]] constexpr iterator end  () { return iterator(list, defs::EMPTY); }
+	[[nodiscard]] constexpr iterator end  () { return iterator(list, EMPTY); }
 	
 	template<class T_, T_ N_>
 	constexpr friend void swap(indexedList<T_,N_>&, indexedList<T_,N_>&);
@@ -99,7 +100,7 @@ class indexedList
 		T next, prev;
 		
 		[[nodiscard]] constexpr index() :
-			inList(false), next(defs::EMPTY), prev(defs::EMPTY) {}
+			inList(false), next(EMPTY), prev(EMPTY) {}
 	};
 	
 	unsigned numItems;
