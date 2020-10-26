@@ -6,6 +6,7 @@
 #include <stack>
 #include <ctime>
 #include <mutex>
+#include "graph.hpp"
 
 // This file contains basic type definitions along with headers for some functions
 // shared between different programs, and 'global' variables.
@@ -17,10 +18,11 @@ struct Subtree;
 
 namespace defs
 {
-	typedef unsigned vertexID;
+	// TODO: Use graph directly everywhere, remove these
+	using vertexID = Graph::vertexID;
 	
-	constexpr vertexID EMPTY = (unsigned)-1;
-	constexpr unsigned numVertices = SIZEX*SIZEY*SIZEZ;
+	constexpr vertexID EMPTY = Graph::EMPTY;
+	constexpr vertexID numVertices = Graph::numVertices;
 	
 	enum action_type { add, rem, stop };
 	struct action { action_type type; vertexID v; };

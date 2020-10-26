@@ -2,8 +2,9 @@
 #define GRAPH_HPP
 
 #include <array>
+#include <numeric>
 #include "semiarray.hpp"
-#include "defs.hpp"
+#include "minFastType.hpp"
 
 /*
 In this case, a Graph is a cubic lattice, with size given
@@ -13,9 +14,18 @@ by SIZEX, SIZEY, and SIZEZ.
 class Graph
 {
 	// Will eventually be removed in favor of a template
-	static constexpr std::array<defs::vertexID, 3> dim_array = { SIZEX,SIZEY,SIZEZ };
+	static constexpr std::array<unsigned, 3> dim_array = { SIZEX,SIZEY,SIZEZ };
 	
 	public:
+	
+	constexpr static auto numVertices = minFastType<
+		std::accumulate(dim_array.begin(),dim_array.end(),
+			1,std::multiplies<uintmax_t>())
+	>::value;
+	
+	using vertexID = std::remove_const<decltype(numVertices)>::type;
+	
+	constexpr static vertexID EMPTY = std::numeric_limits<vertexID>::max();
 	
 	struct graphVertex
 	{
@@ -24,29 +34,29 @@ class Graph
 		// the direction enum below, EMPTY means there
 		// is no vertex in a given direction.
 		
-		semiarray <defs::vertexID, dim_array.size() * 2> neighbors;
-		std::array<defs::vertexID, dim_array.size() * 2> directions;
+		semiarray <vertexID, dim_array.size() * 2> neighbors;
+		std::array<vertexID, dim_array.size() * 2> directions;
 		
 		graphVertex() {}
-		graphVertex(defs::vertexID);
+		graphVertex(vertexID);
 	};
 	
 	private:
 	
-	static std::array<graphVertex, SIZEX*SIZEY*SIZEZ> makeVertices();
+	static std::array<graphVertex, numVertices> makeVertices();
 	
 	public:
 	
 	// Index of a given vertex is its ID
-	const static inline std::array<graphVertex, defs::numVertices> vertices = makeVertices();
+	const static inline auto vertices = makeVertices();
 	
-	[[nodiscard]] static bool onOuterShell(defs::vertexID);
+	[[nodiscard]] static bool onOuterShell(vertexID);
 	
-	[[nodiscard]] static constexpr defs::vertexID sizeof_dim(unsigned d);
-	[[nodiscard]] static constexpr defs::vertexID get_coord (unsigned d, defs::vertexID c);
+	[[nodiscard]] static constexpr vertexID sizeof_dim(unsigned d);
+	[[nodiscard]] static constexpr vertexID get_coord (unsigned d, vertexID c);
 	
-	[[nodiscard]] static constexpr defs::vertexID forward   (unsigned d, defs::vertexID c);
-	[[nodiscard]] static constexpr defs::vertexID backward  (unsigned d, defs::vertexID c);
+	[[nodiscard]] static constexpr vertexID forward   (unsigned d, vertexID c);
+	[[nodiscard]] static constexpr vertexID backward  (unsigned d, vertexID c);
 };
 
 #endif

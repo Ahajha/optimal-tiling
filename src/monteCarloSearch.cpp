@@ -141,8 +141,8 @@ void nested_monte_carlo(int id, Subtree& S,
 		if (level == NMC_LEVEL)
 		{
 			std::cout << "Level " << level << " decided on vertex "
-				<< nextVertex << ", numInduced = " << S.numInduced << 
-				": " << defs::threadSeconds() << std::endl;
+				<< static_cast<uintmax_t>(nextVertex) << ", numInduced = "
+				<< S.numInduced << ": " << defs::threadSeconds() << std::endl;
 		}
 	}
 	
