@@ -19,8 +19,6 @@ namespace defs
 	// TODO: Use graph directly everywhere, remove these
 	using vertexID = Graph::vertexID;
 	
-	constexpr vertexID EMPTY = Graph::EMPTY;
-	
 	enum action_type { add, rem, stop };
 	struct action { action_type type; vertexID v; };
 	
