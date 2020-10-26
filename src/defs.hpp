@@ -7,12 +7,10 @@
 #include <ctime>
 #include <mutex>
 #include "graph.hpp"
+#include "indexedList.hpp"
 
 // This file contains basic type definitions along with headers for some functions
 // shared between different programs, and 'global' variables.
-
-template<class T, T N>
-class indexedList;
 
 struct Subtree;
 
