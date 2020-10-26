@@ -8,9 +8,9 @@
 
 // Updates the border of S after adding x, does not track changes.
 void simpleUpdate(Subtree& S,
-	indexedList<defs::vertexID, Graph::numVertices>& border, defs::vertexID x)
+	indexedList<Graph::vertexID, Graph::numVertices>& border, Graph::vertexID x)
 {
-	for (defs::vertexID y : Graph::vertices[x].neighbors)
+	for (Graph::vertexID y : Graph::vertices[x].neighbors)
 	{
 		if (S.cnt(y) > 1)
 		{
@@ -26,13 +26,13 @@ void simpleUpdate(Subtree& S,
 // Randomly adds vertices to S until it becomes maximal, then returns
 // its size.
 // Current path should start with only the last added vertex.
-void randomBranch(int id, Subtree S, indexedList<defs::vertexID, Graph::numVertices> border,
-	unsigned& bestResult, indexedList<defs::vertexID, Graph::numVertices> currentPath,
-	indexedList<defs::vertexID, Graph::numVertices>& bestPath)
+void randomBranch(int id, Subtree S, indexedList<Graph::vertexID, Graph::numVertices> border,
+	unsigned& bestResult, indexedList<Graph::vertexID, Graph::numVertices> currentPath,
+	indexedList<Graph::vertexID, Graph::numVertices>& bestPath)
 {
 	while(!border.empty())
 	{
-		defs::vertexID x;
+		Graph::vertexID x;
 		do
 		{
 			// Get and remove a random element,
@@ -63,20 +63,20 @@ void randomBranch(int id, Subtree S, indexedList<defs::vertexID, Graph::numVerti
 }
 
 void nested_monte_carlo(int id, Subtree& S,
-	indexedList<defs::vertexID, Graph::numVertices>& border,
+	indexedList<Graph::vertexID, Graph::numVertices>& border,
 	std::stack<defs::action>& previous_actions, unsigned level, unsigned& globalBestResult,
-	indexedList<defs::vertexID, Graph::numVertices> currentPath,
-	indexedList<defs::vertexID, Graph::numVertices>& globalBestPath)
+	indexedList<Graph::vertexID, Graph::numVertices> currentPath,
+	indexedList<Graph::vertexID, Graph::numVertices>& globalBestPath)
 {
 	// Keep track of the vertices added.
-	std::stack<defs::vertexID> added;
+	std::stack<Graph::vertexID> added;
 	
-	indexedList<defs::vertexID, Graph::numVertices> bestPath;
+	indexedList<Graph::vertexID, Graph::numVertices> bestPath;
 	unsigned bestResult = 0;
 	while(true)
 	{
 		// Temporarily remove any vertices that are invalid to add.
-		for (defs::vertexID x : border)
+		for (Graph::vertexID x : border)
 		{
 			if (!S.safeToAdd(x))
 			{
@@ -91,11 +91,11 @@ void nested_monte_carlo(int id, Subtree& S,
 			break;
 		}
 		
-		indexedList<defs::vertexID, Graph::numVertices> trialPath;
+		indexedList<Graph::vertexID, Graph::numVertices> trialPath;
 		do
 		{
 			// Get and remove the first element
-			defs::vertexID x = border.pop_front();
+			Graph::vertexID x = border.pop_front();
 			
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
@@ -127,7 +127,7 @@ void nested_monte_carlo(int id, Subtree& S,
 		
 		std::swap(border, defs::lists[id][S.numInduced]);
 		
-		defs::vertexID nextVertex = bestPath.pop_front();
+		Graph::vertexID nextVertex = bestPath.pop_front();
 		
 		S.add(nextVertex);
 		
@@ -150,10 +150,10 @@ void nested_monte_carlo(int id, Subtree& S,
 	
 	// There is one item, temporarily remove it so
 	// we can put the rest of the items in order.
-	defs::vertexID temp = currentPath.pop_front();
+	Graph::vertexID temp = currentPath.pop_front();
 	while(!added.empty())
 	{
-		defs::vertexID x = added.top();
+		Graph::vertexID x = added.top();
 		added.pop();
 		
 		S.rem(x);
@@ -187,13 +187,13 @@ int main(int num_args, char** args)
 	defs::start_time = clock();
 	
 	unsigned globalBestResult = 0;
-	indexedList<defs::vertexID, Graph::numVertices> currentPath;
+	indexedList<Graph::vertexID, Graph::numVertices> currentPath;
 	currentPath.push_front(0);
-	indexedList<defs::vertexID, Graph::numVertices> globalBestPath;
+	indexedList<Graph::vertexID, Graph::numVertices> globalBestPath;
 	
 	Subtree S(0);
 	
-	indexedList<defs::vertexID, Graph::numVertices> border;
+	indexedList<Graph::vertexID, Graph::numVertices> border;
 	
 	std::stack<defs::action> previous_actions;
 	

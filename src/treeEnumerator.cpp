@@ -6,7 +6,7 @@
 #include <iostream>
 
 // Performs the bulk of the algorithm described in the paper.
-void branch(int id, Subtree& S, indexedList<defs::vertexID, Graph::numVertices>& border,
+void branch(int id, Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
 	std::stack<defs::action>& previous_actions)
 {
 	// We only consider subtrees without children to be good candidates,
@@ -24,7 +24,7 @@ void branch(int id, Subtree& S, indexedList<defs::vertexID, Graph::numVertices>&
 		do
 		{
 			// Get and remove the first element
-			defs::vertexID x = border.pop_front();
+			Graph::vertexID x = border.pop_front();
 			
 			// Push it onto a temporary list. This is a fix
 			// to the base algorithm, it will not work without this
@@ -69,12 +69,12 @@ int main(int num_args, char** args)
 	
 	defs::start_time = clock();
 	
-	for (defs::vertexID x = 0; x < Graph::numVertices; x++)
+	for (Graph::vertexID x = 0; x < Graph::numVertices; x++)
 	{
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
 		
-		indexedList<defs::vertexID, Graph::numVertices> border;
+		indexedList<Graph::vertexID, Graph::numVertices> border;
 		
 		std::stack<defs::action> previous_actions;
 		

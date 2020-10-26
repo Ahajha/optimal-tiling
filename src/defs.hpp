@@ -15,11 +15,8 @@
 
 namespace defs
 {
-	// TODO: Use graph directly everywhere, remove these
-	using vertexID = Graph::vertexID;
-	
 	enum action_type { add, rem, stop };
-	struct action { action_type type; vertexID v; };
+	struct action { action_type type; Graph::vertexID v; };
 	
 	extern const int NUM_THREADS;
 	
@@ -39,7 +36,7 @@ namespace defs
 	// then swapped back to restore. A call to branch can find the list it should
 	// use by going to lists[id][S.numInduced].
 	extern std::vector<
-		std::array<indexedList<vertexID, Graph::numVertices>, Graph::numVertices>
+		std::array<indexedList<Graph::vertexID, Graph::numVertices>, Graph::numVertices>
 	> lists;
 	
 	// Used to store the number of leaves seen thus far
@@ -53,11 +50,11 @@ namespace defs
 	float threadSeconds();
 	
 	// Updates the border of S after adding x.
-	void update(Subtree& S, indexedList<vertexID, Graph::numVertices>& border,
-		vertexID x, std::stack<action>& previous_actions);
+	void update(Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
+		Graph::vertexID x, std::stack<action>& previous_actions);
 	
 	// Restores the border of S after removing x.
-	void restore(indexedList<vertexID, Graph::numVertices>& border,
+	void restore(indexedList<Graph::vertexID, Graph::numVertices>& border,
 		std::stack<action>& previous_actions);
 	
 	// After confirming S has a greater number of blocks than seen before,
