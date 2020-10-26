@@ -1,4 +1,5 @@
 #include "defs.hpp"
+#include "graph.hpp"
 #include "subTree.hpp"
 #include "indexedList.hpp"
 

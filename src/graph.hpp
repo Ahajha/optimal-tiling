@@ -1,10 +1,11 @@
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
-#include <array>
-#include <numeric>
 #include "semiarray.hpp"
 #include "minFastType.hpp"
+
+#include <array>
+#include <numeric>
 
 /*
 In this case, a Graph is a cubic lattice, with size given

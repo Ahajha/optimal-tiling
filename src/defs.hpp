@@ -2,13 +2,13 @@
 #define DEFS_HPP
 
 #include "../CTPL/ctpl_stl.h"
+#include "graph.hpp"
+#include "subTree.hpp"
+#include "indexedList.hpp"
 
 #include <stack>
 #include <ctime>
 #include <mutex>
-#include "graph.hpp"
-#include "subTree.hpp"
-#include "indexedList.hpp"
 
 // This file contains basic type definitions along with headers for some functions
 // shared between different programs, and 'global' variables.

@@ -1,10 +1,11 @@
 #ifndef SUBTREE_HPP
 #define SUBTREE_HPP
 
+#include "graph.hpp"
+
 #include <array>
 #include <vector>
 #include <iostream>
-#include "graph.hpp"
 
 // Represents an induced subtree
 struct Subtree
