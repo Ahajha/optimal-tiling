@@ -8,7 +8,7 @@
 
 // Updates the border of S after adding x, does not track changes.
 void simpleUpdate(Subtree& S,
-	indexedList<defs::vertexID, defs::numVertices>& border, defs::vertexID x)
+	indexedList<defs::vertexID, Graph::numVertices>& border, defs::vertexID x)
 {
 	for (defs::vertexID y : Graph::vertices[x].neighbors)
 	{
@@ -26,9 +26,9 @@ void simpleUpdate(Subtree& S,
 // Randomly adds vertices to S until it becomes maximal, then returns
 // its size.
 // Current path should start with only the last added vertex.
-void randomBranch(int id, Subtree S, indexedList<defs::vertexID, defs::numVertices> border,
-	unsigned& bestResult, indexedList<defs::vertexID, defs::numVertices> currentPath,
-	indexedList<defs::vertexID, defs::numVertices>& bestPath)
+void randomBranch(int id, Subtree S, indexedList<defs::vertexID, Graph::numVertices> border,
+	unsigned& bestResult, indexedList<defs::vertexID, Graph::numVertices> currentPath,
+	indexedList<defs::vertexID, Graph::numVertices>& bestPath)
 {
 	while(!border.empty())
 	{
@@ -63,15 +63,15 @@ void randomBranch(int id, Subtree S, indexedList<defs::vertexID, defs::numVertic
 }
 
 void nested_monte_carlo(int id, Subtree& S,
-	indexedList<defs::vertexID, defs::numVertices>& border,
+	indexedList<defs::vertexID, Graph::numVertices>& border,
 	std::stack<defs::action>& previous_actions, unsigned level, unsigned& globalBestResult,
-	indexedList<defs::vertexID, defs::numVertices> currentPath,
-	indexedList<defs::vertexID, defs::numVertices>& globalBestPath)
+	indexedList<defs::vertexID, Graph::numVertices> currentPath,
+	indexedList<defs::vertexID, Graph::numVertices>& globalBestPath)
 {
 	// Keep track of the vertices added.
 	std::stack<defs::vertexID> added;
 	
-	indexedList<defs::vertexID, defs::numVertices> bestPath;
+	indexedList<defs::vertexID, Graph::numVertices> bestPath;
 	unsigned bestResult = 0;
 	while(true)
 	{
@@ -91,7 +91,7 @@ void nested_monte_carlo(int id, Subtree& S,
 			break;
 		}
 		
-		indexedList<defs::vertexID, defs::numVertices> trialPath;
+		indexedList<defs::vertexID, Graph::numVertices> trialPath;
 		do
 		{
 			// Get and remove the first element
@@ -187,13 +187,13 @@ int main(int num_args, char** args)
 	defs::start_time = clock();
 	
 	unsigned globalBestResult = 0;
-	indexedList<defs::vertexID, defs::numVertices> currentPath;
+	indexedList<defs::vertexID, Graph::numVertices> currentPath;
 	currentPath.push_front(0);
-	indexedList<defs::vertexID, defs::numVertices> globalBestPath;
+	indexedList<defs::vertexID, Graph::numVertices> globalBestPath;
 	
 	Subtree S(0);
 	
-	indexedList<defs::vertexID, defs::numVertices> border;
+	indexedList<defs::vertexID, Graph::numVertices> border;
 	
 	std::stack<defs::action> previous_actions;
 	

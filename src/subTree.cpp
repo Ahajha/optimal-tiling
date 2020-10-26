@@ -55,7 +55,7 @@ void Subtree::rem(defs::vertexID i)
 void Subtree::print() const
 {
 	std::cout << "Subgraph: ";
-	for (defs::vertexID x = 0; x < defs::numVertices; x++)
+	for (defs::vertexID x = 0; x < Graph::numVertices; x++)
 	{
 		if (has(x)) std::cout << x << ' ';
 	}
@@ -113,10 +113,10 @@ bool Subtree::hasEnclosedSpace() const
 	enum label { induced, empty, empty_connected };
 	
 	// Each vertex is labeled one of the above
-	std::array<label, defs::numVertices> vertex_labels;
+	std::array<label, Graph::numVertices> vertex_labels;
 	
 	// Initial label is either induced or empty
-	for (defs::vertexID x = 0; x < defs::numVertices; x++)
+	for (defs::vertexID x = 0; x < Graph::numVertices; x++)
 	{
 		vertex_labels[x] = has(x) ? induced : empty;
 	}
@@ -126,7 +126,7 @@ bool Subtree::hasEnclosedSpace() const
 	
 	// For each vertex touching the outer shell of the cube,
 	// queue for searching
-	for (defs::vertexID x = 0; x < defs::numVertices; x++)
+	for (defs::vertexID x = 0; x < Graph::numVertices; x++)
 	{
 		if (Graph::onOuterShell(x))
 		{
@@ -158,7 +158,7 @@ bool Subtree::hasEnclosedSpace() const
 	
 	// If the graph has enclosed space, then there will
 	// be vertices not accounted for in this formula
-	return numInduced + numConnected != defs::numVertices;
+	return numInduced + numConnected != Graph::numVertices;
 }
 
 bool Subtree::safeToAdd(defs::vertexID i)

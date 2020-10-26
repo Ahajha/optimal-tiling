@@ -17,7 +17,7 @@ std::string defs::outfile;
 clock_t defs::start_time;
 
 std::vector<
-	std::array<indexedList<defs::vertexID, defs::numVertices>, defs::numVertices>
+	std::array<indexedList<defs::vertexID, Graph::numVertices>, Graph::numVertices>
 > defs::lists(NUM_THREADS);
 
 std::vector<unsigned long long> defs::numLeaves(NUM_THREADS);
@@ -26,7 +26,7 @@ bool defs::lastWasNew = false;
 
 std::mutex defs::IOmutex;
 
-void defs::update(Subtree& S, indexedList<vertexID, numVertices>& border,
+void defs::update(Subtree& S, indexedList<vertexID, Graph::numVertices>& border,
 	vertexID x, std::stack<action>& previous_actions)
 {
 	for (vertexID y : Graph::vertices[x].neighbors)
@@ -50,7 +50,7 @@ void defs::update(Subtree& S, indexedList<vertexID, numVertices>& border,
 	}
 }
 
-void defs::restore(indexedList<vertexID, numVertices>& border,
+void defs::restore(indexedList<vertexID, Graph::numVertices>& border,
 	std::stack<action>& previous_actions)
 {
 	while (true)

@@ -6,7 +6,7 @@
 #include <iostream>
 
 // Performs the bulk of the algorithm described in the paper.
-void branch(int id, Subtree& S, indexedList<defs::vertexID, defs::numVertices>& border,
+void branch(int id, Subtree& S, indexedList<defs::vertexID, Graph::numVertices>& border,
 	std::stack<defs::action>& previous_actions)
 {
 	// We only consider subtrees without children to be good candidates,
@@ -69,12 +69,12 @@ int main(int num_args, char** args)
 	
 	defs::start_time = clock();
 	
-	for (defs::vertexID x = 0; x < defs::numVertices; x++)
+	for (defs::vertexID x = 0; x < Graph::numVertices; x++)
 	{
 		// Makes a subgraph with one vertex, its root.
 		Subtree S(x);
 		
-		indexedList<defs::vertexID, defs::numVertices> border;
+		indexedList<defs::vertexID, Graph::numVertices> border;
 		
 		std::stack<defs::action> previous_actions;
 		

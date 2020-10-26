@@ -26,7 +26,7 @@ struct Subtree
 	
 	defs::vertexID root;
 	
-	std::array<subTreeVertex, defs::numVertices> vertices;
+	std::array<subTreeVertex, Graph::numVertices> vertices;
 	
 	Subtree(defs::vertexID);
 	
