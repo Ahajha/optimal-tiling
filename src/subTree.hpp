@@ -4,8 +4,6 @@
 #include <array>
 #include <vector>
 #include <iostream>
-
-#include "defs.hpp"
 #include "graph.hpp"
 
 // Represents an induced subtree
@@ -24,21 +22,22 @@ struct Subtree
 	
 	unsigned numInduced;
 	
-	defs::vertexID root;
+	Graph::vertexID root;
 	
 	std::array<subTreeVertex, Graph::numVertices> vertices;
 	
-	Subtree(defs::vertexID);
+	Subtree(Graph::vertexID);
 	
-	unsigned cnt(defs::vertexID i) const { return vertices[i].effectiveDegree; }
-	bool     has(defs::vertexID i) const { return vertices[i].induced;         }
+	unsigned cnt(Graph::vertexID i) const { return vertices[i].effectiveDegree; }
+	bool     has(Graph::vertexID i) const { return vertices[i].induced;         }
 	
 	// Does nothing if the graph would be invalidated
-	bool add(defs::vertexID);
+	bool add(Graph::vertexID);
 	
-	void rem(defs::vertexID);
+	void rem(Graph::vertexID);
 	
-	bool exists(defs::vertexID i) const { return i != defs::EMPTY && vertices[i].induced; }
+	bool exists(Graph::vertexID i) const
+		{ return i != Graph::EMPTY && vertices[i].induced; }
 	
 	void print() const;
 	
@@ -46,14 +45,14 @@ struct Subtree
 	
 	// Defined only for dimensions 2 and 3. A vertex is valid
 	// if it has at most one axis with both neighbors.
-	bool validate(defs::vertexID i) const;
+	bool validate(Graph::vertexID i) const;
 	
 	// Returns true iff there is at least one block whose
 	// faces cannot be accessed externally.
 	bool hasEnclosedSpace() const;
 	
 	// Returns true iff adding i would preserve the neighbor condition.
-	bool safeToAdd(defs::vertexID);
+	bool safeToAdd(Graph::vertexID);
 };
 
 #endif
