@@ -18,33 +18,33 @@ namespace defs
 	enum action_type { add, rem, stop };
 	struct action { action_type type; Graph::vertexID v; };
 	
-	extern const int NUM_THREADS;
+	inline const int NUM_THREADS = std::thread::hardware_concurrency();
 	
 	// Thread pool
-	extern ctpl::thread_pool pool;
+	inline ctpl::thread_pool pool(NUM_THREADS);
 	
 	// Maximum size graph seen so far
-	extern unsigned largestTree, largestWithEnclosed;
+	inline unsigned largestTree = 0, largestWithEnclosed = 0;
 	
 	// File to write the best graph seen so far to
-	extern std::string outfile;
+	inline std::string outfile {};
 	
 	// The start time of the program
-	extern clock_t start_time;
+	inline clock_t start_time {};
 	
 	// Grid of indexedLists, used to store the border elements as they are removed,
 	// then swapped back to restore. A call to branch can find the list it should
 	// use by going to lists[id][S.numInduced].
-	extern std::vector<
+	inline std::vector<
 		std::array<indexedList<Graph::vertexID, Graph::numVertices>, Graph::numVertices>
-	> lists;
+	> lists(NUM_THREADS);
 	
 	// Used to store the number of leaves seen thus far
-	extern std::vector<unsigned long long> numLeaves;
-	extern bool lastWasNew;
+	inline std::vector<uintmax_t> numLeaves(NUM_THREADS);
+	inline bool lastWasNew = false;
 	
 	// Used for thread safety on any IO actions.
-	extern std::mutex IOmutex;
+	inline std::mutex IOmutex {};
 	
 	// Returns the number of thread-seconds since the start of the program.
 	float threadSeconds();

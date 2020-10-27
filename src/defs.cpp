@@ -1,30 +1,6 @@
 #include "defs.hpp"
-#include "indexedList.hpp"
-#include "subTree.hpp"
-#include "graph.hpp"
 
-#include <thread>
 #include <iostream>
-
-const int defs::NUM_THREADS = std::thread::hardware_concurrency();
-
-ctpl::thread_pool defs::pool(NUM_THREADS);
-
-unsigned defs::largestTree = 0, defs::largestWithEnclosed = 0;
-
-std::string defs::outfile;
-
-clock_t defs::start_time;
-
-std::vector<
-	std::array<indexedList<Graph::vertexID, Graph::numVertices>, Graph::numVertices>
-> defs::lists(NUM_THREADS);
-
-std::vector<unsigned long long> defs::numLeaves(NUM_THREADS);
-
-bool defs::lastWasNew = false;
-
-std::mutex defs::IOmutex;
 
 void defs::update(Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
 	Graph::vertexID x, std::stack<action>& previous_actions)
