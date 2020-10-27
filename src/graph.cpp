@@ -5,12 +5,8 @@
 // if d == dim_array.size(), this is just the number of vertices.
 constexpr Graph::vertexID Graph::sizeof_dim(unsigned d)
 {
-	vertexID result = 1;
-	for (unsigned i = 0; i < d; ++i)
-	{
-		result *= dim_array[i];
-	}
-	return result;
+	return std::accumulate(dim_array.begin(), dim_array.begin() + d,
+		1, std::multiplies<vertexID>());
 }
 
 // Gets a specific dimension of the coordinate of c. Valid values of
@@ -49,8 +45,12 @@ Graph::graphVertex::graphVertex(vertexID c)
 	
 	// Neighbors need to be in ascending order of ID
 	for (vertexID n : directions)
+	{
 		if (n != EMPTY)
+		{
 			neighbors.push_back(n);
+		}
+	}
 }
 
 bool Graph::onOuterShell(vertexID i)
