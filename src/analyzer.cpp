@@ -232,11 +232,6 @@ class CubicLattice
 	}
 };
 
-const char* btos(bool b)
-{
-	return b ? "true" : "false";
-}
-
 int main()
 {
 	unsigned size;
@@ -261,21 +256,23 @@ int main()
 		}
 	}
 	
+	std::cout << std::boolalpha;
+	
 	unsigned numVert = graph.getNumVertices();
 	std::cout << numVert << " vertices" << std::endl;
 	
 	std::cout << "Graph is connected: "
-		<< btos(graph.isConnected()) << std::endl;
+		<< graph.isConnected() << std::endl;
 	
 	std::cout << "Graph satisfies neighbor condition: "
-		<< btos(graph.validateNeighbors()) << std::endl;
+		<< graph.validateNeighbors() << std::endl;
 	
 	std::cout << "Graph has enclosed space: "
-		<< btos(graph.hasEnclosedSpace()) << std::endl;
+		<< graph.hasEnclosedSpace() << std::endl;
 	
 	unsigned numFaces = graph.numFaces();
 	std::cout << "Number of faces: " << numFaces << std::endl;
 	
 	std::cout << "Graph is a tree: "
-		<< btos(numFaces == 4 * numVert + 2) << std::endl;
+		<< (numFaces == 4 * numVert + 2) << std::endl;
 }
