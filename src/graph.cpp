@@ -1,31 +1,22 @@
 #include "graph.hpp"
 
-// Returns the number of vertices that would be in the graph if
-// it were truncated to a given number of dimensions Note that
-// if d == dim_array.size(), this is just the number of vertices.
 constexpr Graph::vertexID Graph::sizeof_dim(unsigned d)
 {
 	return std::accumulate(dim_array.begin(), dim_array.begin() + d,
 		1, std::multiplies<vertexID>());
 }
 
-// Gets a specific dimension of the coordinate of c. Valid values of
-// d are 0 <= d < dim_array.size()
 constexpr Graph::vertexID Graph::get_coord(unsigned d, vertexID c)
 {
 	return (c / sizeof_dim(d)) % dim_array[d];
 }
 
-// Returns the vertexID of the vertex "forward" in a
-// dimension d from c, if it exists, EMPTY if not.
 constexpr Graph::vertexID Graph::forward  (unsigned d, vertexID c)
 {
 	return (get_coord(d,c) == dim_array[d] - 1)
 		? EMPTY : c + sizeof_dim(d);
 }
 
-// Returns the vertexID of the vertex "backward" in a
-// dimension d from c, if it exists, EMPTY if not.
 constexpr Graph::vertexID Graph::backward (unsigned d, vertexID c)
 {
 	return (get_coord(d,c) == 0)
@@ -53,9 +44,9 @@ Graph::graphVertex::graphVertex(vertexID c)
 	}
 }
 
-bool Graph::onOuterShell(vertexID i)
+bool Graph::onOuterShell(vertexID c)
 {
-	return vertices[i].neighbors.size() != dim_array.size() * 2;
+	return vertices[c].neighbors.size() != dim_array.size() * 2;
 }
 
 std::array<Graph::graphVertex, Graph::numVertices> Graph::makeVertices()

@@ -51,12 +51,24 @@ class Graph
 	// Index of a given vertex is its ID
 	const static inline auto vertices = makeVertices();
 	
-	[[nodiscard]] static bool onOuterShell(vertexID);
+	// Returns true iff c is an element on the outer shell of the hypercube.
+	[[nodiscard]] static bool onOuterShell(vertexID c);
 	
+	// Returns the number of vertices that would be in the graph if
+	// it were truncated to a given number of dimensions Note that
+	// if d == dim_array.size(), this is just the number of vertices.
 	[[nodiscard]] static constexpr vertexID sizeof_dim(unsigned d);
+	
+	// Gets a specific dimension of the coordinate of c. Valid values of
+	// d are 0 <= d < dim_array.size()
 	[[nodiscard]] static constexpr vertexID get_coord (unsigned d, vertexID c);
 	
+	// Returns the vertexID of the vertex "forward" in a
+	// dimension d from c, if it exists, EMPTY if not.
 	[[nodiscard]] static constexpr vertexID forward   (unsigned d, vertexID c);
+	
+	// Returns the vertexID of the vertex "backward" in a
+	// dimension d from c, if it exists, EMPTY if not.
 	[[nodiscard]] static constexpr vertexID backward  (unsigned d, vertexID c);
 };
 
