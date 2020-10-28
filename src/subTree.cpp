@@ -66,22 +66,53 @@ void Subtree::print() const
 void Subtree::writeToFile(std::string filename) const
 {
 	std::ofstream file(filename);
-
-	file << SIZEX << ' ' << SIZEY << ' ' << SIZEZ << std::endl << std::endl;
 	
-	Graph::vertexID x = 0;
-	for (unsigned i = 0; i < SIZEZ; i++)
+	for (unsigned d : dim_array)
 	{
-		for (unsigned j = 0; j < SIZEY; j++)
+		file << d << ' ';
+	}
+	file << "\n\n";
+	
+	// If 2 or 3 dimensions, print in a readable format.
+	// Otherwise, just print all on one line.
+	if constexpr (dim_array.size() == 3)
+	{
+		Graph::vertexID x = 0;
+		for (unsigned i = 0; i < dim_array[0]; ++i)
 		{
-			for (unsigned k = 0; k < SIZEX; k++)
+			for (unsigned j = 0; j < dim_array[1]; ++j)
+			{
+				for (unsigned k = 0; k < dim_array[2]; ++k)
+				{
+					file << (has(x++) ? BLOCK_PRESENT : BLOCK_MISSING);
+				}
+				file << '\n';
+			}
+			file << '\n';
+		}
+	}
+	else if constexpr (dim_array.size() == 2)
+	{
+		Graph::vertexID x = 0;
+		for (unsigned i = 0; i < dim_array[0]; ++i)
+		{
+			for (unsigned j = 0; j < dim_array[1]; ++j)
 			{
 				file << (has(x++) ? BLOCK_PRESENT : BLOCK_MISSING);
 			}
-			file << std::endl;
+			file << '\n';
 		}
-		file << std::endl;
+		file << '\n';
 	}
+	else
+	{
+		for (Graph::vertexID x = 0; x < Graph::numVertices; ++x)
+		{
+			file << (has(x) ? BLOCK_PRESENT : BLOCK_MISSING);
+		}
+		file << "\n\n";
+	}
+	
 	file << numInduced << std::endl;
 }
 
