@@ -4,7 +4,7 @@ sizeString = $(subst $(comma),_,$(size))
 $(shell mkdir -p obj bin results)
 
 CC          = g++-10 --std=c++20
-CFLAGS      = -pthread -O3 -Wall -Wextra
+CFLAGS      = -pthread -O3 -Wall -Wextra -g
 SIZE_MACRO  = -D SIZE=$(size)
 LEVEL_MACRO = -D NMC_LEVEL=$(level)
 
