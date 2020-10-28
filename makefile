@@ -1,27 +1,12 @@
-# make run size=s
-# OR
-# make run sizeX=x sizeY=y sizeZ=z
-# OR
-# make analyze file=<infile>
-
-# If only size is defined, then define the individual side
-# lengths to be that size.
-ifdef size
-
-sizeX=$(size)
-sizeY=$(size)
-sizeZ=$(size)
-
-endif
+comma = ,
+sizeString = $(subst $(comma),_,$(size))
 
 $(shell mkdir -p obj bin results)
 
 CC          = g++-10 --std=c++20
 CFLAGS      = -pthread -O3 -Wall -Wextra
-SIZE_MACRO  = -D SIZEX=$(sizeX) -D SIZEY=$(sizeY) -D SIZEZ=$(sizeZ)
+SIZE_MACRO  = -D SIZE=$(size)
 LEVEL_MACRO = -D NMC_LEVEL=$(level)
-
-sizeString=$(sizeX)_$(sizeY)_$(sizeZ)
 
 ST_ofile=obj/subTree_$(sizeString).o
 MC_ofile=obj/monteCarloSearch_$(sizeString)_level$(level).o

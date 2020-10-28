@@ -15,7 +15,7 @@ by SIZEX, SIZEY, and SIZEZ.
 class Graph
 {
 	// Will eventually be removed in favor of a template
-	static constexpr std::array<unsigned, 3> dim_array = { SIZEX,SIZEY,SIZEZ };
+	static constexpr std::array<unsigned, 3> dim_array = { SIZE };
 	
 	public:
 	

@@ -13,7 +13,7 @@ struct Subtree
 	private:
 	
 	// To be removed later, used as a stopgap solution before templatization
-	static constexpr std::array<unsigned, 3> dim_array = { SIZEX,SIZEY,SIZEZ };
+	static constexpr std::array<unsigned, 3> dim_array = { SIZE };
 	
 	public:
 	
