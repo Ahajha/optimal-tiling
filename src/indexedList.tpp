@@ -104,11 +104,9 @@ constexpr bool indexedList<T,N>::empty() const
 template<class T, T N>
 constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 {
-	constexpr T EMPTY = indexedList<T,N>::EMPTY;
-
 	// Loop follows the second list, since this constantly swaps the
 	// next item information into the other list.
-	for (T x = list1.head; x != EMPTY; x = list2.list[x].next)
+	for (T x = list1.head; x != indexedList<T,N>::EMPTY; x = list2.list[x].next)
 	{
 		std::swap(list1.list[x],list2.list[x]);
 	}
@@ -119,7 +117,7 @@ constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 	// (!list2.list[x].inList || list1.list[x].inList), which negates to
 	// (list2.list[x].inList && !list1.list[x].inList).
 	// After the (potential) swap, the next cell will always be in list1.
-	for (T x = list2.head; x != EMPTY; x = list1.list[x].next)
+	for (T x = list2.head; x != indexedList<T,N>::EMPTY; x = list1.list[x].next)
 	{
 		if (list2.list[x].inList && !list1.list[x].inList)
 		{
@@ -127,9 +125,10 @@ constexpr void swap(indexedList<T,N>& list1, indexedList<T,N>& list2)
 		}
 	}
 	
-	// Finally, swap the heads and tails.
+	// Finally, swap the heads, tails, and number of items.
 	std::swap(list1.head,list2.head);
 	std::swap(list1.tail,list2.tail);
+	std::swap(list1.numItems,list2.numItems);
 }
 
 template<class T, T N>
@@ -141,7 +140,9 @@ constexpr bool indexedList<T,N>::exists(T x) const
 template<class T, T N>
 constexpr void indexedList<T,N>::clear()
 {
+	// 'Lazy' removal, no cells are modified.
 	head = tail = EMPTY;
+	numItems = 0;
 }
 
 template<class T, T N>
