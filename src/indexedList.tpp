@@ -1,7 +1,6 @@
 #include "indexedList.hpp"
 
 #include <random>
-#include <iostream>
 
 template<class T, T N>
 constexpr indexedList<T,N>::indexedList() :
@@ -157,25 +156,4 @@ constexpr T indexedList<T,N>::removeRandom()
 	remove(valueToRemove);
 	
 	return valueToRemove;
-}
-
-template<class T, T N>
-void indexedList<T,N>::print() const
-{
-	/*
-	for (T x = head; x != EMPTY; x = list[x].next)
-	{
-		std::cout << x << " ";
-	}
-	std::cout << std::endl;
-	*/
-	std::cout << "(default cells omitted)" << std::endl;
-	for (unsigned i = 0; i < N; i++)
-	{
-		if (list[i].inList || list[i].next != EMPTY || list[i].prev != EMPTY)
-			std::cout << "vertex " << i << ", " << (list[i].inList ? "in" : "not in") << ", "
-				<< "next = " << list[i].next << ", prev = " << list[i].prev << std::endl;
-	}
-	std::cout << "head = " << head << ", tail = " << tail
-		<< ", size = " << numItems << std::endl;
 }

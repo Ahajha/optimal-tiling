@@ -48,8 +48,6 @@ class indexedList
 	
 	[[nodiscard]] constexpr T size() const;
 	
-	void print() const;
-	
 	friend class iterator;
 	
 	class iterator
