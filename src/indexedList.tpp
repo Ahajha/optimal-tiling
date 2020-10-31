@@ -13,18 +13,24 @@ constexpr bool indexedList<T,N>::remove(T x)
 	
 	list[x].inList = false;
 	
-	if (list[x].next != EMPTY)
-		list[list[x].next].prev = list[x].prev;
-	else // Tail of the list
-		tail = list[x].prev;
-	
-	if (list[x].prev != EMPTY)
-		list[list[x].prev].next = list[x].next;
-	else // Head of the list
+	// Removals are 'lazy', they do not reset the cell that was removed.
+	if (head == x)
+	{
 		head = list[x].next;
+	}
+	else
+	{
+		list[list[x].prev].next = list[x].next;
+	}
 	
-	//list[x].next = EMPTY;
-	//list[x].prev = EMPTY;
+	if (tail == x)
+	{
+		tail = list[x].prev;
+	}
+	else
+	{
+		list[list[x].next].prev = list[x].prev;
+	}
 	
 	--numItems;
 	
