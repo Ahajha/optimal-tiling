@@ -7,9 +7,9 @@ constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
 {
 	// Array of sizes of previous dimensions, effectively a running product
 	// of the dimension sizes up to a point.
-	std::array<value_type, dims.size() + 1> dimSizes;
+	std::array<value_type, dims.size()> dimSizes;
 	dimSizes[0] = 1;
-	for (unsigned i = 1; i <= dims.size(); ++i)
+	for (unsigned i = 1; i < dims.size(); ++i)
 	{
 		dimSizes[i] = dimSizes[i - 1] * dims[i - 1];
 	}
@@ -24,10 +24,10 @@ constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
 	{
 		auto helper = [&](auto& ref)
 		{
-			// Skip over the first dimension, since there is no point
+			// Skip over the primary dimension, since there is no point
 			// swapping with itself (and we have constructed the 'reference'
 			// permutation) and look for any other dimensions that
-			// shares the same size, swap that dimension with the first one.
+			// shares the same size, swap that dimension with the primary one.
 			for (value_type i = 0; i < dims.size() - 1; ++i)
 			{
 				if (dims[i] == primaryDim)
@@ -36,21 +36,19 @@ constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
 					// extract the last dimension and dimension i and swap them.
 					for (value_type j = 0; j < numVertices; ++j)
 					{
-						// TODO: make sure i'm not reversing any directions,
-						// and double check these indexes
-						
 						auto& val = perms[index][j] = ref[j];
 						
-						value_type dLast =  ref[j] % dimSizes[dims.size() - 1];
-						value_type di    = (ref[j] % dimSizes[i]) / dimSizes[i + 1];
+						// Dimension 'primary' and 'i'
+						value_type dp =  val / dimSizes[dims.size() - 1];
+						value_type di = (val / dimSizes[i]) % dims[i];
 						
 						// 'erase' the dimensions
-						val -= dLast * dimSizes[dims.size() - 1];
-						val -= di    * dimSizes[i];
+						val -= dp * dimSizes[dims.size() - 1];
+						val -= di * dimSizes[i];
 						
 						// 'add' the new dimensions, but swapped
-						val += dLast * dimSizes[i];
-						val += di    * dimSizes[dims.size() - 1];
+						val += dp * dimSizes[i];
+						val += di * dimSizes[dims.size() - 1];
 					}
 					
 					++index;
