@@ -50,7 +50,7 @@ struct column
 {
 	// Assumes number of used bits is n.
 	// Contains a component number, or EMPTY or COMPLETELY_EMPTY
-	std::vector<componentNumType> componentNums;
+	std::array<componentNumType, n> componentNums;
 	
 	unsigned numComponents;
 	unsigned numVertices;
@@ -58,8 +58,7 @@ struct column
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
-	column(unsigned p) : componentNums(n), numComponents(0),
-		numVertices(0)
+	column(unsigned p) : numComponents(0), numVertices(0)
 	{
 		bool lastWasSpace = true;
 		
@@ -123,7 +122,7 @@ struct slice
 	// Inner vector is a vector of component numbers (or EMPTY/COMPLETELY_EMPTY).
 	// Middle vector is configs with the same physical form, but not identical.
 	// Outer vector is different physical forms.
-	std::vector<std::vector<std::vector<componentNumType>>> componentNums;
+	std::vector<std::vector<std::array<componentNumType, n * n>>> componentNums;
 	
 	unsigned numComponents;
 	unsigned numVertices;
@@ -134,7 +133,7 @@ struct slice
 	slice(const pathWithoutSymmetries& p) : componentNums(1),
 		numVertices(p.numVertices)
 	{
-		componentNums.front().emplace_back(p.path.size() * n);
+		componentNums.front().emplace_back();
 		
 		// Count the total number of components in all slices. We don't need
 		// to concatenate the exact ERs, just the number of components is needed.
@@ -348,11 +347,12 @@ std::ostream& operator<<(std::ostream& stream, const hyperCube& hc)
 // =======================================================================
 // Various functions
 
-std::strong_ordering compareSymmetries(std::vector<componentNumType> sym1,
-	std::vector<componentNumType> sym2)
+template<unsigned size>
+std::strong_ordering compareSymmetries(std::array<componentNumType, size> sym1,
+	std::array<componentNumType, size> sym2)
 {
 	// The symmetries are assumed to be the same size
-	for (unsigned i = 0; i < sym1.size(); i++)
+	for (unsigned i = 0; i < size; i++)
 	{
 		// We only compare physical forms, as two physical
 		// forms with different equivalence configurations are
@@ -417,8 +417,9 @@ equivalence relation that the successor would need to be configured with.
 Otherwise, returns false.
 */
 
-bool succeeds(const std::vector<componentNumType>& afterCN,
-	unsigned afterNumComponents, const std::vector<componentNumType>& beforeCN,
+template<unsigned size>
+bool succeeds(const std::array<componentNumType, size>& afterCN,
+	unsigned afterNumComponents, const std::array<componentNumType, size>& beforeCN,
 	unsigned beforeConfigID, unsigned& result)
 {
 	const equivRelation& beforeConfig = er_store[beforeConfigID];
@@ -428,7 +429,7 @@ bool succeeds(const std::vector<componentNumType>& afterCN,
 	// the second part.
 	equivRelation combination = equivRelation(afterNumComponents).append(beforeConfig);
 	
-	for (unsigned i = 0; i < afterCN.size(); i++)
+	for (unsigned i = 0; i < size; i++)
 	{
 		// If both vertices exist
 		if (afterCN[i] >= 0 && beforeCN[i] >= 0)
@@ -471,7 +472,7 @@ void fillInColumnAdjLists()
 		for (unsigned i = 0; i < column::columns.size(); i++)
 		{
 			// TODO simplify this call
-			if (succeeds(column::columns[i].componentNums, column::columns[i].numComponents,
+			if (succeeds<n>(column::columns[i].componentNums, column::columns[i].numComponents,
 				column::lookup(vID).componentNums, column::graph[vID].erID, result))
 			{
 				auto search = column::columns[i].er_map.find(result);
@@ -553,10 +554,11 @@ static const std::vector<std::vector<char>> perms =
 	{ {1,2},{1,-2},{-1,-2},{-1,2},{2,1},{2,-1},{-2,-1},{-2,1} };
 
 // pID is the index of the permutation to apply in perms.
-std::vector<componentNumType> applyPermutation(unsigned pID,
-	std::vector<componentNumType> componentNums)
+// n is hardcoded here, likely it will be templatized later
+std::array<componentNumType, n * n> applyPermutation(unsigned pID,
+	std::array<componentNumType, n * n> componentNums)
 {
-	std::vector<componentNumType> result(componentNums.size());
+	std::array<componentNumType, n * n> result;
 	
 	const auto& perm = perms[pID];
 	
@@ -605,7 +607,7 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 		
 			// If this new symmetry is lexicographically smaller than the original,
 			// then we can prune this one.
-			if (compareSymmetries(cn, componentNums[0][0]) < 0)
+			if (compareSymmetries<n * n>(cn, componentNums[0][0]) < 0)
 			{
 				slice::slices.pop_back();
 				return;
@@ -619,7 +621,7 @@ void produceSlicesRecursive(pathWithoutSymmetries& p)
 			for (auto& physicalForm : componentNums)
 			{
 				// If these are same physically, check further inwards
-				if (compareSymmetries(cn, physicalForm.front()) == 0)
+				if (compareSymmetries<n * n>(cn, physicalForm.front()) == 0)
 				{
 					// This rechecks the first index, but this is necessary because
 					// compareSymmetries does a comparison of physical forms, here
@@ -719,7 +721,7 @@ void fillSliceVertex(unsigned vID)
 		for (unsigned symNum = 0; symNum < slice::slices[i].componentNums.size(); symNum++)
 		{
 			// TODO simplify this call
-			if (succeeds(slice::slices[i].componentNums[symNum].front(),
+			if (succeeds<n * n>(slice::slices[i].componentNums[symNum].front(),
 				slice::slices[i].numComponents,
 				slice::lookup(vID).componentNums.front().front(),
 				slice::graph[vID].erID, result))
@@ -753,7 +755,7 @@ void fillSliceVertex(unsigned vID)
 					{
 						// No need to check the result, since the same physical configuration
 						// will also work.
-						succeeds(slice::slices[i].componentNums[symNum][j],
+						succeeds<n * n>(slice::slices[i].componentNums[symNum][j],
 							slice::slices[i].numComponents,
 							slice::lookup(vID).componentNums.front().front(),
 							slice::graph[vID].erID, result);
