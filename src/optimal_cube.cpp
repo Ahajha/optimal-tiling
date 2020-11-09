@@ -16,7 +16,7 @@
 // ==========================================================
 // Global variables, struct definitions, and printing functions.
 
-unsigned n;
+constexpr unsigned n = (unsigned)MAX_DIM;
 
 bool trace = false;
 
@@ -371,31 +371,23 @@ std::strong_ordering compareSymmetries(std::vector<componentNumType> sym1,
 
 void parseArgs(int argn, char** args)
 {
-	if (argn < 2 || argn > 3)
+	if (argn > 2)
 	{
-		std::cerr << "usage: " << args[0] << " <N> [-t]" << std::endl;
+		std::cerr << "usage: " << args[0] << " [-t]\n";
 		exit(1);
 	}
 	
-	if (argn == 3)
+	if (argn == 2)
 	{
-		if (std::string("-t") == args[2])
+		if (std::string("-t") == args[1])
 		{
 			trace = true;
 		}
 		else
 		{
-			std::cerr << "unknown option \"" << args[2] << "\"" << std::endl;
+			std::cerr << "unknown option \"" << args[1] << "\"\n";
 			exit(1);
 		}
-	}
-	
-	n = atoi(args[1]);
-	
-	if (n == 0)
-	{
-		std::cerr << "error, n should be a positive integer" << std::endl;
-		exit(2);
 	}
 }
 

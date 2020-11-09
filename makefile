@@ -6,7 +6,7 @@ else
 	trace_flag=
 endif
 
-CFLAGS= --std=c++2a -O3 -g -W -Wall
+CFLAGS= --std=c++20 -O3 -g -W -Wall
 
 CC=g++-10
 
@@ -32,14 +32,17 @@ rect: bin/optimal_rectangle
 rect_matrix: bin/optimal_rectangle_matrix
 	./bin/optimal_rectangle_matrix $(trace_flag)
 
-cube: bin/optimal_cube
-	./bin/optimal_cube $(size) $(trace_flag)
+cube: bin/optimal_cube_$(size)
+	./bin/optimal_cube_$(size) $(trace_flag)
 
 #debug: bin/optimal_tiling
 #	gdb --args ./bin/optimal_tiling $(size) -t
 
 #perf_run: $(OT_efile)
 #	perf record ./$(TE_efile) $(size)
+
+obj/optimal_cube_$(size).o: src/optimal_cube.cpp
+	$(CC) $(CFLAGS) -DMAX_DIM=$(size) -c $< -o $@
 
 obj/%.o: src/%.cpp src/%.hpp
 	$(CC) $(CFLAGS) -c $< -o $@
