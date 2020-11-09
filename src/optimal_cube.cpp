@@ -95,8 +95,8 @@ struct column
 	
 	bool operator[](unsigned i) const { return componentNums[i] >= 0; }
 	
-	static std::vector<vertex> graph;
-	static std::vector<column> columns;
+	static inline std::vector<vertex> graph{};
+	static inline std::vector<column> columns{};
 	
 	// Gets a column associated with a vertex ID.
 	static column& lookup(unsigned vID) { return columns[graph[vID].sliceNum]; }
@@ -107,9 +107,6 @@ struct column
 		graph.emplace_back(colID,erID);
 	}
 };
-
-std::vector<vertex> column::graph = {};
-std::vector<column> column::columns = {};
 
 struct pathWithoutSymmetries
 {
@@ -194,8 +191,8 @@ struct slice
 		}
 	}
 	
-	static std::vector<vertex> graph;
-	static std::vector<slice> slices;
+	static inline std::vector<vertex> graph{};
+	static inline std::vector<slice> slices{};
 	
 	// Gets a slice associated with a vertex ID.
 	static slice& lookup(unsigned vID) { return slices[graph[vID].sliceNum]; }
@@ -206,9 +203,6 @@ struct slice
 		graph.emplace_back(sliceID,erID);
 	}
 };
-
-std::vector<vertex> slice::graph = {};
-std::vector<slice> slice::slices = {};
 
 // Structures relating to the enumeration algorithm
 struct path_info
