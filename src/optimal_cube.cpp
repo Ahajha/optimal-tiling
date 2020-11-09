@@ -7,6 +7,7 @@
 #include <array>
 #include <unordered_map>
 #include "equivRelation.hpp"
+#include "permutation.hpp"
 #include "fraction.hpp"
 
 // The current state of this program is, frankly, awful, and I apologize
@@ -539,44 +540,22 @@ bool prune(pathWithoutSymmetries& p)
 	return false;
 }
 
-// For now, just hardcode in the 8 values needed for 3 dimensions.
-// In the future, for higher dimensions, look into one of these algorithms:
-// https://en.wikipedia.org/wiki/Heap%27s_algorithm#cite_note-3
-// https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
-// In the future, this will just be a constant vector produced at runtime based on the input.
-static const std::vector<std::vector<char>> perms =
-	{ {1,2},{1,-2},{-1,-2},{-1,2},{2,1},{2,-1},{-2,-1},{-2,1} };
+constexpr auto& perms = permutationSet<std::to_array({n,n})>::perms;
 
 // pID is the index of the permutation to apply in perms.
 // n is hardcoded here, likely it will be templatized later
 std::array<componentNumType, n * n> applyPermutation(unsigned pID,
 	std::array<componentNumType, n * n> componentNums)
 {
-	std::array<componentNumType, n * n> result;
-	
 	const auto& perm = perms[pID];
 	
-	std::vector<unsigned> old_coord(2);
-	std::vector<unsigned> new_coord(2);
+	std::array<componentNumType, n * n> result;
 	
-	for (old_coord[0] = 0; old_coord[0] < n; old_coord[0]++)
+	for (unsigned i = 0; i < n * n; ++i)
 	{
-		for (old_coord[1] = 0; old_coord[1] < n; old_coord[1]++)
-		{
-			// todo: [0] can be computed in the outer loop,
-			// [1] at the inner, etc. for higher dimensions.
-			for (unsigned i = 0; i < 2; i++)
-			{
-				new_coord[i] = (perm[i] > 0)
-					? (old_coord[abs(perm[i]) - 1])
-					: (n - 1 - old_coord[abs(perm[i]) - 1]);
-			}
-			
-			result[new_coord[0] * n + new_coord[1]] =
-				componentNums[old_coord[0] * n + old_coord[1]];
-		}
+		result[i] = componentNums[perm[i]];
 	}
-	
+
 	return result;
 }
 
