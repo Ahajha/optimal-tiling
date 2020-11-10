@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <unordered_set>
 #include "permutation.hpp"
 #include "equivRelation.hpp"
 
@@ -44,7 +45,13 @@ struct slice : public slice_base
 	using pset = permutationSet<dims>;
 	using compNumArray = std::array<compNumType, pset::numVertices>;
 	
-	compNumArray compNums;
+	// Inner vector contains configs with the same physical form, but different
+	// equivalence relations. Outer vector contains symmetries with different
+	// physical forms. TODO: use unordered_set?
+	std::vector<std::vector<compNumArray>> forms;
+	
+	// Maps ER IDs to vertex IDs.
+	std::unordered_map<unsigned,unsigned> er_map;
 	
 	unsigned numVerts;
 	compNumType numComps; 
@@ -81,34 +88,6 @@ struct slice : public slice_base
 	
 	static bool succeeds(const compNumArray& afterCN, unsigned afterNumComp,
 		const compNumArray& beforeCN, unsigned beforeERID, unsigned& result);
-};
-
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-	      && (dims.empty())
-struct slice<dims, prune> : public slice_base
-{
-	// TODO: Can this be done by just specializing some methods,
-	// rather than the whole class?
-	using pset = permutationSet<dims>;
-	using compNumArray = std::array<compNumType, pset::numVertices>;
-	
-	compNumArray compNums;
-	
-	unsigned numVerts;
-	compNumType numComps; 
-	
-	static inline std::vector<vertex> graph{};
-	static inline std::vector<slice> slices{};
-	
-	// Fills graph and slices.
-	static void enumerate();
-	
-	template<auto d, bool p>
-		requires unsigned_range<decltype(d)>
-	friend std::ostream& operator<<(std::ostream&, const slice<d,p>&);
-	
-	static slice& lookup(unsigned vID);
 };
 
 #include "slice.tpp"
