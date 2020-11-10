@@ -75,7 +75,8 @@ struct slice : public slice_base
 	// TODO: specialization for dims.size() == 1
 	slice(const std::vector<unsigned>& path, unsigned nv);
 	
-	void permute(unsigned permID, compNumArray& result) const;
+	static void permute(unsigned permID, const compNumArray& src,
+		compNumArray& result);
 	
 	static void enumerateRecursive();
 	
