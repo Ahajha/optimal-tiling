@@ -343,8 +343,8 @@ std::ostream& operator<<(std::ostream& stream, const hyperCube& hc)
 // Various functions
 
 template<unsigned size>
-std::strong_ordering compareSymmetries(std::array<componentNumType, size> sym1,
-	std::array<componentNumType, size> sym2)
+std::strong_ordering compareSymmetries(const std::array<componentNumType, size>& sym1,
+	const std::array<componentNumType, size>& sym2)
 {
 	// The symmetries are assumed to be the same size
 	for (unsigned i = 0; i < size; i++)
@@ -491,7 +491,7 @@ void fillInColumnAdjLists()
 	if (trace) std::cout << column::graph << std::endl;
 }
 
-bool prune(pathWithoutSymmetries& p)
+bool prune(const pathWithoutSymmetries& p)
 {
 	// Prune any slice with a non-induced vertex with no induced neighbors.
 	// Look for 'completely empty' vertices.
@@ -545,7 +545,7 @@ constexpr auto& perms = permutationSet<std::to_array({n,n})>::perms;
 // pID is the index of the permutation to apply in perms.
 // n is hardcoded here, likely it will be templatized later
 std::array<componentNumType, n * n> applyPermutation(unsigned pID,
-	std::array<componentNumType, n * n> componentNums)
+	const std::array<componentNumType, n * n>& componentNums)
 {
 	const auto& perm = perms[pID];
 	
