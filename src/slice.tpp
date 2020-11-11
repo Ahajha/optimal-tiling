@@ -106,3 +106,51 @@ bool slice<dims,prune>::succeeds(const compNumArray& afterCN,
 	
 	return true;
 }
+
+template<auto dims, bool prune>
+	requires unsigned_range<decltype(dims)>
+slice<dims,prune>& slice<dims,prune>::lookup(unsigned vID)
+{
+	return slices[graph[vID].sliceNum];
+}
+
+template<auto dims, bool prune>
+	requires unsigned_range<decltype(dims)>
+void slice<dims,prune>::fillVertex(unsigned vID)
+{
+	if constexpr (prune)
+	{
+		
+	}
+	else
+	{
+		// Out-parameter for 'succeeds' function calls
+		unsigned result;
+		
+		// Go through each of the physical columns (as the afters),
+		// and see if it can succeed this configuration.
+		for (unsigned i = 0; i < slices.size(); i++)
+		{
+			// Forms[0][0] gives the 'default' form, with no components
+			// connected.
+			if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
+				lookup(vID).componentNums, graph[vID].erID, result))
+			{
+				auto search = slices[i].er_map.find(result);
+				
+				if (search != slices[i].er_map.end())
+				{
+					// Found
+					graph[vID].adjList.push_back(search->second);
+				}
+				else
+				{
+					// Not found
+					graph[vID].adjList.push_back(graph.size());
+					
+					addVertex(i,result);
+				}
+			}
+		}
+	}
+}
