@@ -34,23 +34,6 @@ class CubicLattice
 	
 	unsigned _numInduced;
 	
-	// Returns the index of coordinate (x,y,z) in the graph.
-	// Assumes the coordinate is valid.
-	unsigned safe_index(unsigned x, unsigned y, unsigned z) const
-	{
-		return x + size*y + s2*z;
-	}
-	
-	// Returns the index of coordinate (x,y,z) in the graph.
-	// Checks to see if the coordinate is valid.
-	unsigned check_index(unsigned x, unsigned y, unsigned z) const
-	{
-		if (x >= size || y >= size || z >= size)
-			throw std::out_of_range("invalid coordinate");
-	
-		return safe_index(x,y,z);
-	}
-	
 	// Extracts the coordinates of a raw index.
 	unsigned get_x(unsigned coord) const { return coord % size; }
 	unsigned get_y(unsigned coord) const { return (coord / size) % size; }
@@ -136,10 +119,9 @@ class CubicLattice
 		graph.resize(dimSizes.back());
 	}
 	
-	// Adds an induced vertex at coordinate (x,y,z).
-	void add(unsigned x, unsigned y, unsigned z)
+	// Adds an induced vertex at a given index
+	void add(unsigned index)
 	{
-		unsigned index = check_index(x,y,z);
 		graph[index].label = induced;
 		
 		++_numInduced;
@@ -264,19 +246,17 @@ int main()
 	CubicLattice graph(sizes[0]);
 	
 	char symbol;
-	for (unsigned i = 0; i < sizes[0]; i++)
+	for (unsigned i = 0; i < graph.numVertices(); ++i)
 	{
-		for (unsigned j = 0; j < sizes[0]; j++)
+		if (!(std::cin >> symbol))
 		{
-			for (unsigned k = 0; k < sizes[0]; k++)
-			{
-				std::cin >> symbol;
-				
-				if (symbol == SELECT)
-				{
-					graph.add(i,j,k);
-				}
-			}
+			std::cerr << "error reading input, are there enough vertices?\n";
+			return 1;
+		}
+		
+		if (symbol == SELECT)
+		{
+			graph.add(i);
 		}
 	}
 	
