@@ -20,6 +20,8 @@ class CubicLattice
 	{
 		vertexLabel label;
 		unsigned char degree;
+		
+		vertex() : label(empty), degree(0) {}
 	};
 	
 	// The length of one side of the lattice, and its square and cube.
@@ -123,7 +125,7 @@ class CubicLattice
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
 	CubicLattice(unsigned s) : size(s), s2(s*s), s3(s2*s),
-		dims{ s, s, s }, dimSizes(3 + 1), graph(s3+1), numVertices(0)
+		dims{ s, s, s }, dimSizes(3 + 1), numVertices(0)
 	{
 		dimSizes[0] = 1;
 		for (unsigned i = 0; i < dims.size(); ++i)
@@ -131,12 +133,7 @@ class CubicLattice
 			dimSizes[i + 1] = dimSizes[i] * dims[i];
 		}
 		
-		// The one extra vertex represents 'outside'
-		for (unsigned i = 0; i < s3; i++)
-		{
-			graph[i].label = empty;
-			graph[i].degree = 0;
-		}
+		graph.resize(dimSizes.back());
 	}
 	
 	// Adds an induced vertex at coordinate (x,y,z).
