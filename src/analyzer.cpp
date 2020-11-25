@@ -32,7 +32,7 @@ class CubicLattice
 	std::vector<unsigned> dims, dimSizes;
 	std::vector<vertex> graph;
 	
-	unsigned numVertices;
+	unsigned _numInduced;
 	
 	// Returns the index of coordinate (x,y,z) in the graph.
 	// Assumes the coordinate is valid.
@@ -125,7 +125,7 @@ class CubicLattice
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
 	CubicLattice(unsigned s) : size(s), s2(s*s), s3(s2*s),
-		dims{ s, s, s }, dimSizes(3 + 1), numVertices(0)
+		dims{ s, s, s }, dimSizes(3 + 1), _numInduced(0)
 	{
 		dimSizes[0] = 1;
 		for (unsigned i = 0; i < dims.size(); ++i)
@@ -142,7 +142,7 @@ class CubicLattice
 		unsigned index = check_index(x,y,z);
 		graph[index].label = induced;
 		
-		numVertices++;
+		++_numInduced;
 		
 		if (hasNorth(index)) graph[north(index)].degree++;
 		if (hasSouth(index)) graph[south(index)].degree++;
@@ -152,10 +152,16 @@ class CubicLattice
 		if (hasDown (index)) graph[down (index)].degree++;
 	}
 	
-	// Returns the number of induced vertices in the graph.
-	unsigned getNumVertices() const
+	// Returns the number of vertices in the graph.
+	unsigned numVertices() const
 	{
-		return numVertices;
+		return dimSizes.back();
+	}
+	
+	// Returns the number of induced vertices in the graph.
+	unsigned numInduced() const
+	{
+		return _numInduced;
 	}
 	
 	bool isConnected()
@@ -276,8 +282,8 @@ int main()
 	
 	std::cout << std::boolalpha;
 	
-	unsigned numVert = graph.getNumVertices();
-	std::cout << numVert << " vertices" << std::endl;
+	unsigned numVert = graph.numInduced();
+	std::cout << numVert << " induced vertices" << std::endl;
 	
 	std::cout << "Graph is connected: "
 		<< graph.isConnected() << std::endl;
