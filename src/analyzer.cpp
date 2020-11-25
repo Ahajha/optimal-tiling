@@ -1,9 +1,9 @@
+#include <limits>
 #include <vector>
 #include <iostream>
 #include <exception>
 
-#define SELECT 'X'
-#define EMPTY '_'
+constexpr char INDUCED_VERTEX = 'X', EMPTY_VERTEX   = '_';
 
 class CubicLattice
 {
@@ -23,6 +23,8 @@ class CubicLattice
 		
 		vertex() : label(empty), degree(0) {}
 	};
+	
+	constexpr static unsigned EMPTY = std::numeric_limits<unsigned>::max();
 	
 	// The length of one side of the lattice, and its square and cube.
 	unsigned size, s2, s3;
@@ -96,6 +98,16 @@ class CubicLattice
 	unsigned west (unsigned index) const { return index - 1;    }
 	unsigned up   (unsigned index) const { return index + s2;   }
 	unsigned down (unsigned index) const { return index - s2;   }
+	
+	unsigned forward(unsigned d, unsigned index) const
+	{
+		return (get_coord(d,index) == dims[d] - 1) ? EMPTY : index + dimSizes[d];
+	}
+	
+	unsigned backward(unsigned d, unsigned index) const
+	{
+		return (get_coord(d,index) == 0) ? EMPTY : index - dimSizes[d];
+	}
 		
 	// Uses a depth-first-search to mark all connected vertices
 	// in the graph with a given label with a new label.
@@ -265,7 +277,7 @@ int main()
 			return 1;
 		}
 		
-		if (symbol == SELECT)
+		if (symbol == INDUCED_VERTEX)
 		{
 			graph.add(i);
 		}
