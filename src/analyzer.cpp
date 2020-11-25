@@ -117,13 +117,14 @@ class CubicLattice
 		if (graph[index].label == oldLabel)
 		{
 			graph[index].label = newLabel;
-		
-			if (hasNorth(index)) mark_connected(north(index),oldLabel,newLabel);
-			if (hasSouth(index)) mark_connected(south(index),oldLabel,newLabel);
-			if (hasEast (index)) mark_connected(east (index),oldLabel,newLabel);
-			if (hasWest (index)) mark_connected(west (index),oldLabel,newLabel);
-			if (hasUp   (index)) mark_connected(up   (index),oldLabel,newLabel);
-			if (hasDown (index)) mark_connected(down (index),oldLabel,newLabel);
+			
+			for (unsigned i : graph[index].adjList)
+			{
+				if (i != EMPTY)
+				{
+					mark_connected(i, oldLabel, newLabel);
+				}
+			}
 		}
 	}
 	
@@ -167,12 +168,13 @@ class CubicLattice
 		
 		++_numInduced;
 		
-		if (hasNorth(index)) graph[north(index)].degree++;
-		if (hasSouth(index)) graph[south(index)].degree++;
-		if (hasEast (index)) graph[east (index)].degree++;
-		if (hasWest (index)) graph[west (index)].degree++;
-		if (hasUp   (index)) graph[up   (index)].degree++;
-		if (hasDown (index)) graph[down (index)].degree++;
+		for (unsigned i : graph[index].adjList)
+		{
+			if (i != EMPTY)
+			{
+				++graph[i].degree;
+			}
+		}
 	}
 	
 	// Returns the number of vertices in the graph.
@@ -228,16 +230,15 @@ class CubicLattice
 	bool hasEnclosedSpace()
 	{
 		// This could be made slightly faster by only looking
-		// at each face of the large cube, but that would be
+		// at each 'face' of the graph, but that would be
 		// a much more complicated implementation. Either way,
-		// the algorithm is still O(size^3).
+		// the algorithm is still O(nv).
 		for (unsigned i = 0; i < s3; i++)
 		{
-			// Initialize a search in all outside blocks to
-			// mark anything that has outside access.
-			if (!hasNorth(i) || !hasSouth(i) ||
-			    !hasEast (i) || !hasWest (i) ||
-			    !hasUp   (i) || !hasDown (i))
+			// Initialize a search in all vertices that are missing neighbors, i.e.
+			// neighbors on the outer shell of the graph.
+			if (std::find(graph[i].adjList.begin(), graph[i].adjList.end(), EMPTY)
+				== graph[i].adjList.end())
 			{
 				mark_connected(i, empty, emptyConnected);
 			}
