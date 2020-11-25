@@ -20,6 +20,7 @@ class CubicLattice
 	{
 		vertexLabel label;
 		unsigned char degree;
+		std::vector<unsigned> adjList;
 		
 		vertex() : label(empty), degree(0) {}
 	};
@@ -140,6 +141,23 @@ class CubicLattice
 		}
 		
 		graph.resize(dimSizes.back());
+		
+		for (unsigned i = 0; i < graph.size(); ++i)
+		{
+			auto& adjList = graph[i].adjList;
+			
+			adjList.resize(2 * dims.size());
+			
+			// The highest dimension has the largest and smallest neighbors.
+			// The second highest dimension has the second largest
+			// and second smallest neighbors, etc.
+			// Neighbors on the same axis are on 'mirror' indexes.
+			for (unsigned d = 0; d < dims.size(); ++d)
+			{
+				adjList[dims.size() - d - 1] = backward(d,i);
+				adjList[dims.size() + d    ] = forward (d,i);
+			}
+		}
 	}
 	
 	// Adds an induced vertex at a given index
