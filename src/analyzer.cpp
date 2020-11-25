@@ -233,19 +233,32 @@ class CubicLattice
 	}
 };
 
+void readSizes(std::istream& stream, std::vector<unsigned>& result)
+{
+	for (int c; (c = stream.peek()) != '\n' && stream;)
+	{
+		if ('0' <= c && c <= '9')
+		{
+			unsigned& value = result.emplace_back();
+			stream >> value;
+		}
+		else stream.ignore();
+	}
+}
+
 int main()
 {
-	unsigned size;
-	std::cin >> size;
+	std::vector<unsigned> sizes;
+	readSizes(std::cin, sizes);
 	
-	CubicLattice graph(size);
+	CubicLattice graph(sizes[0]);
 	
 	char symbol;
-	for (unsigned i = 0; i < size; i++)
+	for (unsigned i = 0; i < sizes[0]; i++)
 	{
-		for (unsigned j = 0; j < size; j++)
+		for (unsigned j = 0; j < sizes[0]; j++)
 		{
-			for (unsigned k = 0; k < size; k++)
+			for (unsigned k = 0; k < sizes[0]; k++)
 			{
 				std::cin >> symbol;
 				
