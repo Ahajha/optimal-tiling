@@ -1,3 +1,4 @@
+#include <vector>
 #include <iostream>
 #include <exception>
 
@@ -26,7 +27,7 @@ class CubicLattice
 	// The length of one side of the lattice, and its square and cube.
 	unsigned size, s2, s3;
 	
-	vertex* graph;
+	std::vector<vertex> graph;
 	
 	unsigned numVertices;
 	
@@ -121,7 +122,7 @@ class CubicLattice
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
 	CubicLattice(unsigned s) : size(s), s2(s*s), s3(s2*s),
-		graph(new vertex[s3+1]), numVertices(0)
+		graph(s3+1), numVertices(0)
 	{
 		// The one extra vertex represents 'outside'
 		for (unsigned i = 0; i < s3; i++)
