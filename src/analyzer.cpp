@@ -60,6 +60,16 @@ class CubicLattice
 	bool hasUp   (unsigned index) const { return get_coord(2,index) != size - 1; }
 	bool hasDown (unsigned index) const { return get_coord(2,index) != 0;        }
 	
+	bool hasForward(unsigned d, unsigned index) const
+	{
+		return get_coord(d, index) != dims[d] - 1;
+	}
+	
+	bool hasBackward(unsigned d, unsigned index) const
+	{
+		return get_coord(d, index) != 0;
+	}
+	
 	// Returns true iff the label represents a selected block.
 	static bool exists(vertexLabel label)
 	{
