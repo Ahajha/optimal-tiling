@@ -34,10 +34,11 @@ class CubicLattice
 	
 	unsigned _numInduced;
 	
-	// Extracts the coordinates of a raw index.
-	unsigned get_x(unsigned coord) const { return coord % size; }
-	unsigned get_y(unsigned coord) const { return (coord / size) % size; }
-	unsigned get_z(unsigned coord) const { return coord / s2; }
+	// Extracts the d-dimension coordinate from an index.
+	unsigned get_coord(unsigned d, unsigned index) const
+	{
+		return (index / dimSizes[d]) % dims[d];
+	}
 	
 	// Starting at the current vertex (graph[index]), finds the first vertex with
 	// a given label and stores that into index. Returns true if a vertex
@@ -52,12 +53,12 @@ class CubicLattice
 	
 	// North and south are in the y direction, east and west in x, and
 	// up and down in z.
-	bool hasNorth(unsigned index) const { return get_y(index) != size - 1; }
-	bool hasSouth(unsigned index) const { return get_y(index) != 0;        }
-	bool hasEast (unsigned index) const { return get_x(index) != size - 1; }
-	bool hasWest (unsigned index) const { return get_x(index) != 0;        }
-	bool hasUp   (unsigned index) const { return get_z(index) != size - 1; }
-	bool hasDown (unsigned index) const { return get_z(index) != 0;        }
+	bool hasNorth(unsigned index) const { return get_coord(1,index) != size - 1; }
+	bool hasSouth(unsigned index) const { return get_coord(1,index) != 0;        }
+	bool hasEast (unsigned index) const { return get_coord(0,index) != size - 1; }
+	bool hasWest (unsigned index) const { return get_coord(0,index) != 0;        }
+	bool hasUp   (unsigned index) const { return get_coord(2,index) != size - 1; }
+	bool hasDown (unsigned index) const { return get_coord(2,index) != 0;        }
 	
 	// Returns true iff the label represents a selected block.
 	static bool exists(vertexLabel label)
