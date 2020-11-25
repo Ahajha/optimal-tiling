@@ -7,8 +7,6 @@
 
 class CubicLattice
 {
-	private:
-	
 	enum vertexLabel
 	{
 		induced,
@@ -27,6 +25,9 @@ class CubicLattice
 	// The length of one side of the lattice, and its square and cube.
 	unsigned size, s2, s3;
 	
+	// Dims for the length of each axis, and the size of a cross section
+	// up to a given dimension.
+	std::vector<unsigned> dims, dimSizes;
 	std::vector<vertex> graph;
 	
 	unsigned numVertices;
@@ -122,8 +123,14 @@ class CubicLattice
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
 	CubicLattice(unsigned s) : size(s), s2(s*s), s3(s2*s),
-		graph(s3+1), numVertices(0)
+		dims{ s, s, s }, dimSizes(3 + 1), graph(s3+1), numVertices(0)
 	{
+		dimSizes[0] = 1;
+		for (unsigned i = 0; i < dims.size(); ++i)
+		{
+			dimSizes[i + 1] = dimSizes[i] * dims[i];
+		}
+		
 		// The one extra vertex represents 'outside'
 		for (unsigned i = 0; i < s3; i++)
 		{
