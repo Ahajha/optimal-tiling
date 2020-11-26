@@ -3,7 +3,7 @@
 #include <iostream>
 #include <exception>
 
-constexpr char INDUCED_VERTEX = 'X', EMPTY_VERTEX   = '_';
+constexpr char INDUCED_VERTEX = 'X', EMPTY_VERTEX = '_';
 
 class CubicLattice
 {
@@ -89,7 +89,8 @@ class CubicLattice
 	
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
-	CubicLattice(unsigned s) : dims{ s, s, s }, dimSizes(3 + 1), _numInduced(0)
+	CubicLattice(const std::vector<unsigned>& ds) : dims(ds),
+		dimSizes(ds.size() + 1), _numInduced(0)
 	{
 		dimSizes[0] = 1;
 		for (unsigned i = 0; i < dims.size(); ++i)
@@ -115,10 +116,12 @@ class CubicLattice
 				adjList[dims.size() + d    ] = forward (d,i);
 			}
 			
-			graph[i].numNeighbors = std::count_if(adjList.begin(), adjList.end(), [](unsigned adj)
-			{
-				return adj != EMPTY;
-			});
+			graph[i].numNeighbors = std::count_if(adjList.begin(), adjList.end(),
+				[](unsigned adj)
+				{
+					return adj != EMPTY;
+				}
+			);
 		}
 	}
 	
@@ -250,7 +253,7 @@ int main()
 	std::vector<unsigned> sizes;
 	readSizes(std::cin, sizes);
 	
-	CubicLattice graph(sizes[0]);
+	CubicLattice graph(sizes);
 	
 	char symbol;
 	for (unsigned i = 0; i < graph.numVertices(); ++i)
