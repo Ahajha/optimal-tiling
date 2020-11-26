@@ -19,7 +19,7 @@ class CubicLattice
 	struct vertex
 	{
 		vertexLabel label;
-		unsigned char degree;
+		unsigned char degree, numNeighbors;
 		std::vector<unsigned> adjList;
 		
 		vertex() : label(empty), degree(0) {}
@@ -158,6 +158,11 @@ class CubicLattice
 				adjList[dims.size() - d - 1] = backward(d,i);
 				adjList[dims.size() + d    ] = forward (d,i);
 			}
+			
+			graph[i].numNeighbors = std::count_if(adjList.begin(), adjList.end(), [](unsigned adj)
+			{
+				return adj != EMPTY;
+			});
 		}
 	}
 	
@@ -237,8 +242,7 @@ class CubicLattice
 		{
 			// Initialize a search in all vertices that are missing neighbors, i.e.
 			// neighbors on the outer shell of the graph.
-			if (std::find(graph[i].adjList.begin(), graph[i].adjList.end(), EMPTY)
-				== graph[i].adjList.end())
+			if (graph[i].numNeighbors != (2 * dims.size()))
 			{
 				mark_connected(i, empty, emptyConnected);
 			}
