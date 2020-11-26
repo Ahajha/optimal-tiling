@@ -27,9 +27,6 @@ class CubicLattice
 	
 	constexpr static unsigned EMPTY = std::numeric_limits<unsigned>::max();
 	
-	// The length of one side of the lattice, and its square and cube.
-	unsigned size, s2;
-	
 	// Dims for the length of each axis, and the size of a cross section
 	// up to a given dimension.
 	std::vector<unsigned> dims, dimSizes;
@@ -54,51 +51,11 @@ class CubicLattice
 		return false;
 	}
 	
-	// North and south are in the y direction, east and west in x, and
-	// up and down in z.
-	bool hasNorth(unsigned index) const { return get_coord(1,index) != size - 1; }
-	bool hasSouth(unsigned index) const { return get_coord(1,index) != 0;        }
-	bool hasEast (unsigned index) const { return get_coord(0,index) != size - 1; }
-	bool hasWest (unsigned index) const { return get_coord(0,index) != 0;        }
-	bool hasUp   (unsigned index) const { return get_coord(2,index) != size - 1; }
-	bool hasDown (unsigned index) const { return get_coord(2,index) != 0;        }
-	
-	bool hasForward(unsigned d, unsigned index) const
-	{
-		return get_coord(d, index) != dims[d] - 1;
-	}
-	
-	bool hasBackward(unsigned d, unsigned index) const
-	{
-		return get_coord(d, index) != 0;
-	}
-	
 	// Returns true iff the label represents a selected block.
 	static bool exists(vertexLabel label)
 	{
 		return label == inducedConnected || label == induced;
 	}
-	
-	bool hasNorthNeighbor(unsigned index) const
-		{ return hasNorth(index) && exists(graph[north(index)].label); }
-	bool hasSouthNeighbor(unsigned index) const
-		{ return hasSouth(index) && exists(graph[south(index)].label); }
-	bool hasEastNeighbor (unsigned index) const
-		{ return hasEast (index) && exists(graph[east (index)].label); }
-	bool hasWestNeighbor (unsigned index) const
-		{ return hasWest (index) && exists(graph[west (index)].label); }
-	bool hasUpNeighbor   (unsigned index) const
-		{ return hasUp   (index) && exists(graph[up   (index)].label); }
-	bool hasDownNeighbor (unsigned index) const
-		{ return hasDown (index) && exists(graph[down (index)].label); }
-	
-	// Each of these assumes its respective direction is valid.
-	unsigned north(unsigned index) const { return index + size; }
-	unsigned south(unsigned index) const { return index - size; }
-	unsigned east (unsigned index) const { return index + 1;    }
-	unsigned west (unsigned index) const { return index - 1;    }
-	unsigned up   (unsigned index) const { return index + s2;   }
-	unsigned down (unsigned index) const { return index - s2;   }
 	
 	unsigned forward(unsigned d, unsigned index) const
 	{
@@ -132,8 +89,7 @@ class CubicLattice
 	
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
-	CubicLattice(unsigned s) : size(s), s2(s*s),
-		dims{ s, s, s }, dimSizes(3 + 1), _numInduced(0)
+	CubicLattice(unsigned s) : dims{ s, s, s }, dimSizes(3 + 1), _numInduced(0)
 	{
 		dimSizes[0] = 1;
 		for (unsigned i = 0; i < dims.size(); ++i)
