@@ -28,7 +28,7 @@ class CubicLattice
 	constexpr static unsigned EMPTY = std::numeric_limits<unsigned>::max();
 	
 	// The length of one side of the lattice, and its square and cube.
-	unsigned size, s2, s3;
+	unsigned size, s2;
 	
 	// Dims for the length of each axis, and the size of a cross section
 	// up to a given dimension.
@@ -45,10 +45,10 @@ class CubicLattice
 	
 	// Starting at the current vertex (graph[index]), finds the first vertex with
 	// a given label and stores that into index. Returns true if a vertex
-	// with the given label was found, and false if not (and index = s3))
+	// with the given label was found, and false if not (and index = graph.size()))
 	bool getFirstWithLabel(unsigned& index, vertexLabel label) const
 	{
-		for (; index < s3; index++)
+		for (; index < graph.size(); index++)
 			if (graph[index].label == label)
 				return true;
 		return false;
@@ -132,7 +132,7 @@ class CubicLattice
 	
 	// Constructs a cubic lattice of side length s, and sets
 	// all vertices to empty.
-	CubicLattice(unsigned s) : size(s), s2(s*s), s3(s2*s),
+	CubicLattice(unsigned s) : size(s), s2(s*s),
 		dims{ s, s, s }, dimSizes(3 + 1), _numInduced(0)
 	{
 		dimSizes[0] = 1;
@@ -213,7 +213,7 @@ class CubicLattice
 	// neighbors in a given plane.
 	bool validateNeighbors() const
 	{
-		for (unsigned i = 0; i < s3; i++)
+		for (unsigned i = 0; i < graph.size(); i++)
 		{
 			if (exists(graph[i].label))
 			{
@@ -238,7 +238,7 @@ class CubicLattice
 		// at each 'face' of the graph, but that would be
 		// a much more complicated implementation. Either way,
 		// the algorithm is still O(nv).
-		for (unsigned i = 0; i < s3; i++)
+		for (unsigned i = 0; i < graph.size(); i++)
 		{
 			// Initialize a search in all vertices that are missing neighbors, i.e.
 			// neighbors on the outer shell of the graph.
@@ -259,7 +259,7 @@ class CubicLattice
 	{
 		unsigned sum = 0;
 		
-		for (unsigned i = 0; i < s3; i++)
+		for (unsigned i = 0; i < graph.size(); i++)
 		{
 			switch (graph[i].label)
 			{
