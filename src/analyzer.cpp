@@ -217,14 +217,19 @@ class CubicLattice
 		{
 			if (exists(graph[i].label))
 			{
-				if (graph[i].degree < 4) continue;
-				if (graph[i].degree > 4) return false;
-				
-				// Ensure it has a neighbor on each axis
-				if (!hasNorthNeighbor(i) && !hasSouthNeighbor(i) ||
-				    !hasEastNeighbor (i) && !hasWestNeighbor (i) ||
-				    !hasUpNeighbor   (i) && !hasDownNeighbor (i))
-					return false;
+				// Ensure there is at most one axis with 2 neighbors
+				bool hasAxisWith2Neighbors = false;
+				for (unsigned d = 0; d < dims.size(); ++d)
+				{
+					unsigned adj1 = graph[i].adjList[d];
+					unsigned adj2 = graph[i].adjList[graph[i].adjList.size() - d - 1];
+					if (adj1 != EMPTY && exists(graph[adj1].label)
+					 && adj2 != EMPTY && exists(graph[adj2].label))
+					{
+						if (hasAxisWith2Neighbors) return false;
+						hasAxisWith2Neighbors = true;
+					}
+				}
 			}
 		}
 		return true;
