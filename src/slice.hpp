@@ -31,8 +31,11 @@ struct slice_base
 		
 		vertex(unsigned sn, unsigned e) : sliceNum(sn), erID(e) {}
 	};
-	
-	static inline er_storage er_store{};
+};
+
+namespace slice_er_storage
+{
+	static inline er_storage store{};
 };
 
 // TODO: implement changes when prune == true
