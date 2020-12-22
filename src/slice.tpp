@@ -1,45 +1,8 @@
 #include "slice.hpp"
 
-template<auto dims, bool prune>
+template<auto dims>
 	requires unsigned_range<decltype(dims)>
-void slice<dims,prune>::enumerate()
-{
-	// This likely will not happen, but just to
-	// be safe, avoid multiple calls to this.
-	if (!slices.empty()) return;
-	
-	if constexpr (dims.empty())
-	{
-		// There are two different physical forms,
-		// each with a single configuration.
-		slices.resize(2);
-		slices[0] = {{{{COMPLETELY_EMPTY}}}, 0, 0};
-		slices[1] = {{{{0}}}, 1, 1};
-		
-		addVertex(0, er_store(equivRelation(0)));
-		addVertex(1, er_store(equivRelation(1)));
-		
-		// Both slices can succeed one another.
-		graph[0].adjList = {0, 1};
-		graph[1].adjList = {0, 1};
-	}
-	else
-	{
-		// TODO
-	}
-}
-
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice<dims,prune>::addVertex(unsigned sliceID, unsigned erID)
-{
-	slices[sliceID].er_map[erID] = graph.size();
-	graph.emplace_back(sliceID,erID);
-}
-
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice<dims,prune>::permute(unsigned permID, const compNumArray& src,
+void slice_base<dims>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
 {
 	const auto& perm = pset::perms[permID];
@@ -49,9 +12,9 @@ void slice<dims,prune>::permute(unsigned permID, const compNumArray& src,
 	}
 }
 
-template<auto dims, bool prune>
+template<auto dims>
 	requires unsigned_range<decltype(dims)>
-std::strong_ordering slice<dims,prune>::compareSymmetries
+std::strong_ordering slice_base<dims>::compareSymmetries
 	(const compNumArray& sym1, const compNumArray& sym2)
 {
 	for (unsigned i = 0; i < pset::numVertices; ++i)
@@ -71,13 +34,13 @@ std::strong_ordering slice<dims,prune>::compareSymmetries
 	return std::strong_ordering::equal;
 }
 
-template<auto dims, bool prune>
+template<auto dims>
 	requires unsigned_range<decltype(dims)>
-bool slice<dims,prune>::succeeds(const compNumArray& afterCN,
+bool slice_base<dims>::succeeds(const compNumArray& afterCN,
 	unsigned afterNumComp, const compNumArray& beforeCN,
 	unsigned beforeERID, unsigned& result)
 {
-	const equivRelation& beforeConfig = er_store[beforeERID];
+	const equivRelation& beforeConfig = slice_defs::er_store[beforeERID];
 	
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
@@ -102,55 +65,143 @@ bool slice<dims,prune>::succeeds(const compNumArray& afterCN,
 	
 	// Result is acyclic, so produce the ER that should be used
 	// by shaving off the last 'before.numComponents' items.
-	result = er_store(combination.shave(beforeConfig.size()));
+	result = slice_defs::er_store(combination.shave(beforeConfig.size()));
 	
 	return true;
 }
 
 template<auto dims, bool prune>
 	requires unsigned_range<decltype(dims)>
-slice<dims,prune>& slice<dims,prune>::lookup(unsigned vID)
+void slice_graph<dims,prune>::enumerateRecursive
+	(std::vector<unsigned>& path,unsigned nv)
 {
-	return slices[graph[vID].sliceNum];
+	if constexpr (prune)
+	{
+	
+	}
+	else
+	{
+	
+	}
+	
+	/*
+	// Buffer for output to succeeds
+	compNumArray cna;
+
+	// The last dimension is the "primary" one.
+	if (path.size() == *dims.rbegin())
+	{
+		// Produce the slice
+		auto& sliceGroup = slices.emplace_back(path,nv);
+		
+		// Produce each symmetry. Should one of them be lexicographically smaller
+		// than this one, then remove it.
+	}
+	*/
 }
 
 template<auto dims, bool prune>
 	requires unsigned_range<decltype(dims)>
-void slice<dims,prune>::fillVertex(unsigned vID)
+void slice_graph<dims,prune>::enumerate()
 {
-	if constexpr (prune)
+	/*
+	// This likely will not happen, but just to
+	// be safe, avoid multiple calls to this.
+	if (!slices.empty()) return;
+	
+	if constexpr (dims.empty())
 	{
+		// There are two different physical forms,
+		// each with a single configuration.
+		slices.resize(2);
+		slices[0] = {{{{slice_defs::COMPLETELY_EMPTY}}}, 0, 0};
+		slices[1] = {{{{0}}}, 1, 1};
 		
+		addVertex(0, slice_defs::er_store(equivRelation(0)));
+		addVertex(1, slice_defs::er_store(equivRelation(1)));
+		
+		// Both slices can succeed one another.
+		graph[0].adjList = {0, 1};
+		graph[1].adjList = {0, 1};
 	}
 	else
 	{
-		// Out-parameter for 'succeeds' function calls
-		unsigned result;
+		// For now, assume no pruning
 		
-		// Go through each of the physical columns (as the afters),
-		// and see if it can succeed this configuration.
-		for (unsigned i = 0; i < slices.size(); i++)
+		const auto& subslices = unpruned_slice<pset::subArray>::slices;
+		for (unsigned i = 0; i < subslices.size(); ++i)
 		{
-			// Forms[0][0] gives the 'default' form, with no components
-			// connected.
-			if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
-				lookup(vID).componentNums, graph[vID].erID, result))
+			std::vector<unsigned> path { i };
+			unsigned nv = subslices[i].numVerts;
+			
+			enumerateRecursive(path,nv);
+		}
+	}
+	*/
+}
+
+template<auto dims, bool prune>
+	requires unsigned_range<decltype(dims)>
+void slice_graph<dims,prune>::addVertex(unsigned sliceID, unsigned erID)
+{
+	slices[sliceID].er_map[erID] = graph.size();
+	graph.emplace_back(sliceID,erID);
+}
+
+/*
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+pruned_slice<dims>::pruned_slice(const std::vector<unsigned>& path, unsigned nv)
+{
+	// TODO
+}
+
+
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+unpruned_slice<dims>& unpruned_slice<dims>::lookup(unsigned vID)
+{
+	return slices[graph[vID].sliceNum];
+}
+
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+pruned_slice<dims>& pruned_slice<dims>::lookup(unsigned vID)
+{
+	return slices[graph[vID].sliceNum];
+}
+
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+void unpruned_slice<dims>::fillVertex(unsigned vID)
+{
+	// Out-parameter for 'succeeds' function calls
+	unsigned result;
+	
+	// Go through each of the physical columns (as the afters),
+	// and see if it can succeed this configuration.
+	for (unsigned i = 0; i < slices.size(); i++)
+	{
+		// Forms[0][0] gives the 'default' form, with no components
+		// connected.
+		if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
+			lookup(vID).componentNums, graph[vID].erID, result))
+		{
+			auto search = slices[i].er_map.find(result);
+			
+			if (search != slices[i].er_map.end())
 			{
-				auto search = slices[i].er_map.find(result);
+				// Found
+				graph[vID].adjList.push_back(search->second);
+			}
+			else
+			{
+				// Not found
+				graph[vID].adjList.push_back(graph.size());
 				
-				if (search != slices[i].er_map.end())
-				{
-					// Found
-					graph[vID].adjList.push_back(search->second);
-				}
-				else
-				{
-					// Not found
-					graph[vID].adjList.push_back(graph.size());
-					
-					addVertex(i,result);
-				}
+				addVertex(i,result);
 			}
 		}
 	}
 }
+*/
