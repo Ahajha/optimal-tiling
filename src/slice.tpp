@@ -70,34 +70,119 @@ bool slice_base<dims>::succeeds(const compNumArray& afterCN,
 	return true;
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice_graph<dims,prune>::enumerateRecursive
-	(std::vector<unsigned>& path,unsigned nv)
+template<auto d>
+	requires unsigned_range<decltype(d)>
+std::ostream& operator<<(std::ostream& stream, const unpruned_slice<d>& s)
 {
-	if constexpr (prune)
+	for (auto v : s.form)
 	{
-	
+		stream << (slice_defs::empty(v) ? 'X' : '_');
 	}
-	else
-	{
-	
-	}
-	
-	/*
-	// Buffer for output to succeeds
-	compNumArray cna;
+	return stream;
+}
 
-	// The last dimension is the "primary" one.
-	if (path.size() == *dims.rbegin())
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+unpruned_slice<dims>::unpruned_slice
+	(const std::vector<unsigned>& path, unsigned nv)
+		: slice_base<dims>::numVerts(nv)
+{
+	using subSlice = slice_graph<slice_base<dims>::pset::subArray, false>;
+	constexpr unsigned dimSize = *dims.rbegin();
+	
+	// Count the total number of components in all slices. We don't need
+	// to concatenate the exact ERs, just the number of components is needed.
+	unsigned totalComponents = 0;
+	for (unsigned vID : path)
 	{
-		// Produce the slice
-		auto& sliceGroup = slices.emplace_back(path,nv);
-		
-		// Produce each symmetry. Should one of them be lexicographically smaller
-		// than this one, then remove it.
+		totalComponents += subSlice::lookup(vID).numComps;
 	}
-	*/
+	
+	equivRelation combination(totalComponents);
+	
+	// Total offset before both columns, and offset between them.
+	unsigned base_offset = 0, offset;
+	
+	// Iterate over each pair of adjacent columns
+	for (unsigned i = 0; i < path.size() - 1; ++i)
+	{	
+		const auto& col1 = subSlice::lookup(path[i]);
+		const auto& col2 = subSlice::lookup(path[i + 1]);
+		
+		offset = col1.numComponents;
+		
+		// Iterate over the two adjacent columns, if both vertices exist,
+		// then merge their respective components. This is already known
+		// to not have cycles, so no need to check.
+		for (unsigned j = 0; j < dimSize; ++j)
+		{
+			if (col1[j] && col2[j])
+			{
+				combination.merge(base_offset + col1.componentNums[j],
+				         offset + base_offset + col2.componentNums[j]);
+			}
+		}
+		
+		base_offset += offset;
+	}
+	
+	slice_base<dims>::numComps = combination.numComponents();
+	
+	const auto& cgl = combination.canonicalGroupLabeling();
+	
+	// Fill in componentNums based on the component
+	// numbers and the canonical group labeling.
+	unsigned pos = 0;
+	base_offset = 0;
+	for (unsigned vID : path)
+	{
+		const auto& col = subSlice::lookup(vID);
+	
+		for (unsigned j = 0; j < dimSize; ++j)
+		{
+			// Re-use col[j] if it is empty, in case it is completely empty.
+			form[pos++] = slice_defs::empty(col[j])
+				? col[j]
+				: cgl[col.componentNums[j] + base_offset];
+		}
+		
+		base_offset += col.numComponents;
+	}
+	
+	// Set any completely empty vertices to empty if they have a vertex
+	// on either side of them. (By induction, they don't have any to the
+	// side of them in any other dimensions)
+	for (unsigned i = 0; i < form.size(); ++i)
+	{
+		if (form[i] == slice_defs::COMPLETELY_EMPTY)
+		{
+			if (!(
+				(i < dimSize ||
+					slice_defs::empty(form[i - dimSize])) &&
+			    (i + dimSize >= form.size() ||
+			    	slice_defs::empty(form[i + dimSize]))
+			     )
+			   )
+			{
+				form[i] = slice_defs::EMPTY;
+			}
+		}
+	}
+}
+
+template<auto d>
+	requires unsigned_range<decltype(d)>
+std::ostream& operator<<(std::ostream& stream, const pruned_slice<d>& s)
+{
+	return stream;
+}
+
+template<auto dims>
+	requires unsigned_range<decltype(dims)>
+pruned_slice<dims>::pruned_slice
+	(const std::vector<unsigned>& path, unsigned nv)
+{
+	
 }
 
 template<auto dims, bool prune>
@@ -142,39 +227,39 @@ void slice_graph<dims,prune>::enumerate()
 
 template<auto dims, bool prune>
 	requires unsigned_range<decltype(dims)>
-void slice_graph<dims,prune>::addVertex(unsigned sliceID, unsigned erID)
+void slice_graph<dims,prune>::enumerateRecursive
+	(std::vector<unsigned>& path,unsigned nv)
 {
-	slices[sliceID].er_map[erID] = graph.size();
-	graph.emplace_back(sliceID,erID);
+	if constexpr (prune)
+	{
+	
+	}
+	else
+	{
+	
+	}
+	
+	/*
+	// Buffer for output to succeeds
+	compNumArray cna;
+
+	// The last dimension is the "primary" one.
+	if (path.size() == *dims.rbegin())
+	{
+		// Produce the slice
+		auto& sliceGroup = slices.emplace_back(path,nv);
+		
+		// Produce each symmetry. Should one of them be lexicographically smaller
+		// than this one, then remove it.
+	}
+	*/
 }
 
-/*
-template<auto dims>
+template<auto dims, bool prune>
 	requires unsigned_range<decltype(dims)>
-pruned_slice<dims>::pruned_slice(const std::vector<unsigned>& path, unsigned nv)
+void slice_graph<dims, prune>::fillVertex(unsigned vID)
 {
-	// TODO
-}
-
-
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-unpruned_slice<dims>& unpruned_slice<dims>::lookup(unsigned vID)
-{
-	return slices[graph[vID].sliceNum];
-}
-
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-pruned_slice<dims>& pruned_slice<dims>::lookup(unsigned vID)
-{
-	return slices[graph[vID].sliceNum];
-}
-
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-void unpruned_slice<dims>::fillVertex(unsigned vID)
-{
+	/*
 	// Out-parameter for 'succeeds' function calls
 	unsigned result;
 	
@@ -203,5 +288,20 @@ void unpruned_slice<dims>::fillVertex(unsigned vID)
 			}
 		}
 	}
+	*/
 }
-*/
+
+template<auto dims, bool prune>
+	requires unsigned_range<decltype(dims)>
+auto slice_graph<dims, prune>::lookup(unsigned vID) -> slice_t&
+{
+	return slices[graph[vID].sliceNum];
+}
+
+template<auto dims, bool prune>
+	requires unsigned_range<decltype(dims)>
+void slice_graph<dims,prune>::addVertex(unsigned sliceID, unsigned erID)
+{
+	slices[sliceID].er_map[erID] = graph.size();
+	graph.emplace_back(sliceID,erID);
+}

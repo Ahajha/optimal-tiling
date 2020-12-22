@@ -24,6 +24,9 @@ namespace slice_defs
 		std::numeric_limits<compNumType>::max();
 	constexpr static compNumType COMPLETELY_EMPTY = EMPTY - 1;
 	
+	constexpr static bool empty(compNumType v)
+		{ return v >= COMPLETELY_EMPTY; }
+	
 	struct vertex
 	{
 		std::vector<unsigned> adjList;
