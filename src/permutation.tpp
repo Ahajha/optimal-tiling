@@ -1,25 +1,24 @@
 #include "permutation.hpp"
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
-		permutationSet<subArray>::perms.size() * 2 * similarDimensions>
+template<std::unsigned_integral T, T d1, T ... rest>
+constexpr auto permutationSet<T, d1,rest...>::makePerms() -> std::array<permutation,
+		permutationSet<T,rest...>::perms.size() * 2 * similarDimensions>
 {
 	// Array of sizes of previous dimensions, effectively a running product
 	// of the dimension sizes up to a point.
-	std::array<value_type, dims.size()> dimSizes;
+	std::array<T, dims.size()> dimSizes;
 	dimSizes[0] = 1;
 	for (unsigned i = 1; i < dims.size(); ++i)
 	{
 		dimSizes[i] = dimSizes[i - 1] * dims[i - 1];
 	}
 	
-	constexpr auto& subPerms = permutationSet<subArray>::perms;
+	constexpr auto& subPerms = permutationSet<T,rest...>::perms;
 	
-	std::array<permutation, permutationSet<subArray>::perms.size()
+	std::array<permutation, permutationSet<T,rest...>::perms.size()
 		* 2 * similarDimensions> perms;
 	
-	value_type index = 0;
+	T index = 0;
 	for (const auto& subPerm : subPerms)
 	{
 		auto helper = [&](auto& ref)
@@ -28,19 +27,19 @@ constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
 			// swapping with itself (and we have constructed the 'reference'
 			// permutation) and look for any other dimensions that
 			// shares the same size, swap that dimension with the primary one.
-			for (value_type i = 0; i < dims.size() - 1; ++i)
+			for (T i = 0; i < dims.size() - 1; ++i)
 			{
-				if (dims[i] == primaryDim)
+				if (dims[i] == d1)
 				{
 					// For each element in the reference permutation,
 					// extract the last dimension and dimension i and swap them.
-					for (value_type j = 0; j < numVertices; ++j)
+					for (T j = 0; j < numVertices; ++j)
 					{
 						auto& val = perms[index][j] = ref[j];
 						
 						// Dimension 'primary' and 'i'
-						value_type dp =  val / dimSizes[dims.size() - 1];
-						value_type di = (val / dimSizes[i]) % dims[i];
+						T dp =  val / dimSizes[dims.size() - 1];
+						T di = (val / dimSizes[i]) % dims[i];
 						
 						// 'erase' the dimensions
 						val -= dp * dimSizes[dims.size() - 1];
@@ -62,15 +61,15 @@ constexpr auto permutationSet<dims>::makePerms() -> std::array<permutation,
 		auto& reverseRef = perms[index++];
 		
 		// Construct an initial form that just adds the next dimension
-		for (value_type i = 0; i < primaryDim; ++i)
+		for (T i = 0; i < d1; ++i)
 		{
-			for (value_type j = 0; j < dimSizes[dims.size() - 1]; ++j)
+			for (T j = 0; j < dimSizes[dims.size() - 1]; ++j)
 			{
 				ref[i * dimSizes[dims.size() - 1] + j]
 					= i * dimSizes[dims.size() - 1] + subPerm[j];
 				
 				reverseRef[i * dimSizes[dims.size() - 1] + j] =
-					(primaryDim - i - 1) * dimSizes[dims.size() - 1] + subPerm[j];
+					(d1 - i - 1) * dimSizes[dims.size() - 1] + subPerm[j];
 			}
 		}
 		

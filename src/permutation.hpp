@@ -1,59 +1,40 @@
 #ifndef PERMUTATION_HPP
 #define PERMUTATION_HPP
 
+#include "variadic-array.hpp"
 #include <array>
 #include <ranges>
 
-template<class T>
-concept unsigned_range = std::ranges::random_access_range<T>
-	&& std::unsigned_integral<typename T::value_type>;
-
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
+template<std::unsigned_integral T, T ...>
 struct permutationSet
 {
-	using value_type = typename decltype(dims)::value_type;
+	constexpr static T numVertices = 1;
 	
-	// Removes the last element
-	constexpr static auto subArray = []()
-	{
-		std::array<value_type, dims.size() - 1> arr;
-		std::copy(dims.begin(), dims.end() - 1, arr.begin());
-		return arr;
-	}();
+	using permutation = std::array<T,1>;
 	
-	constexpr static value_type primaryDim = dims[dims.size() - 1];
+	constexpr static std::array<permutation,1> perms = {{0}};
+};
+
+template<std::unsigned_integral T, T d1, T ... rest>
+struct permutationSet<T,d1,rest...>
+{
+	constexpr static T numVertices = d1 * permutationSet<T, rest...>::numVertices;
 	
-	constexpr static value_type numVertices = primaryDim
-		* permutationSet<subArray>::numVertices;
-	
-	constexpr static value_type similarDimensions =
-		std::count(dims.begin(),dims.end(),primaryDim);
-	
-	using permutation = std::array<value_type,numVertices>;
+	using permutation = std::array<T,numVertices>;
 	
 	private:
 	
+	constexpr static auto dims = variadic_array<T,d1,rest...>{};
+	
+	constexpr static unsigned similarDimensions =
+		std::count(dims.begin(),dims.end(),d1);
+	
 	constexpr static std::array<permutation,
-		permutationSet<subArray>::perms.size() * 2 * similarDimensions> makePerms();
+		permutationSet<T, rest...>::perms.size() * 2 * similarDimensions> makePerms();
 
 	public:
 	
 	constexpr static auto perms = makePerms();
-};
-
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-	      && (dims.empty())
-struct permutationSet<dims>
-{
-	using value_type = typename decltype(dims)::value_type;
-	
-	constexpr static value_type numVertices = 1;
-	
-	using permutation = std::array<value_type,numVertices>;
-	
-	constexpr static std::array<permutation,1> perms = {{0}};
 };
 
 #include "permutation.tpp"
