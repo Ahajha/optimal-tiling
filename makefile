@@ -1,56 +1,52 @@
 $(shell mkdir -p obj bin)
 
-ifdef trace
-	trace_flag=-t
-else
-	trace_flag=
-endif
+CC=g++-10 --std=c++20
+CFLAGS= -O3 -g -W -Wall
 
-CFLAGS= --std=c++20 -O3 -g -W -Wall
-
-CC=g++-10
+VARIADIC_ARRAY=src/variadic-array.hpp
+PERMUTATION=src/permutation.hpp src/permutation.tpp $(VARIADIC_ARRAY)
+SLICE=src/slice.hpp src/slice.tpp $(PERMUTATION)
 
 help:
-	@echo "make all, compile all programs"
+	@echo "make tile size=A,B,C,... : run the optimal tiling algorithm on a given size"
+	@echo "make cube size=A,B,C,... : run the optimal cube algorithm on a given size"
+	@echo "make all  size=A,B,C,... : compile all programs without running"
 	@echo ""
-	@echo "make tile size=N, run the optimal tiling algorithm on a given width"
-	@echo "make rect size=N, run the optimal rectangle algorithm on a given width"
-	@echo "make rect_matrix, run the optimal rectangle matrix algorithm"
-	@echo "make cube size=N, run the optimal cube tiling algorithm with a given square base size"
-	@echo ""
-	@echo "To add tracing to any program, give the variable 'trace' any value. For example:"
-	@echo "make tile size=5 trace=y"
+	@echo "For performance concerns, it is suggested that the dimension sizes be given\
+	 in nonascending order."
 
-all: bin/optimal_tiling bin/optimal_rectangle bin/optimal_rectangle_matrix
+all: bin/optimal_tile_$(size) bin/optimal_cube_$(size)
 
-tile: bin/optimal_tiling
-	./bin/optimal_tiling $(size) $(trace_flag)
-
-rect: bin/optimal_rectangle
-	./bin/optimal_rectangle $(size) $(trace_flag)
-
-rect_matrix: bin/optimal_rectangle_matrix
-	./bin/optimal_rectangle_matrix $(trace_flag)
+tile: bin/optimal_tile_$(size)
+	./bin/optimal_tile_$(size)
 
 cube: bin/optimal_cube_$(size)
-	./bin/optimal_cube_$(size) $(trace_flag)
+	./bin/optimal_cube_$(size)
 
-#debug: bin/optimal_tiling
-#	gdb --args ./bin/optimal_tiling $(size) -t
+debug_tile: bin/optimal_tile_$(size)
+	gdb ./bin/optimal_tile_$(size)
 
-#perf_run: $(OT_efile)
-#	perf record ./$(TE_efile) $(size)
+debug_cube: bin/optimal_cube_$(size)
+	gdb ./bin/optimal_cube_$(size)
 
-obj/optimal_cube_$(size).o: src/optimal_cube.cpp
-	$(CC) $(CFLAGS) -DMAX_DIM=$(size) -c $< -o $@
+perf_tile: bin/optimal_tile_$(size)
+	perf record /bin/optimal_tile_$(size)
 
-obj/%.o: src/%.cpp src/%.hpp
-	$(CC) $(CFLAGS) -c $< -o $@
+perf_cube: bin/optimal_cube_$(size)
+	perf record /bin/optimal_cube_$(size)
 
-# Empty target for .cpp files that do not have a .hpp counterpart.
-%.hpp: ;
+obj/optimal_tile_$(size).o: src/optimal_tile.cpp $(SLICE)
+obj/optimal_cube_$(size).o: src/optimal_cube.cpp $(SLICE)
 
-bin/%: obj/%.o obj/equivRelation.o obj/fraction.o
+obj/equivRelation.o: src/equivRelation.cpp src/equivRelation.hpp
+
+obj/%.o:
+	$(CC) $(CFLAGS) -DDIM_SIZES=$(size) -c $< -o $@
+
+bin/optimal_tile_$(size): obj/optimal_tile_$(size).o obj/equivRelation.o
+bin/optimal_cube_$(size): obj/optimal_cube_$(size).o obj/equivRelation.o
+
+bin/%:
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
