@@ -38,11 +38,10 @@ namespace slice_defs
 	static inline er_storage er_store{};
 };
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
+template<std::unsigned_integral T, T ... dims>
 struct slice_base
 {
-	using pset = permutationSet<dims>;
+	using pset = permutationSet<T,dims...>;
 	using compNumArray = std::array<slice_defs::compNumType, pset::numVertices>;
 	
 	unsigned numVerts;
@@ -63,43 +62,70 @@ struct slice_base
 		const compNumArray& beforeCN, unsigned beforeERID, unsigned& result);
 };
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-struct unpruned_slice : public slice_base<dims>
+// Only for 0 dimensions
+template<std::unsigned_integral T, T ... dims>
+struct unpruned_slice : public slice_base<T,dims...>
 {
-	typename slice_base<dims>::compNumArray form;
+	typename slice_base<T,dims...>::compNumArray form;
 	
-	template<auto d>
-		requires unsigned_range<decltype(d)>
-	friend std::ostream& operator<<(std::ostream&, const unpruned_slice<d>&);
+	template<std::unsigned_integral t, t ... ds>
+	friend std::ostream& operator<<(std::ostream&,
+		const unpruned_slice<t,ds...>&);
 	
-	// TODO: specialization for dims.size() == 1 or 0
+	unpruned_slice(bool v);
+};
+
+// For 1+ dimensions (minor todo: specialization for 1 dimension)
+template<std::unsigned_integral T, T d1, T ... rest>
+struct unpruned_slice<T,d1,rest...> : public slice_base<T,d1,rest...>
+{
+	typename slice_base<T,d1,rest...>::compNumArray form;
+	
+	template<std::unsigned_integral t, t d, t ... ds>
+	friend std::ostream& operator<<(std::ostream&,
+		const unpruned_slice<t,d,ds...>&);
+	
 	unpruned_slice(const std::vector<unsigned>& path, unsigned nv);
 };
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-struct pruned_slice : public slice_base<dims>
+// For 0 dimensions
+template<std::unsigned_integral T, T ... dims>
+struct pruned_slice : public slice_base<T,dims...>
 {
 	// Inner vector contains configs with the same physical form, but different
 	// equivalence relations. Outer vector contains symmetries with different
-	// physical forms. TODO: use unordered_set?
-	std::vector<std::vector<typename slice_base<dims>::compNumArray>> forms;
+	// physical forms. Possible todo: use unordered_set
+	std::vector<std::vector<
+		typename slice_base<T,dims...>::compNumArray
+	>> forms;
 	
-	template<auto d>
-		requires unsigned_range<decltype(d)>
-	friend std::ostream& operator<<(std::ostream&, const pruned_slice<d>&);
+	template<std::unsigned_integral t, t ... ds>
+	friend std::ostream& operator<<(std::ostream&,
+		const pruned_slice<t,ds...>&);
 	
-	// TODO: specialization for dims.size() == 1 or 0
+	pruned_slice(bool v);
+};
+
+// For 1+ dimensions (minor todo: specialization for 1 dimension)
+template<std::unsigned_integral T, T d1, T ... rest>
+struct pruned_slice<T,d1,rest...> : public slice_base<T,d1,rest...>
+{
+	std::vector<std::vector<
+		typename slice_base<T,d1,rest...>::compNumArray
+	>> forms;
+	
+	template<std::unsigned_integral t, t d, t ... ds>
+	friend std::ostream& operator<<(std::ostream&,
+		const pruned_slice<t,d,ds...>&);
+	
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv);
 };
 
-template<auto dims, bool prune = true>
-	requires unsigned_range<decltype(dims)>
+template<bool prune, std::unsigned_integral T, T ... dims>
 struct slice_graph
 {
 	using slice_t = std::conditional<prune,
-		pruned_slice<dims>, unpruned_slice<dims>>;
+		pruned_slice<T,dims...>, unpruned_slice<T,dims...>>;
 	
 	static inline std::vector<slice_defs::vertex> graph{};
 	static inline std::vector<slice_t> slices{};

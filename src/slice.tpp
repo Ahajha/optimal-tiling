@@ -1,8 +1,7 @@
 #include "slice.hpp"
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-void slice_base<dims>::permute(unsigned permID, const compNumArray& src,
+template<std::unsigned_integral T, T ... dims>
+void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
 {
 	const auto& perm = pset::perms[permID];
@@ -12,9 +11,8 @@ void slice_base<dims>::permute(unsigned permID, const compNumArray& src,
 	}
 }
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-std::strong_ordering slice_base<dims>::compareSymmetries
+template<std::unsigned_integral T, T ... dims>
+std::strong_ordering slice_base<T,dims...>::compareSymmetries
 	(const compNumArray& sym1, const compNumArray& sym2)
 {
 	for (unsigned i = 0; i < pset::numVertices; ++i)
@@ -34,9 +32,8 @@ std::strong_ordering slice_base<dims>::compareSymmetries
 	return std::strong_ordering::equal;
 }
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-bool slice_base<dims>::succeeds(const compNumArray& afterCN,
+template<std::unsigned_integral T, T ... dims>
+bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 	unsigned afterNumComp, const compNumArray& beforeCN,
 	unsigned beforeERID, unsigned& result)
 {
@@ -70,9 +67,8 @@ bool slice_base<dims>::succeeds(const compNumArray& afterCN,
 	return true;
 }
 
-template<auto d>
-	requires unsigned_range<decltype(d)>
-std::ostream& operator<<(std::ostream& stream, const unpruned_slice<d>& s)
+template<std::unsigned_integral T, T ... dims>
+std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& s)
 {
 	for (auto v : s.form)
 	{
@@ -81,14 +77,12 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<d>& s)
 	return stream;
 }
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-unpruned_slice<dims>::unpruned_slice
+template<std::unsigned_integral T, T d1, T ... rest>
+unpruned_slice<T,d1,rest...>::unpruned_slice
 	(const std::vector<unsigned>& path, unsigned nv)
-		: slice_base<dims>::numVerts(nv)
+		: slice_base<T,d1,rest...>::numVerts(nv)
 {
-	using subSlice = slice_graph<slice_base<dims>::pset::subArray, false>;
-	constexpr unsigned dimSize = *dims.rbegin();
+	using subSlice = slice_graph<false,T,rest...>;
 	
 	// Count the total number of components in all slices. We don't need
 	// to concatenate the exact ERs, just the number of components is needed.
@@ -114,7 +108,7 @@ unpruned_slice<dims>::unpruned_slice
 		// Iterate over the two adjacent columns, if both vertices exist,
 		// then merge their respective components. This is already known
 		// to not have cycles, so no need to check.
-		for (unsigned j = 0; j < dimSize; ++j)
+		for (unsigned j = 0; j < d1; ++j)
 		{
 			if (col1[j] && col2[j])
 			{
@@ -126,7 +120,7 @@ unpruned_slice<dims>::unpruned_slice
 		base_offset += offset;
 	}
 	
-	slice_base<dims>::numComps = combination.numComponents();
+	slice_base<T,d1,rest...>::numComps = combination.numComponents();
 	
 	const auto& cgl = combination.canonicalGroupLabeling();
 	
@@ -138,7 +132,7 @@ unpruned_slice<dims>::unpruned_slice
 	{
 		const auto& col = subSlice::lookup(vID);
 	
-		for (unsigned j = 0; j < dimSize; ++j)
+		for (unsigned j = 0; j < d1; ++j)
 		{
 			// Re-use col[j] if it is empty, in case it is completely empty.
 			form[pos++] = slice_defs::empty(col[j])
@@ -157,10 +151,10 @@ unpruned_slice<dims>::unpruned_slice
 		if (form[i] == slice_defs::COMPLETELY_EMPTY)
 		{
 			if (!(
-				(i < dimSize ||
-					slice_defs::empty(form[i - dimSize])) &&
-			    (i + dimSize >= form.size() ||
-			    	slice_defs::empty(form[i + dimSize]))
+				(i < d1 ||
+					slice_defs::empty(form[i - d1])) &&
+			    (i + d1 >= form.size() ||
+			    	slice_defs::empty(form[i + d1]))
 			     )
 			   )
 			{
@@ -170,24 +164,21 @@ unpruned_slice<dims>::unpruned_slice
 	}
 }
 
-template<auto d>
-	requires unsigned_range<decltype(d)>
-std::ostream& operator<<(std::ostream& stream, const pruned_slice<d>& s)
+template<std::unsigned_integral T, T ... dims>
+std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 {
 	return stream;
 }
 
-template<auto dims>
-	requires unsigned_range<decltype(dims)>
-pruned_slice<dims>::pruned_slice
+template<std::unsigned_integral T, T d1, T ... rest>
+pruned_slice<T,d1,rest...>::pruned_slice
 	(const std::vector<unsigned>& path, unsigned nv)
 {
 	
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice_graph<dims,prune>::enumerate()
+template<bool prune, std::unsigned_integral T, T ... dims>
+void slice_graph<prune,T,dims...>::enumerate()
 {
 	/*
 	// This likely will not happen, but just to
@@ -225,9 +216,8 @@ void slice_graph<dims,prune>::enumerate()
 	*/
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice_graph<dims,prune>::enumerateRecursive
+template<bool prune, std::unsigned_integral T, T ... dims>
+void slice_graph<prune,T,dims...>::enumerateRecursive
 	(std::vector<unsigned>& path,unsigned nv)
 {
 	if constexpr (prune)
@@ -255,9 +245,8 @@ void slice_graph<dims,prune>::enumerateRecursive
 	*/
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice_graph<dims, prune>::fillVertex(unsigned vID)
+template<bool prune, std::unsigned_integral T, T ... dims>
+void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 {
 	/*
 	// Out-parameter for 'succeeds' function calls
@@ -291,16 +280,14 @@ void slice_graph<dims, prune>::fillVertex(unsigned vID)
 	*/
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-auto slice_graph<dims, prune>::lookup(unsigned vID) -> slice_t&
+template<bool prune, std::unsigned_integral T, T ... dims>
+auto slice_graph<prune,T,dims...>::lookup(unsigned vID) -> slice_t&
 {
 	return slices[graph[vID].sliceNum];
 }
 
-template<auto dims, bool prune>
-	requires unsigned_range<decltype(dims)>
-void slice_graph<dims,prune>::addVertex(unsigned sliceID, unsigned erID)
+template<bool prune, std::unsigned_integral T, T ... dims>
+void slice_graph<prune,T,dims...>::addVertex(unsigned sliceID, unsigned erID)
 {
 	slices[sliceID].er_map[erID] = graph.size();
 	graph.emplace_back(sliceID,erID);
