@@ -1,16 +1,19 @@
 #include "permutation.hpp"
 
 template<std::unsigned_integral T, T d1, T ... rest>
-constexpr auto permutationSet<T, d1,rest...>::makePerms() -> std::array<permutation,
+constexpr auto permutationSet<T, d1, rest...>::makePerms() -> std::array<permutation,
 		permutationSet<T,rest...>::perms.size() * 2 * similarDimensions>
 {
 	// Array of sizes of previous dimensions, effectively a running product
-	// of the dimension sizes up to a point.
+	// of the dimension sizes up to a point. The running product goes from
+	// back to front, with the number at index 0 representing the size
+	// of one dimension lower than the maximum given.
 	std::array<T, dims.size()> dimSizes;
-	dimSizes[0] = 1;
+	dimSizes.back() = 1;
 	for (unsigned i = 1; i < dims.size(); ++i)
 	{
-		dimSizes[i] = dimSizes[i - 1] * dims[i - 1];
+		dimSizes[dims.size() - i - 1] =
+			dimSizes[dims.size() - i] * dims[dims.size() - i];
 	}
 	
 	constexpr auto& subPerms = permutationSet<T,rest...>::perms;
@@ -27,7 +30,7 @@ constexpr auto permutationSet<T, d1,rest...>::makePerms() -> std::array<permutat
 			// swapping with itself (and we have constructed the 'reference'
 			// permutation) and look for any other dimensions that
 			// shares the same size, swap that dimension with the primary one.
-			for (T i = 0; i < dims.size() - 1; ++i)
+			for (T i = 1; i < dims.size(); ++i)
 			{
 				if (dims[i] == d1)
 				{
@@ -35,19 +38,16 @@ constexpr auto permutationSet<T, d1,rest...>::makePerms() -> std::array<permutat
 					// extract the last dimension and dimension i and swap them.
 					for (T j = 0; j < numVertices; ++j)
 					{
+						// Copy over value from the reference permutation
 						auto& val = perms[index][j] = ref[j];
 						
 						// Dimension 'primary' and 'i'
-						T dp =  val / dimSizes[dims.size() - 1];
+						T dp =  val / dimSizes.front();
 						T di = (val / dimSizes[i]) % dims[i];
 						
-						// 'erase' the dimensions
-						val -= dp * dimSizes[dims.size() - 1];
-						val -= di * dimSizes[i];
-						
-						// 'add' the new dimensions, but swapped
-						val += dp * dimSizes[i];
-						val += di * dimSizes[dims.size() - 1];
+						// 'erase' the dimensions, then re-add them, but swapped.
+						val -= (dp * dimSizes.front() + di * dimSizes[i]);
+						val += (di * dimSizes.front() + dp * dimSizes[i]);
 					}
 					
 					++index;
@@ -63,13 +63,13 @@ constexpr auto permutationSet<T, d1,rest...>::makePerms() -> std::array<permutat
 		// Construct an initial form that just adds the next dimension
 		for (T i = 0; i < d1; ++i)
 		{
-			for (T j = 0; j < dimSizes[dims.size() - 1]; ++j)
+			for (T j = 0; j < dimSizes.front(); ++j)
 			{
-				ref[i * dimSizes[dims.size() - 1] + j]
-					= i * dimSizes[dims.size() - 1] + subPerm[j];
+				ref[i * dimSizes.front() + j] =
+					i * dimSizes.front() + subPerm[j];
 				
-				reverseRef[i * dimSizes[dims.size() - 1] + j] =
-					(d1 - i - 1) * dimSizes[dims.size() - 1] + subPerm[j];
+				reverseRef[i * dimSizes.front() + j] =
+					(d1 - i - 1) * dimSizes.front() + subPerm[j];
 			}
 		}
 		

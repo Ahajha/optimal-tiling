@@ -1,6 +1,11 @@
 #ifndef PERMUTATION_HPP
 #define PERMUTATION_HPP
 
+/*
+A class to store permutations of a hyper-rectangular-prismic lattice graph.
+The first size given should be the "highest" dimension.
+*/
+
 #include "variadic-array.hpp"
 #include <array>
 #include <ranges>
