@@ -1,7 +1,10 @@
 $(shell mkdir -p obj bin)
 
+comma = ,
+sizeString = $(subst $(comma),_,$(size))
+
 CC=g++-10 --std=c++20
-CFLAGS= -O3 -g -W -Wall
+CFLAGS=-O3 -g -W -Wall
 
 VARIADIC_ARRAY=src/variadic-array.hpp
 PERMUTATION=src/permutation.hpp src/permutation.tpp $(VARIADIC_ARRAY)
@@ -15,36 +18,36 @@ help:
 	@echo "For performance concerns, it is suggested that the dimension sizes be given\
 	 in nonascending order."
 
-all: bin/optimal_tile_$(size) bin/optimal_cube_$(size)
+all: bin/optimal_tile_$(sizeString) bin/optimal_cube_$(sizeString)
 
-tile: bin/optimal_tile_$(size)
-	./bin/optimal_tile_$(size)
+tile: bin/optimal_tile_$(sizeString)
+	./bin/optimal_tile_$(sizeString)
 
-cube: bin/optimal_cube_$(size)
-	./bin/optimal_cube_$(size)
+cube: bin/optimal_cube_$(sizeString)
+	./bin/optimal_cube_$(sizeString)
 
-debug_tile: bin/optimal_tile_$(size)
-	gdb ./bin/optimal_tile_$(size)
+debug_tile: bin/optimal_tile_$(sizeString)
+	gdb ./bin/optimal_tile_$(sizeString)
 
-debug_cube: bin/optimal_cube_$(size)
-	gdb ./bin/optimal_cube_$(size)
+debug_cube: bin/optimal_cube_$(sizeString)
+	gdb ./bin/optimal_cube_$(sizeString)
 
-perf_tile: bin/optimal_tile_$(size)
-	perf record /bin/optimal_tile_$(size)
+perf_tile: bin/optimal_tile_$(sizeString)
+	perf record /bin/optimal_tile_$(sizeString)
 
-perf_cube: bin/optimal_cube_$(size)
-	perf record /bin/optimal_cube_$(size)
+perf_cube: bin/optimal_cube_$(sizeString)
+	perf record /bin/optimal_cube_$(sizeString)
 
-obj/optimal_tile_$(size).o: src/optimal_tile.cpp $(SLICE)
-obj/optimal_cube_$(size).o: src/optimal_cube.cpp $(SLICE)
+obj/optimal_tile_$(sizeString).o: src/optimal_tile.cpp $(SLICE)
+obj/optimal_cube_$(sizeString).o: src/optimal_cube.cpp $(SLICE)
 
 obj/equivRelation.o: src/equivRelation.cpp src/equivRelation.hpp
 
 obj/%.o:
 	$(CC) $(CFLAGS) -DDIM_SIZES=$(size) -c $< -o $@
 
-bin/optimal_tile_$(size): obj/optimal_tile_$(size).o obj/equivRelation.o
-bin/optimal_cube_$(size): obj/optimal_cube_$(size).o obj/equivRelation.o
+bin/optimal_tile_$(sizeString): obj/optimal_tile_$(sizeString).o obj/equivRelation.o
+bin/optimal_cube_$(sizeString): obj/optimal_cube_$(sizeString).o obj/equivRelation.o
 
 bin/%:
 	$(CC) $(CFLAGS) $^ -o $@
