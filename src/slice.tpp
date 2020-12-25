@@ -150,12 +150,9 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	{
 		if (form[i] == slice_defs::COMPLETELY_EMPTY)
 		{
-			if (!(
-				(i < d1 ||
-					slice_defs::empty(form[i - d1])) &&
-			    (i + d1 >= form.size() ||
-			    	slice_defs::empty(form[i + d1]))
-			     )
+			if (!
+			    ((i < d1                || slice_defs::empty(form[i - d1])) &&
+			     (i + d1 >= form.size() || slice_defs::empty(form[i + d1])))
 			   )
 			{
 				form[i] = slice_defs::EMPTY;
