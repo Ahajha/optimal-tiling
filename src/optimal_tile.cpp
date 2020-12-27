@@ -53,4 +53,6 @@ void test()
 int main()
 {
 	test<DIM_SIZES>();
+	
+	test<>();
 }

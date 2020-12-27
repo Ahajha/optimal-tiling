@@ -158,7 +158,7 @@ struct slice_graph<prune,T,d1,rest...>
 	
 	private:
 	
-	static void enumerateRecursive(std::vector<unsigned>& path, unsigned nv);
+	static void enumerateRecursive(std::vector<unsigned>& path, unsigned& nv);
 	
 	static void fillVertex(unsigned vID);
 	

@@ -72,7 +72,7 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& 
 {
 	for (auto v : s.form)
 	{
-		stream << (slice_defs::empty(v) ? 'X' : '_');
+		stream << (slice_defs::empty(v) ? '_' : 'X');
 	}
 	return stream;
 }
@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,d1,rest...
 {
 	for (auto v : s.form)
 	{
-		stream << (slice_defs::empty(v) ? 'X' : '_');
+		stream << (slice_defs::empty(v) ? '_' : 'X');
 	}
 	return stream;
 }
@@ -93,8 +93,8 @@ slice_base<T,rest...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
 
 template<std::unsigned_integral T, T ... rest>
 unpruned_slice<T,rest...>::unpruned_slice(bool v) : slice_base<T,rest...>(v,v),
-	form({static_cast<slice_defs::compNumType>
-		(v ? 0 : slice_defs::COMPLETELY_EMPTY)}) {}
+	form({v ? static_cast<slice_defs::compNumType>(0)
+	        : slice_defs::COMPLETELY_EMPTY}) {}
 
 template<std::unsigned_integral T, T d1, T ... rest>
 unpruned_slice<T,d1,rest...>::unpruned_slice
@@ -117,17 +117,18 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	unsigned base_offset = 0, offset;
 	
 	// Iterate over each pair of adjacent columns
-	for (unsigned i = 0; i < path.size() - 1; ++i)
+	for (unsigned i = 0; i < d1 - 1; ++i)
 	{
 		const auto& ss1 = subSlice::lookup(path[i]);
 		const auto& ss2 = subSlice::lookup(path[i + 1]);
 		
 		offset = ss1.numComps;
 		
+		
 		// Iterate over the two adjacent columns, if both vertices exist,
 		// then merge their respective components. This is already known
 		// to not have cycles, so no need to check.
-		for (unsigned j = 0; j < d1; ++j)
+		for (unsigned j = 0; j < ss1.form.size(); ++j)
 		{
 			if (!slice_defs::empty(ss1.form[j]) && !slice_defs::empty(ss2.form[j]))
 			{
@@ -150,8 +151,8 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	for (unsigned vID : path)
 	{
 		const auto& ss = subSlice::lookup(vID);
-	
-		for (unsigned j = 0; j < d1; ++j)
+		
+		for (unsigned j = 0; j < ss.form.size(); ++j)
 		{
 			// Re-use ss.form[j] if it is empty, in case it is completely empty.
 			form[pos++] = slice_defs::empty(ss.form[j])
@@ -196,6 +197,8 @@ pruned_slice<T,d1,rest...>::pruned_slice
 template<bool prune, std::unsigned_integral T, T ... dims>
 void slice_graph<prune,T,dims...>::enumerate()
 {
+	if (!slices.empty()) return;
+	
 	// There are two different physical forms
 	slices.emplace_back(false);
 	slices.emplace_back(true);
@@ -230,45 +233,53 @@ void slice_graph<prune,T,d1,rest...>::enumerate()
 
 template<bool prune, std::unsigned_integral T, T d1, T ... rest>
 void slice_graph<prune,T,d1,rest...>::enumerateRecursive
-	(std::vector<unsigned>& path,unsigned nv)
+	(std::vector<unsigned>& path,unsigned& nv)
 {
 	if constexpr (prune)
 	{
 		// TODO
-	}
-	else
-	{
-		// Buffer for output to succeeds
-		typename slice_base<T,d1,rest...>::compNumArray cna;
-		
-		// If the path is the size of the primary dimension, add the slice.
-		if (path.size() == d1)
-		{
-			auto& s = slices.emplace_back(path,nv);
-		}
-	}
-	
-	/*
-	// Buffer for output to succeeds
-	compNumArray cna;
-
-	// The last dimension is the "primary" one.
-	if (path.size() == *dims.rbegin())
-	{
+		/*
 		// Produce the slice
 		auto& sliceGroup = slices.emplace_back(path,nv);
 		
 		// Produce each symmetry. Should one of them be lexicographically smaller
 		// than this one, then remove it.
+		*/
 	}
-	*/
+	else
+	{
+		// If the path is the size of the primary dimension, add the slice.
+		if (path.size() == d1)
+		{
+			slices.emplace_back(path,nv);
+		}
+		else
+		{
+			for (const auto& adj :
+				slice_graph<false,T,rest...>::graph[path.back()].adjList)
+			{
+				// Need to find and store the number
+				// of vertices the adjacent slice has.
+				const unsigned deltaNV =
+					slice_graph<false,T,rest...>::lookup(adj).numVerts;
+				
+				path.push_back(adj);
+				nv += deltaNV;
+				
+				enumerateRecursive(path,nv);
+				
+				path.pop_back();
+				nv -= deltaNV;
+			}
+		}
+	}
 }
 
 template<bool prune, std::unsigned_integral T, T d1, T ... rest>
 void slice_graph<prune,T,d1,rest...>::fillVertex(unsigned vID)
 {
 	/*
-	// Out-parameter for 'succeeds' function calls
+	// Buffer for output to succeeds
 	unsigned result;
 	
 	// Go through each of the physical columns (as the afters),
