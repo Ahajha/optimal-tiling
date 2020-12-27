@@ -99,7 +99,7 @@ unpruned_slice<T,rest...>::unpruned_slice(bool v) : slice_base<T,rest...>(v,v),
 template<std::unsigned_integral T, T d1, T ... rest>
 unpruned_slice<T,d1,rest...>::unpruned_slice
 	(const std::vector<unsigned>& path, unsigned nv)
-		: slice_base<T,d1,rest...>::numVerts(nv)
+		: slice_base<T,d1,rest...>(nv,0)
 {
 	using subSlice = slice_graph<false,T,rest...>;
 	
@@ -119,20 +119,20 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	// Iterate over each pair of adjacent columns
 	for (unsigned i = 0; i < path.size() - 1; ++i)
 	{
-		const auto& col1 = subSlice::lookup(path[i]);
-		const auto& col2 = subSlice::lookup(path[i + 1]);
+		const auto& ss1 = subSlice::lookup(path[i]);
+		const auto& ss2 = subSlice::lookup(path[i + 1]);
 		
-		offset = col1.numComponents;
+		offset = ss1.numComps;
 		
 		// Iterate over the two adjacent columns, if both vertices exist,
 		// then merge their respective components. This is already known
 		// to not have cycles, so no need to check.
 		for (unsigned j = 0; j < d1; ++j)
 		{
-			if (col1[j] && col2[j])
+			if (!slice_defs::empty(ss1.form[j]) && !slice_defs::empty(ss2.form[j]))
 			{
-				combination.merge(base_offset + col1.componentNums[j],
-				         offset + base_offset + col2.componentNums[j]);
+				combination.merge(base_offset + ss1.form[j],
+				         offset + base_offset + ss2.form[j]);
 			}
 		}
 		
@@ -149,17 +149,17 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	base_offset = 0;
 	for (unsigned vID : path)
 	{
-		const auto& col = subSlice::lookup(vID);
+		const auto& ss = subSlice::lookup(vID);
 	
 		for (unsigned j = 0; j < d1; ++j)
 		{
-			// Re-use col[j] if it is empty, in case it is completely empty.
-			form[pos++] = slice_defs::empty(col[j])
-				? col[j]
-				: cgl[col.componentNums[j] + base_offset];
+			// Re-use ss.form[j] if it is empty, in case it is completely empty.
+			form[pos++] = slice_defs::empty(ss.form[j])
+				? ss.form[j]
+				: cgl[ss.form[j] + base_offset];
 		}
 		
-		base_offset += col.numComponents;
+		base_offset += ss.numComps;
 	}
 	
 	// Set any completely empty vertices to empty if they have a vertex
@@ -215,8 +215,10 @@ void slice_graph<prune,T,d1,rest...>::enumerate()
 	// be safe, avoid multiple calls to this.
 	if (!slices.empty()) return;
 	
-	// For now, assume no pruning TODO
+	// Subslices are never pruned
+	slice_graph<false,T,rest...>::enumerate();
 	const auto& subslices = slice_graph<false,T,rest...>::slices;
+	
 	for (unsigned i = 0; i < subslices.size(); ++i)
 	{
 		std::vector<unsigned> path { i };
@@ -232,11 +234,18 @@ void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 {
 	if constexpr (prune)
 	{
-	
+		// TODO
 	}
 	else
 	{
-	
+		// Buffer for output to succeeds
+		typename slice_base<T,d1,rest...>::compNumArray cna;
+		
+		// If the path is the size of the primary dimension, add the slice.
+		if (path.size() == d1)
+		{
+			auto& s = slices.emplace_back(path,nv);
+		}
 	}
 	
 	/*

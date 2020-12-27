@@ -132,12 +132,12 @@ struct slice_graph
 	static inline std::vector<slice_defs::vertex> graph{};
 	static inline std::vector<slice_t> slices{};
 	
+	static slice_t& lookup(unsigned vID);
+	
 	// Fills graph and slices.
 	static void enumerate();
 	
 	private:
-	
-	static slice_t& lookup(unsigned vID);
 	
 	static void addVertex(unsigned sliceID, unsigned erID);
 };
@@ -151,6 +151,8 @@ struct slice_graph<prune,T,d1,rest...>
 	static inline std::vector<slice_defs::vertex> graph{};
 	static inline std::vector<slice_t> slices{};
 	
+	static slice_t& lookup(unsigned vID);
+	
 	// Fills graph and slices.
 	static void enumerate();
 	
@@ -159,8 +161,6 @@ struct slice_graph<prune,T,d1,rest...>
 	static void enumerateRecursive(std::vector<unsigned>& path, unsigned nv);
 	
 	static void fillVertex(unsigned vID);
-	
-	static slice_t& lookup(unsigned vID);
 	
 	static void addVertex(unsigned sliceID, unsigned erID);
 };
