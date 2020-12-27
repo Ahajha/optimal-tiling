@@ -78,6 +78,25 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& 
 }
 
 template<std::unsigned_integral T, T d1, T ... rest>
+std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,d1,rest...>& s)
+{
+	for (auto v : s.form)
+	{
+		stream << (slice_defs::empty(v) ? 'X' : '_');
+	}
+	return stream;
+}
+
+template<std::unsigned_integral T, T ... rest>
+slice_base<T,rest...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
+	numVerts(nv), numComps(nc) {}
+
+template<std::unsigned_integral T, T ... rest>
+unpruned_slice<T,rest...>::unpruned_slice(bool v) : slice_base<T,rest...>(v,v),
+	form({static_cast<slice_defs::compNumType>
+		(v ? 0 : slice_defs::COMPLETELY_EMPTY)}) {}
+
+template<std::unsigned_integral T, T d1, T ... rest>
 unpruned_slice<T,d1,rest...>::unpruned_slice
 	(const std::vector<unsigned>& path, unsigned nv)
 		: slice_base<T,d1,rest...>::numVerts(nv)
@@ -99,7 +118,7 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	
 	// Iterate over each pair of adjacent columns
 	for (unsigned i = 0; i < path.size() - 1; ++i)
-	{	
+	{
 		const auto& col1 = subSlice::lookup(path[i]);
 		const auto& col2 = subSlice::lookup(path[i + 1]);
 		
@@ -177,44 +196,38 @@ pruned_slice<T,d1,rest...>::pruned_slice
 template<bool prune, std::unsigned_integral T, T ... dims>
 void slice_graph<prune,T,dims...>::enumerate()
 {
-	/*
+	// There are two different physical forms
+	slices.emplace_back(false);
+	slices.emplace_back(true);
+	
+	addVertex(0, slice_defs::er_store(equivRelation(0)));
+	addVertex(1, slice_defs::er_store(equivRelation(1)));
+	
+	// Both slices can succeed one another.
+	graph[0].adjList = {0, 1};
+	graph[1].adjList = {0, 1};
+}
+
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+void slice_graph<prune,T,d1,rest...>::enumerate()
+{
 	// This likely will not happen, but just to
 	// be safe, avoid multiple calls to this.
 	if (!slices.empty()) return;
 	
-	if constexpr (dims.empty())
+	// For now, assume no pruning TODO
+	const auto& subslices = slice_graph<false,T,rest...>::slices;
+	for (unsigned i = 0; i < subslices.size(); ++i)
 	{
-		// There are two different physical forms,
-		// each with a single configuration.
-		slices.resize(2);
-		slices[0] = {{{{slice_defs::COMPLETELY_EMPTY}}}, 0, 0};
-		slices[1] = {{{{0}}}, 1, 1};
+		std::vector<unsigned> path { i };
+		unsigned nv = subslices[i].numVerts;
 		
-		addVertex(0, slice_defs::er_store(equivRelation(0)));
-		addVertex(1, slice_defs::er_store(equivRelation(1)));
-		
-		// Both slices can succeed one another.
-		graph[0].adjList = {0, 1};
-		graph[1].adjList = {0, 1};
+		enumerateRecursive(path,nv);
 	}
-	else
-	{
-		// For now, assume no pruning
-		
-		const auto& subslices = unpruned_slice<pset::subArray>::slices;
-		for (unsigned i = 0; i < subslices.size(); ++i)
-		{
-			std::vector<unsigned> path { i };
-			unsigned nv = subslices[i].numVerts;
-			
-			enumerateRecursive(path,nv);
-		}
-	}
-	*/
 }
 
-template<bool prune, std::unsigned_integral T, T ... dims>
-void slice_graph<prune,T,dims...>::enumerateRecursive
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 	(std::vector<unsigned>& path,unsigned nv)
 {
 	if constexpr (prune)
@@ -242,8 +255,8 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 	*/
 }
 
-template<bool prune, std::unsigned_integral T, T ... dims>
-void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+void slice_graph<prune,T,d1,rest...>::fillVertex(unsigned vID)
 {
 	/*
 	// Out-parameter for 'succeeds' function calls

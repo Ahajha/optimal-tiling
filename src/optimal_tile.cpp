@@ -6,9 +6,10 @@
 
 // For the time being, this will serve as a testing file
 
-int main()
+template<unsigned ... ds>
+void test()
 {
-	auto dims = variadic_array<unsigned,DIM_SIZES>{};
+	auto dims = variadic_array<unsigned,ds...>{};
 	
 	for (auto i : dims)
 	{
@@ -16,7 +17,7 @@ int main()
 	}
 	std::cout << '\n';
 	
-	for (const auto& perm : permutationSet<unsigned,DIM_SIZES>::perms)
+	for (const auto& perm : permutationSet<unsigned,ds...>::perms)
 	{
 		for (auto i : perm)
 		{
@@ -25,5 +26,17 @@ int main()
 		std::cout << '\n';
 	}
 	
-	slice_graph<true,unsigned,DIM_SIZES>::enumerate();
+	using graph_t = slice_graph<false,unsigned,ds...>;
+	
+	graph_t::enumerate();
+	
+	for (const auto& s : graph_t::slices)
+	{
+		std::cout << s << '\n';
+	}
+}
+
+int main()
+{
+	test<DIM_SIZES>();
 }

@@ -50,6 +50,8 @@ struct slice_base
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
+	slice_base(unsigned nv, slice_defs::compNumType nc);
+	
 	protected:
 	
 	static void permute(unsigned permID, const compNumArray& src,
@@ -125,7 +127,26 @@ template<bool prune, std::unsigned_integral T, T ... dims>
 struct slice_graph
 {
 	using slice_t = std::conditional<prune,
-		pruned_slice<T,dims...>, unpruned_slice<T,dims...>>;
+		pruned_slice<T,dims...>, unpruned_slice<T,dims...>>::type;
+	
+	static inline std::vector<slice_defs::vertex> graph{};
+	static inline std::vector<slice_t> slices{};
+	
+	// Fills graph and slices.
+	static void enumerate();
+	
+	private:
+	
+	static slice_t& lookup(unsigned vID);
+	
+	static void addVertex(unsigned sliceID, unsigned erID);
+};
+
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+struct slice_graph<prune,T,d1,rest...>
+{
+	using slice_t = std::conditional<prune,
+		pruned_slice<T,d1,rest...>, unpruned_slice<T,d1,rest...>>::type;
 	
 	static inline std::vector<slice_defs::vertex> graph{};
 	static inline std::vector<slice_t> slices{};
