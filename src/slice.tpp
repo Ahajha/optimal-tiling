@@ -24,8 +24,8 @@ std::strong_ordering slice_base<T,dims...>::compareSymmetries
 		// is equivalent physically to the base configuration,
 		// we can still safely ignore it, as there is no other slice
 		// it would be produced by.
-		bool sym1_induced = sym1[i] >= 0;
-		bool sym2_induced = sym2[i] >= 0;
+		bool sym1_induced = slice_defs::empty(sym1[i]);
+		bool sym2_induced = slice_defs::empty(sym2[i]);
 		if (sym1_induced != sym2_induced)
 			return sym1[i] <=> sym2[i];
 	}
@@ -42,12 +42,13 @@ bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
 	// the second part.
-	equivRelation combination = equivRelation(afterNumComp).append(beforeERID);
+	
+	equivRelation combination = equivRelation(afterNumComp).append(beforeConfig);
 	
 	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
 		// If both vertices exist
-		if (afterCN[i] >= 0 && beforeCN[i] >= 0)
+		if (!slice_defs::empty(afterCN[i]) && !slice_defs::empty(beforeCN[i]))
 		{
 			// Check if their associated equivalence classes
 			// are already equivalent. If so, this would
@@ -123,7 +124,6 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 		const auto& ss2 = subSlice::lookup(path[i + 1]);
 		
 		offset = ss1.numComps;
-		
 		
 		// Iterate over the two adjacent columns, if both vertices exist,
 		// then merge their respective components. This is already known
@@ -229,6 +229,18 @@ void slice_graph<prune,T,d1,rest...>::enumerate()
 		
 		enumerateRecursive(path,nv);
 	}
+	
+	// Create base versions of all vertices
+	for (unsigned i = 0; i < slices.size(); ++i)
+	{
+		addVertex(i,slice_defs::er_store(equivRelation(slices[i].numComps)));
+	}
+	
+	// Fill in all adjacency lists
+	for (unsigned i = 0; i < graph.size(); ++i)
+	{
+		fillVertex(i);
+	}
 }
 
 template<bool prune, std::unsigned_integral T, T d1, T ... rest>
@@ -278,36 +290,69 @@ void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 template<bool prune, std::unsigned_integral T, T d1, T ... rest>
 void slice_graph<prune,T,d1,rest...>::fillVertex(unsigned vID)
 {
-	/*
-	// Buffer for output to succeeds
-	unsigned result;
-	
-	// Go through each of the physical columns (as the afters),
-	// and see if it can succeed this configuration.
-	for (unsigned i = 0; i < slices.size(); i++)
+	if constexpr (prune)
 	{
-		// Forms[0][0] gives the 'default' form, with no components
-		// connected.
-		if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
-			lookup(vID).componentNums, graph[vID].erID, result))
+		/*
+		// Buffer for output to succeeds
+		unsigned result;
+		
+		// Go through each of the physical columns (as the afters),
+		// and see if it can succeed this configuration.
+		for (unsigned i = 0; i < slices.size(); i++)
 		{
-			auto search = slices[i].er_map.find(result);
-			
-			if (search != slices[i].er_map.end())
+			// Forms[0][0] gives the 'default' form, with no components
+			// connected.
+			if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
+				lookup(vID).componentNums, graph[vID].erID, result))
 			{
-				// Found
-				graph[vID].adjList.push_back(search->second);
-			}
-			else
-			{
-				// Not found
-				graph[vID].adjList.push_back(graph.size());
+				auto search = slices[i].er_map.find(result);
 				
-				addVertex(i,result);
+				if (search != slices[i].er_map.end())
+				{
+					// Found
+					graph[vID].adjList.push_back(search->second);
+				}
+				else
+				{
+					// Not found
+					graph[vID].adjList.push_back(graph.size());
+					
+					addVertex(i,result);
+				}
+			}
+		}
+		*/
+	}
+	else
+	{
+		// Buffer for output to succeeds
+		unsigned result;
+		
+		// Go through each of the physical columns (as the afters),
+		// and see if it can succeed this configuration.
+		for (unsigned i = 0; i < slices.size(); i++)
+		{
+			if (slice_base<T,d1,rest...>::succeeds(slices[i].form,
+				slices[i].numComps, lookup(vID).form, graph[vID].erID, result))
+			{
+				// See if the configuration found exists already
+				auto search = slices[i].er_map.find(result);
+				
+				if (search != slices[i].er_map.end())
+				{
+					// Found
+					graph[vID].adjList.push_back(search->second);
+				}
+				else
+				{
+					// Not found
+					graph[vID].adjList.push_back(graph.size());
+					
+					addVertex(i,result);
+				}
 			}
 		}
 	}
-	*/
 }
 
 template<bool prune, std::unsigned_integral T, T ... dims>
@@ -318,6 +363,19 @@ auto slice_graph<prune,T,dims...>::lookup(unsigned vID) -> slice_t&
 
 template<bool prune, std::unsigned_integral T, T ... dims>
 void slice_graph<prune,T,dims...>::addVertex(unsigned sliceID, unsigned erID)
+{
+	slices[sliceID].er_map[erID] = graph.size();
+	graph.emplace_back(sliceID,erID);
+}
+
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+auto slice_graph<prune,T,d1,rest...>::lookup(unsigned vID) -> slice_t&
+{
+	return slices[graph[vID].sliceNum];
+}
+
+template<bool prune, std::unsigned_integral T, T d1, T ... rest>
+void slice_graph<prune,T,d1,rest...>::addVertex(unsigned sliceID, unsigned erID)
 {
 	slices[sliceID].er_map[erID] = graph.size();
 	graph.emplace_back(sliceID,erID);

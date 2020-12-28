@@ -52,8 +52,6 @@ struct slice_base
 	
 	slice_base(unsigned nv, slice_defs::compNumType nc);
 	
-	protected:
-	
 	static void permute(unsigned permID, const compNumArray& src,
 		compNumArray& result);
 	
