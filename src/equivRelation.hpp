@@ -12,7 +12,7 @@ class equivRelation
 	
 	equivRelation();
 	
-	equivRelation(unsigned);
+	explicit equivRelation(unsigned);
 	
 	// Merge two elements
 	void merge(unsigned, unsigned);
