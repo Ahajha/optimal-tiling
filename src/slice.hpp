@@ -38,10 +38,27 @@ namespace slice_defs
 	static inline er_storage er_store{};
 };
 
+// For 0 dimensions
 template<std::unsigned_integral T, T ... dims>
 struct slice_base
 {
 	using pset = permutationSet<T,dims...>;
+	using compNumArray = std::array<slice_defs::compNumType, pset::numVertices>;
+	
+	unsigned numVerts;
+	slice_defs::compNumType numComps;
+	
+	// Maps ER IDs to vertex IDs.
+	std::unordered_map<unsigned,unsigned> er_map;
+	
+	slice_base(bool v);
+};
+
+// For 1+ dimensions
+template<std::unsigned_integral T, T d1, T ... rest>
+struct slice_base<T,d1,rest...>
+{
+	using pset = permutationSet<T,d1,rest...>;
 	using compNumArray = std::array<slice_defs::compNumType, pset::numVertices>;
 	
 	unsigned numVerts;
@@ -60,9 +77,11 @@ struct slice_base
 	
 	static bool succeeds(const compNumArray& afterCN, unsigned afterNumComp,
 		const compNumArray& beforeCN, unsigned beforeERID, unsigned& result);
+	
+	void constructForm(const std::vector<unsigned>& path, compNumArray& out);
 };
 
-// Only for 0 dimensions
+// For 0 dimensions
 template<std::unsigned_integral T, T ... dims>
 struct unpruned_slice : public slice_base<T,dims...>
 {

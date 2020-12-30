@@ -1,7 +1,7 @@
 #include "slice.hpp"
 
-template<std::unsigned_integral T, T ... dims>
-void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
+template<std::unsigned_integral T, T d1, T ... rest>
+void slice_base<T,d1,rest...>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
 {
 	const auto& perm = pset::perms[permID];
@@ -11,8 +11,8 @@ void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 	}
 }
 
-template<std::unsigned_integral T, T ... dims>
-std::strong_ordering slice_base<T,dims...>::compareSymmetries
+template<std::unsigned_integral T, T d1, T ... rest>
+std::strong_ordering slice_base<T,d1,rest...>::compareSymmetries
 	(const compNumArray& sym1, const compNumArray& sym2)
 {
 	for (unsigned i = 0; i < pset::numVertices; ++i)
@@ -32,8 +32,8 @@ std::strong_ordering slice_base<T,dims...>::compareSymmetries
 	return std::strong_ordering::equal;
 }
 
-template<std::unsigned_integral T, T ... dims>
-bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
+template<std::unsigned_integral T, T d1, T ... rest>
+bool slice_base<T,d1,rest...>::succeeds(const compNumArray& afterCN,
 	unsigned afterNumComp, const compNumArray& beforeCN,
 	unsigned beforeERID, unsigned& result)
 {
@@ -88,28 +88,31 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,d1,rest...
 	return stream;
 }
 
-template<std::unsigned_integral T, T ... rest>
-slice_base<T,rest...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
+template<std::unsigned_integral T, T ... dims>
+slice_base<T,dims...>::slice_base(bool v) : numVerts(v), numComps(v) {}
+
+template<std::unsigned_integral T, T d1, T ... rest>
+slice_base<T,d1,rest...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
 	numVerts(nv), numComps(nc) {}
 
-template<std::unsigned_integral T, T ... rest>
-unpruned_slice<T,rest...>::unpruned_slice(bool v) : slice_base<T,rest...>(v,v),
+template<std::unsigned_integral T, T ... dims>
+unpruned_slice<T,dims...>::unpruned_slice(bool v) : slice_base<T,dims...>(v),
 	form({v ? static_cast<slice_defs::compNumType>(0)
 	        : slice_defs::COMPLETELY_EMPTY}) {}
 
 template<std::unsigned_integral T, T d1, T ... rest>
-unpruned_slice<T,d1,rest...>::unpruned_slice
-	(const std::vector<unsigned>& path, unsigned nv)
-		: slice_base<T,d1,rest...>(nv,0)
+void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
+	compNumArray& out)
 {
-	using subSlice = slice_graph<false,T,rest...>;
+	using subGraph = slice_graph<false,T,rest...>;
+	constexpr static T subNV = slice_base<T,rest...>::pset::numVertices;
 	
 	// Count the total number of components in all slices. We don't need
 	// to concatenate the exact ERs, just the number of components is needed.
 	unsigned totalComponents = 0;
 	for (unsigned vID : path)
 	{
-		totalComponents += subSlice::lookup(vID).numComps;
+		totalComponents += subGraph::lookup(vID).numComps;
 	}
 	
 	equivRelation combination(totalComponents);
@@ -120,15 +123,15 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	// Iterate over each pair of adjacent columns
 	for (unsigned i = 0; i < d1 - 1; ++i)
 	{
-		const auto& ss1 = subSlice::lookup(path[i]);
-		const auto& ss2 = subSlice::lookup(path[i + 1]);
+		const auto& ss1 = subGraph::lookup(path[i]);
+		const auto& ss2 = subGraph::lookup(path[i + 1]);
 		
 		offset = ss1.numComps;
 		
 		// Iterate over the two adjacent columns, if both vertices exist,
 		// then merge their respective components. This is already known
 		// to not have cycles, so no need to check.
-		for (unsigned j = 0; j < ss1.form.size(); ++j)
+		for (unsigned j = 0; j < subNV; ++j)
 		{
 			if (!slice_defs::empty(ss1.form[j]) && !slice_defs::empty(ss2.form[j]))
 			{
@@ -140,7 +143,7 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 		base_offset += offset;
 	}
 	
-	slice_base<T,d1,rest...>::numComps = combination.numComponents();
+	numComps = combination.numComponents();
 	
 	const auto& cgl = combination.canonicalGroupLabeling();
 	
@@ -150,12 +153,12 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	base_offset = 0;
 	for (unsigned vID : path)
 	{
-		const auto& ss = subSlice::lookup(vID);
+		const auto& ss = subGraph::lookup(vID);
 		
-		for (unsigned j = 0; j < ss.form.size(); ++j)
+		for (unsigned j = 0; j < subNV; ++j)
 		{
 			// Re-use ss.form[j] if it is empty, in case it is completely empty.
-			form[pos++] = slice_defs::empty(ss.form[j])
+			out[pos++] = slice_defs::empty(ss.form[j])
 				? ss.form[j]
 				: cgl[ss.form[j] + base_offset];
 		}
@@ -166,19 +169,27 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 	// Set any completely empty vertices to empty if they have a vertex
 	// on either side of them. (By induction, they don't have any to the
 	// side of them in any other dimensions)
-	for (unsigned i = 0; i < form.size(); ++i)
+	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
-		if (form[i] == slice_defs::COMPLETELY_EMPTY)
+		if (out[i] == slice_defs::COMPLETELY_EMPTY)
 		{
 			if (!
-			    ((i < d1                || slice_defs::empty(form[i - d1])) &&
-			     (i + d1 >= form.size() || slice_defs::empty(form[i + d1])))
+			    ((i < d1                      || slice_defs::empty(out[i - d1])) &&
+			     (i + d1 >= pset::numVertices || slice_defs::empty(out[i + d1])))
 			   )
 			{
-				form[i] = slice_defs::EMPTY;
+				out[i] = slice_defs::EMPTY;
 			}
 		}
 	}
+}
+
+template<std::unsigned_integral T, T d1, T ... rest>
+unpruned_slice<T,d1,rest...>::unpruned_slice
+	(const std::vector<unsigned>& path, unsigned nv)
+		: slice_base<T,d1,rest...>(nv,0)
+{
+	slice_base<T,d1,rest...>::constructForm(path,form);
 }
 
 template<std::unsigned_integral T, T ... dims>
