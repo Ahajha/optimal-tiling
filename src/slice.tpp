@@ -27,7 +27,7 @@ std::strong_ordering slice_base<T,d1,rest...>::compareSymmetries
 		bool sym1_induced = slice_defs::empty(sym1[i]);
 		bool sym2_induced = slice_defs::empty(sym2[i]);
 		if (sym1_induced != sym2_induced)
-			return sym1[i] <=> sym2[i];
+			return sym1_induced <=> sym2_induced;
 	}
 	return std::strong_ordering::equal;
 }
@@ -100,6 +100,11 @@ unpruned_slice<T,dims...>::unpruned_slice(bool v) : slice_base<T,dims...>(v),
 	form({v ? static_cast<slice_defs::compNumType>(0)
 	        : slice_defs::COMPLETELY_EMPTY}) {}
 
+template<std::unsigned_integral T, T ... dims>
+pruned_slice<T,dims...>::pruned_slice(bool v) : slice_base<T,dims...>(v),
+	forms({{{v ? static_cast<slice_defs::compNumType>(0)
+	           : slice_defs::COMPLETELY_EMPTY}}}) {}
+
 template<std::unsigned_integral T, T d1, T ... rest>
 void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	compNumArray& out)
@@ -169,13 +174,15 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	// Set any completely empty vertices to empty if they have a vertex
 	// on either side of them. (By induction, they don't have any to the
 	// side of them in any other dimensions)
+	constexpr unsigned subDimSize = pset::numVertices/d1;
 	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
 		if (out[i] == slice_defs::COMPLETELY_EMPTY)
 		{
-			if (!
-			    ((i < d1                      || slice_defs::empty(out[i - d1])) &&
-			     (i + d1 >= pset::numVertices || slice_defs::empty(out[i + d1])))
+			if ((i >= subDimSize &&
+			       !slice_defs::empty(out[i - subDimSize])) ||
+			    (i < pset::numVertices - subDimSize &&
+			       !slice_defs::empty(out[i + subDimSize]))
 			   )
 			{
 				out[i] = slice_defs::EMPTY;
@@ -195,14 +202,38 @@ unpruned_slice<T,d1,rest...>::unpruned_slice
 template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 {
+	for (const auto& symmetryClass : s.forms)
+	{
+		for (auto v : symmetryClass.front())
+		{
+			stream << (slice_defs::empty(v) ? '_' : 'X');
+		}
+		stream << '\n';
+	}
+	return stream;
+}
+
+template<std::unsigned_integral T, T d1, T ... rest>
+std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,d1,rest...>& s)
+{
+	for (const auto& symmetryClass : s.forms)
+	{
+		for (auto v : symmetryClass.front())
+		{
+			stream << (slice_defs::empty(v) ? '_' : 'X');
+		}
+		stream << '\n';
+	}
 	return stream;
 }
 
 template<std::unsigned_integral T, T d1, T ... rest>
 pruned_slice<T,d1,rest...>::pruned_slice
 	(const std::vector<unsigned>& path, unsigned nv)
+		: slice_base<T,d1,rest...>(nv,0)
 {
-	
+	forms.emplace_back().emplace_back();
+	slice_base<T,d1,rest...>::constructForm(path,forms[0][0]);
 }
 
 template<bool prune, std::unsigned_integral T, T ... dims>
@@ -258,42 +289,93 @@ template<bool prune, std::unsigned_integral T, T d1, T ... rest>
 void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 	(std::vector<unsigned>& path,unsigned& nv)
 {
-	if constexpr (prune)
+	// If the path is the size of the primary dimension, add the slice.
+	if (path.size() == d1)
 	{
-		// TODO
-		/*
-		// Produce the slice
-		auto& sliceGroup = slices.emplace_back(path,nv);
-		
-		// Produce each symmetry. Should one of them be lexicographically smaller
-		// than this one, then remove it.
-		*/
-	}
-	else
-	{
-		// If the path is the size of the primary dimension, add the slice.
-		if (path.size() == d1)
+		if constexpr (prune)
 		{
-			slices.emplace_back(path,nv);
+			auto& s = slices.emplace_back(path,nv);
+			
+			// Minor todo: this might be faster if this is pruned as we go along
+			if (std::find(s.forms[0][0].begin(), s.forms[0][0].end(),
+				slice_defs::COMPLETELY_EMPTY) != s.forms[0][0].end())
+			{
+				slices.pop_back();
+				return;
+			}
+			
+			// Out param for calls to permute
+			typename slice_base<T,d1,rest...>::compNumArray result;
+			
+			// Produce each symmetry. Should one of them be lexicographically smaller
+			// than this one, then remove it. Start at index 1, since 0 is the identity.
+			for (unsigned i = 1; i < permutationSet<T,d1,rest...>::perms.size(); ++i)
+			{
+				slice_base<T,d1,rest...>::permute(i,s.forms[0][0],result);
+				
+				// If this new symmetry is lexicographically smaller
+				// than the original, then we can prune this one.
+				if (slice_base<T,d1,rest...>::compareSymmetries(s.forms[0][0],result) > 0)
+				{
+					slices.pop_back();
+					return;
+				}
+			}
+			
+			// Otherwise, place it in either:
+			// 1: A new vector in forms, if it is physically distinct from the rest.
+			// 2: In an existing vector in forms, if it physically the same
+			//    as another, but the array itself is different.
+			// 3: Nowhere, if it is exactly the same as another array.
+			for (auto& physForm : s.forms)
+			{
+				// If these are same physically, check further inwards
+				if (slice_base<T,d1,rest...>::compareSymmetries(physForm[0],result) == 0)
+				{
+					// This rechecks the first index, but this is necessary because
+					// compareSymmetries does a comparison of physical forms, here
+					// we need to check exact values.
+					for (const auto& config : physForm)
+					{
+						// If an exact match already exists here, stop. (case 3)
+						// A goto is needed here to break out of two loops
+						if (result == config) goto endloop;
+					}
+					
+					// Otherwise, put cn at the back of this array and stop. (case 2)
+					physForm.emplace_back(result);
+					goto endloop;
+				}
+			}
+			
+			// If control reaches here, then no place was found for it, so put it in
+			// a new top-level vector. (case 1)
+			s.forms.emplace_back().emplace_back(result);
+			
+			endloop: ;
 		}
 		else
 		{
-			for (const auto& adj :
-				slice_graph<false,T,rest...>::graph[path.back()].adjList)
-			{
-				// Need to find and store the number
-				// of vertices the adjacent slice has.
-				const unsigned deltaNV =
-					slice_graph<false,T,rest...>::lookup(adj).numVerts;
-				
-				path.push_back(adj);
-				nv += deltaNV;
-				
-				enumerateRecursive(path,nv);
-				
-				path.pop_back();
-				nv -= deltaNV;
-			}
+			slices.emplace_back(path,nv);
+		}
+	}
+	else
+	{
+		for (const auto& adj :
+			slice_graph<false,T,rest...>::graph[path.back()].adjList)
+		{
+			// Need to find and store the number
+			// of vertices the adjacent slice has.
+			const unsigned deltaNV =
+				slice_graph<false,T,rest...>::lookup(adj).numVerts;
+			
+			path.push_back(adj);
+			nv += deltaNV;
+			
+			enumerateRecursive(path,nv);
+			
+			path.pop_back();
+			nv -= deltaNV;
 		}
 	}
 }
