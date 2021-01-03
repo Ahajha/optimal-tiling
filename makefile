@@ -6,8 +6,7 @@ sizeString = $(subst $(comma),_,$(size))
 CC=g++-10
 CFLAGS=--std=c++20 -O3 -g -W -Wall
 
-VARIADIC_ARRAY=src/variadic-array.hpp
-PERMUTATION=src/permutation.hpp src/permutation.tpp $(VARIADIC_ARRAY)
+PERMUTATION=src/permutation.hpp src/permutation.tpp
 SLICE=src/slice.hpp src/slice.tpp $(PERMUTATION)
 
 help:

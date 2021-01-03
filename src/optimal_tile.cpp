@@ -7,9 +7,9 @@
 // For the time being, this will serve as a testing file
 
 template<unsigned ... ds>
-void test()
+void testBase()
 {
-	auto dims = variadic_array<unsigned,ds...>{};
+	constexpr auto dims = std::to_array<unsigned>({ds...});
 	
 	std::cout << "Dimensions\n";
 	for (auto i : dims)
@@ -27,8 +27,12 @@ void test()
 		}
 		std::cout << '\n';
 	}
-	
-	using graph_t = slice_graph<false,unsigned,ds...>;
+}
+
+template<bool prune, unsigned ... ds>
+void test()
+{
+	using graph_t = slice_graph<prune,unsigned,ds...>;
 	
 	graph_t::enumerate();
 	
@@ -50,9 +54,26 @@ void test()
 	}
 }
 
+template<unsigned ... ds>
+void testPruned()
+{
+	test<true,ds...>();
+}
+
+template<unsigned ... ds>
+void testUnpruned()
+{
+	test<false,ds...>();
+}
+
 int main()
 {
-	test<DIM_SIZES>();
+	std::cout << "Base tests:\n";
+	testBase<DIM_SIZES>();
 	
-	test<>();
+	std::cout << "\nUnpruned tests:\n";
+	testUnpruned<DIM_SIZES>();
+	
+	std::cout << "\nPruned tests:\n";
+	testPruned<DIM_SIZES>();
 }

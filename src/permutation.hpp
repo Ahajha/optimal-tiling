@@ -6,7 +6,6 @@ A class to store permutations of a hyper-rectangular-prismic lattice graph.
 The first size given should be the "highest" dimension.
 */
 
-#include "variadic-array.hpp"
 #include <array>
 #include <ranges>
 
@@ -29,7 +28,7 @@ struct permutationSet<T,d1,rest...>
 	
 	private:
 	
-	constexpr static auto dims = variadic_array<T,d1,rest...>{};
+	constexpr static auto dims = std::to_array<T>({d1,rest...});
 	
 	constexpr static unsigned similarDimensions =
 		std::count(dims.begin(),dims.end(),d1);
