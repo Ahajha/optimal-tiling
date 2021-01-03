@@ -7,7 +7,6 @@ The first size given should be the "highest" dimension.
 */
 
 #include <array>
-#include <ranges>
 
 template<std::unsigned_integral T, T ...>
 struct permutationSet
@@ -22,16 +21,14 @@ struct permutationSet
 template<std::unsigned_integral T, T d1, T ... rest>
 struct permutationSet<T,d1,rest...>
 {
-	constexpr static T numVertices = d1 * permutationSet<T, rest...>::numVertices;
+	constexpr static T numVertices = (d1 * ... * rest);
 	
 	using permutation = std::array<T,numVertices>;
 	
 	private:
 	
-	constexpr static auto dims = std::to_array<T>({d1,rest...});
-	
-	constexpr static unsigned similarDimensions =
-		std::count(dims.begin(),dims.end(),d1);
+	// Count number of dimensions equal to d1. (d1 == d1, so start at 1)
+	constexpr static unsigned similarDimensions = (1 + ... + (d1 == rest));
 	
 	constexpr static std::array<permutation,
 		permutationSet<T, rest...>::perms.size() * 2 * similarDimensions> makePerms();

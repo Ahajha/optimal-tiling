@@ -4,6 +4,8 @@ template<std::unsigned_integral T, T d1, T ... rest>
 constexpr auto permutationSet<T, d1, rest...>::makePerms() -> std::array<permutation,
 		permutationSet<T,rest...>::perms.size() * 2 * similarDimensions>
 {
+	constexpr auto dims = std::to_array<T>({d1,rest...});
+	
 	// Array of sizes of previous dimensions, effectively a running product
 	// of the dimension sizes up to a point. The running product goes from
 	// back to front, with the number at index 0 representing the size
