@@ -383,47 +383,81 @@ void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 template<bool prune, std::unsigned_integral T, T d1, T ... rest>
 void slice_graph<prune,T,d1,rest...>::fillVertex(unsigned vID)
 {
+	// Out-parameter for 'succeeds' function calls
+	unsigned result;
+	
 	if constexpr (prune)
 	{
-		/*
-		// Buffer for output to succeeds
-		unsigned result;
+		// adjacentTo[x] means that vertex x can follow this vertex.
+		// The size given is an upper bound on the number of vertices that can
+		// exist after this adjacency list is filled (this is based on upper
+		// bounds on the number of iterations of the inner loops). The vector
+		// is default filled with false.
+		std::vector<bool> adjacentTo(graph.size() +
+			slices.size() * permutationSet<T,d1,rest...>::perms.size());
 		
 		// Go through each of the physical columns (as the afters),
 		// and see if it can succeed this configuration.
-		for (unsigned i = 0; i < slices.size(); i++)
+		for (unsigned i = 0; i < slices.size(); ++i)
 		{
-			// Forms[0][0] gives the 'default' form, with no components
-			// connected.
-			if (succeeds(slices[i].forms[0][0], slices[i].numComponents,
-				lookup(vID).componentNums, graph[vID].erID, result))
+			// Go through each symmetry
+			for (const auto& symSet : slices[i].forms)
 			{
-				auto search = slices[i].er_map.find(result);
-				
-				if (search != slices[i].er_map.end())
+				if (slice_base<T,d1,rest...>::succeeds(symSet[0], slices[i].numComps,
+					lookup(vID).forms[0][0], graph[vID].erID, result))
 				{
-					// Found
-					graph[vID].adjList.push_back(search->second);
-				}
-				else
-				{
-					// Not found
-					graph[vID].adjList.push_back(graph.size());
+					// This is in this block so that multiple configurations of a slice
+					// can be added to the adjacency list.
 					
-					addVertex(i,result);
+					// TODO: Exclude configs that are 'supersets'
+					// of other configs (and prove this is valid).
+					
+					auto search = slices[i].er_map.find(result);
+					
+					unsigned adjacent;
+					
+					if (search != slices[i].er_map.end())
+					{
+						// Found
+						adjacent = search->second;
+					}
+					else
+					{
+						// Not found
+						adjacent = graph.size();
+						
+						addVertex(i,result);
+						
+						// Iterate through all other versions of this
+						// physical symmetry, map any generated configs
+						// to the new vertex.
+						for (unsigned j = 1; j < symSet.size(); ++j)
+						{
+							// No need to check the result, since the
+							// same physical configuration will also work.
+							slice_base<T,d1,rest...>::succeeds(symSet[j],
+								slices[i].numComps, lookup(vID).forms[0][0],
+								graph[vID].erID, result);
+							
+							slices[i].er_map[result] = adjacent;
+						}
+					}
+					
+					if (!adjacentTo[adjacent])
+					{
+						adjacentTo[adjacent] = true;
+						
+						graph[vID].adjList.emplace_back(adjacent);
+					}
 				}
 			}
 		}
-		*/
 	}
 	else
 	{
-		// Buffer for output to succeeds
-		unsigned result;
-		
 		// Go through each of the physical columns (as the afters),
 		// and see if it can succeed this configuration.
-		for (unsigned i = 0; i < slices.size(); i++)
+		for (unsigned i = 0; i < slices.size(); ++i)
 		{
 			if (slice_base<T,d1,rest...>::succeeds(slices[i].form,
 				slices[i].numComps, lookup(vID).form, graph[vID].erID, result))
@@ -434,12 +468,12 @@ void slice_graph<prune,T,d1,rest...>::fillVertex(unsigned vID)
 				if (search != slices[i].er_map.end())
 				{
 					// Found
-					graph[vID].adjList.push_back(search->second);
+					graph[vID].adjList.emplace_back(search->second);
 				}
 				else
 				{
 					// Not found
-					graph[vID].adjList.push_back(graph.size());
+					graph[vID].adjList.emplace_back(graph.size());
 					
 					addVertex(i,result);
 				}
