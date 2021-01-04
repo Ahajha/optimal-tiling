@@ -9,7 +9,7 @@
 template<unsigned ... ds>
 void testBase()
 {
-	constexpr auto dims = std::to_array<unsigned>({ds...});
+	std::array<unsigned,sizeof...(ds)> dims {{ds...}};
 	
 	std::cout << "Dimensions\n";
 	for (auto i : dims)
