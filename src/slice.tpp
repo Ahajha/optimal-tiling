@@ -290,34 +290,28 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 				// 2: In an existing vector in forms, if it physically the same
 				//    as another, but the array itself is different.
 				// 3: Nowhere, if it is exactly the same as another array.
-				for (auto& physForm : s.forms)
-				{
-					// If these are same physically, check further inwards
-					if (slice_base<T,dims...>::compareSymmetries(physForm[0],result) == 0)
+				
+				if (auto it = std::find_if(s.forms.begin(),s.forms.end(),
+					[&result](const auto& physForm)
 					{
-						// If this exact configuration does not exist here,
-						// emplace it (case 2), otherwise ignore it (case 3).
-
-						// This rechecks the first index, but this is necessary because
-						// compareSymmetries does a comparison of physical forms, here
-						// we need to check exact values.
-						if (std::find(physForm.begin(),physForm.end(),result) !=
-							physForm.end())
-						{
-							physForm.emplace_back(result);
-						}
-						
-						// Either way, the physical form was found, so skip
-						// over the case 1 code.
-						goto endloop;
-					}
+						return slice_base<T,dims...>::compareSymmetries
+							(physForm[0],result) == 0;
+					});
+					it == s.forms.end())
+				{
+					// Physical form not found (case 1)
+					s.forms.emplace_back().emplace_back(result);
 				}
-				
-				// If control reaches here, then no place was found for it, so put it in
-				// a new top-level vector. (case 1)
-				s.forms.emplace_back().emplace_back(result);
-				
-				endloop: ;
+				else if (slice_base<T,dims...>::compareSymmetries
+				           ((*it)[0],result) == 0
+				      && std::find(it->begin(),it->end(),result)
+				             != it->end())
+				{
+					// Physical form found, but this exact symmetry does not
+					// exist here (case 2)
+					it->emplace_back(result);
+				}
+				// Else, this exact symmetry has already been found (case 3)
 			}
 		}
 		else
