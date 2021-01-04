@@ -109,15 +109,14 @@ template<std::unsigned_integral T, T d1, T ... rest>
 void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	compNumArray& out)
 {
-	using subGraph = slice_graph<false,T,rest...>;
-	constexpr static T subNV = slice_base<T,rest...>::pset::numVertices;
+	constexpr static T subNV = slice_defs::sub_slice<T,d1,rest...>::pset::numVertices;
 	
 	// Count the total number of components in all slices. We don't need
 	// to concatenate the exact ERs, just the number of components is needed.
 	unsigned totalComponents = 0;
 	for (unsigned vID : path)
 	{
-		totalComponents += subGraph::lookup(vID).numComps;
+		totalComponents += slice_defs::sub_graph<T,d1,rest...>::lookup(vID).numComps;
 	}
 	
 	equivRelation combination(totalComponents);
@@ -128,8 +127,8 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	// Iterate over each pair of adjacent columns
 	for (unsigned i = 0; i < d1 - 1; ++i)
 	{
-		const auto& ss1 = subGraph::lookup(path[i]);
-		const auto& ss2 = subGraph::lookup(path[i + 1]);
+		const auto& ss1 = slice_defs::sub_graph<T,d1,rest...>::lookup(path[i]);
+		const auto& ss2 = slice_defs::sub_graph<T,d1,rest...>::lookup(path[i + 1]);
 		
 		offset = ss1.numComps;
 		
@@ -158,7 +157,7 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	base_offset = 0;
 	for (unsigned vID : path)
 	{
-		const auto& ss = subGraph::lookup(vID);
+		const auto& ss = slice_defs::sub_graph<T,d1,rest...>::lookup(vID);
 		
 		for (unsigned j = 0; j < subNV; ++j)
 		{
@@ -261,8 +260,8 @@ void slice_graph<prune,T,d1,rest...>::enumerate()
 	if (!slices.empty()) return;
 	
 	// Subslices are never pruned
-	slice_graph<false,T,rest...>::enumerate();
-	const auto& subslices = slice_graph<false,T,rest...>::slices;
+	slice_defs::sub_graph<T,d1,rest...>::enumerate();
+	const auto& subslices = slice_defs::sub_graph<T,d1,rest...>::slices;
 	
 	for (unsigned i = 0; i < subslices.size(); ++i)
 	{
@@ -362,12 +361,12 @@ void slice_graph<prune,T,d1,rest...>::enumerateRecursive
 	else
 	{
 		for (const auto& adj :
-			slice_graph<false,T,rest...>::graph[path.back()].adjList)
+			slice_defs::sub_graph<T,d1,rest...>::graph[path.back()].adjList)
 		{
 			// Need to find and store the number
 			// of vertices the adjacent slice has.
 			const unsigned deltaNV =
-				slice_graph<false,T,rest...>::lookup(adj).numVerts;
+				slice_defs::sub_graph<T,d1,rest...>::lookup(adj).numVerts;
 			
 			path.push_back(adj);
 			nv += deltaNV;

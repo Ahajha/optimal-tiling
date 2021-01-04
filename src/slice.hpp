@@ -182,6 +182,15 @@ struct slice_graph<prune,T,d1,rest...>
 	static void addVertex(unsigned sliceID, unsigned erID);
 };
 
+namespace slice_defs
+{
+	template<std::unsigned_integral T, T, T ... rest>
+	using sub_graph = slice_graph<false,T,rest...>;
+	
+	template<std::unsigned_integral T, T, T ... rest>
+	using sub_slice = slice_base<T,rest...>;
+};
+
 #include "slice.tpp"
 
 #endif
