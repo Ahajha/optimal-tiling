@@ -66,7 +66,6 @@ struct slice_base
 	void constructForm(const std::vector<unsigned>& path, compNumArray& out);
 };
 
-// For 0 dimensions
 template<std::unsigned_integral T, T ... dims>
 struct unpruned_slice : public slice_base<T,dims...>
 {
@@ -77,22 +76,9 @@ struct unpruned_slice : public slice_base<T,dims...>
 		const unpruned_slice<t,ds...>&);
 	
 	unpruned_slice(bool v);
-};
-
-// For 1+ dimensions (minor todo: specialization for 1 dimension)
-template<std::unsigned_integral T, T d1, T ... rest>
-struct unpruned_slice<T,d1,rest...> : public slice_base<T,d1,rest...>
-{
-	typename slice_base<T,d1,rest...>::compNumArray form;
-	
-	template<std::unsigned_integral t, t d, t ... ds>
-	friend std::ostream& operator<<(std::ostream&,
-		const unpruned_slice<t,d,ds...>&);
-	
 	unpruned_slice(const std::vector<unsigned>& path, unsigned nv);
 };
 
-// For 0 dimensions
 template<std::unsigned_integral T, T ... dims>
 struct pruned_slice : public slice_base<T,dims...>
 {
@@ -108,20 +94,6 @@ struct pruned_slice : public slice_base<T,dims...>
 		const pruned_slice<t,ds...>&);
 	
 	pruned_slice(bool v);
-};
-
-// For 1+ dimensions (minor todo: specialization for 1 dimension)
-template<std::unsigned_integral T, T d1, T ... rest>
-struct pruned_slice<T,d1,rest...> : public slice_base<T,d1,rest...>
-{
-	std::vector<std::vector<
-		typename slice_base<T,d1,rest...>::compNumArray
-	>> forms;
-	
-	template<std::unsigned_integral t, t d, t ... ds>
-	friend std::ostream& operator<<(std::ostream&,
-		const pruned_slice<t,d,ds...>&);
-	
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv);
 };
 

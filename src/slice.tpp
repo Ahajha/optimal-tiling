@@ -78,16 +78,6 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& 
 	return stream;
 }
 
-template<std::unsigned_integral T, T d1, T ... rest>
-std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,d1,rest...>& s)
-{
-	for (auto v : s.form)
-	{
-		stream << (slice_defs::empty(v) ? '_' : 'X');
-	}
-	return stream;
-}
-
 template<std::unsigned_integral T, T ... dims>
 slice_base<T,dims...>::slice_base(bool v) : numVerts(v), numComps(v) {}
 
@@ -101,9 +91,24 @@ unpruned_slice<T,dims...>::unpruned_slice(bool v) : slice_base<T,dims...>(v),
 	        : slice_defs::COMPLETELY_EMPTY}) {}
 
 template<std::unsigned_integral T, T ... dims>
+unpruned_slice<T,dims...>::unpruned_slice (const std::vector<unsigned>& path,
+	unsigned nv) : slice_base<T,dims...>(nv,0)
+{
+	slice_base<T,dims...>::constructForm(path,form);
+}
+
+template<std::unsigned_integral T, T ... dims>
 pruned_slice<T,dims...>::pruned_slice(bool v) : slice_base<T,dims...>(v),
 	forms({{{v ? static_cast<slice_defs::compNumType>(0)
 	           : slice_defs::COMPLETELY_EMPTY}}}) {}
+
+template<std::unsigned_integral T, T ... dims>
+pruned_slice<T,dims...>::pruned_slice (const std::vector<unsigned>& path,
+	unsigned nv) : slice_base<T,dims...>(nv,0)
+{
+	forms.emplace_back().emplace_back();
+	slice_base<T,dims...>::constructForm(path,forms[0][0]);
+}
 
 template<std::unsigned_integral T, T ... dims>
 void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
@@ -190,14 +195,6 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	}
 }
 
-template<std::unsigned_integral T, T d1, T ... rest>
-unpruned_slice<T,d1,rest...>::unpruned_slice
-	(const std::vector<unsigned>& path, unsigned nv)
-		: slice_base<T,d1,rest...>(nv,0)
-{
-	slice_base<T,d1,rest...>::constructForm(path,form);
-}
-
 template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 {
@@ -210,29 +207,6 @@ std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 		stream << '\n';
 	}
 	return stream;
-}
-
-template<std::unsigned_integral T, T d1, T ... rest>
-std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,d1,rest...>& s)
-{
-	for (const auto& symmetryClass : s.forms)
-	{
-		for (auto v : symmetryClass.front())
-		{
-			stream << (slice_defs::empty(v) ? '_' : 'X');
-		}
-		stream << '\n';
-	}
-	return stream;
-}
-
-template<std::unsigned_integral T, T d1, T ... rest>
-pruned_slice<T,d1,rest...>::pruned_slice
-	(const std::vector<unsigned>& path, unsigned nv)
-		: slice_base<T,d1,rest...>(nv,0)
-{
-	forms.emplace_back().emplace_back();
-	slice_base<T,d1,rest...>::constructForm(path,forms[0][0]);
 }
 
 template<bool prune, std::unsigned_integral T, T ... dims>
