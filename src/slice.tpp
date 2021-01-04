@@ -295,18 +295,20 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 					// If these are same physically, check further inwards
 					if (slice_base<T,dims...>::compareSymmetries(physForm[0],result) == 0)
 					{
+						// If this exact configuration does not exist here,
+						// emplace it (case 2), otherwise ignore it (case 3).
+
 						// This rechecks the first index, but this is necessary because
 						// compareSymmetries does a comparison of physical forms, here
 						// we need to check exact values.
-						for (const auto& config : physForm)
+						if (std::find(physForm.begin(),physForm.end(),result) !=
+							physForm.end())
 						{
-							// If an exact match already exists here, stop. (case 3)
-							// A goto is needed here to break out of two loops
-							if (result == config) goto endloop;
+							physForm.emplace_back(result);
 						}
 						
-						// Otherwise, put cn at the back of this array and stop. (case 2)
-						physForm.emplace_back(result);
+						// Either way, the physical form was found, so skip
+						// over the case 1 code.
 						goto endloop;
 					}
 				}
