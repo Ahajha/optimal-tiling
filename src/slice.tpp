@@ -111,6 +111,35 @@ pruned_slice<T,dims...>::pruned_slice (const std::vector<unsigned>& path,
 }
 
 template<std::unsigned_integral T, T ... dims>
+void pruned_slice<T,dims...>::emplace_symmetry(
+	const typename slice_base<T,dims...>::compNumArray& sym)
+{
+	// Place it in either:
+	// 1: A new vector in forms, if it is physically distinct from the rest.
+	// 2: In an existing vector in forms, if it physically the same
+	//    as another, but the array itself is different.
+	// 3: Nowhere, if it is exactly the same as another array.
+	
+	if (auto it = std::find_if(forms.begin(),forms.end(),
+		[&sym](const auto& physForm)
+		{
+			return slice_base<T,dims...>::compareSymmetries (physForm[0],sym) == 0;
+		});
+		it == forms.end())
+	{
+		// Physical form not found (case 1)
+		forms.emplace_back().emplace_back(sym);
+	}
+	else if (slice_base<T,dims...>::compareSymmetries((*it)[0],sym) == 0
+	      && std::find(it->begin(),it->end(),sym) != it->end())
+	{
+		// Physical form found, but this exact symmetry does not exist (case 2)
+		it->emplace_back(sym);
+	}
+	// Otherwise, this exact symmetry has already been found (case 3)
+}
+
+template<std::unsigned_integral T, T ... dims>
 void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	compNumArray& out)
 {
@@ -285,33 +314,8 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 					return;
 				}
 				
-				// Otherwise, place it in either:
-				// 1: A new vector in forms, if it is physically distinct from the rest.
-				// 2: In an existing vector in forms, if it physically the same
-				//    as another, but the array itself is different.
-				// 3: Nowhere, if it is exactly the same as another array.
-				
-				if (auto it = std::find_if(s.forms.begin(),s.forms.end(),
-					[&result](const auto& physForm)
-					{
-						return slice_base<T,dims...>::compareSymmetries
-							(physForm[0],result) == 0;
-					});
-					it == s.forms.end())
-				{
-					// Physical form not found (case 1)
-					s.forms.emplace_back().emplace_back(result);
-				}
-				else if (slice_base<T,dims...>::compareSymmetries
-				           ((*it)[0],result) == 0
-				      && std::find(it->begin(),it->end(),result)
-				             != it->end())
-				{
-					// Physical form found, but this exact symmetry does not
-					// exist here (case 2)
-					it->emplace_back(result);
-				}
-				// Else, this exact symmetry has already been found (case 3)
+				// Otherwise, place it in the slice
+				s.emplace_symmetry(result);
 			}
 		}
 		else

@@ -93,6 +93,9 @@ struct pruned_slice : public slice_base<T,dims...>
 	friend std::ostream& operator<<(std::ostream&,
 		const pruned_slice<t,ds...>&);
 	
+	void emplace_symmetry(const
+		typename slice_base<T,dims...>::compNumArray& sym);
+	
 	pruned_slice(bool v);
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv);
 };
