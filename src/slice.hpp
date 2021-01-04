@@ -38,7 +38,6 @@ namespace slice_defs
 	static inline er_storage er_store{};
 };
 
-// For 0 dimensions
 template<std::unsigned_integral T, T ... dims>
 struct slice_base
 {
@@ -51,22 +50,8 @@ struct slice_base
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
+	// TODO: enable/disable constructors as needed
 	slice_base(bool v);
-};
-
-// For 1+ dimensions
-template<std::unsigned_integral T, T d1, T ... rest>
-struct slice_base<T,d1,rest...>
-{
-	using pset = permutationSet<T,d1,rest...>;
-	using compNumArray = std::array<slice_defs::compNumType, pset::numVertices>;
-	
-	unsigned numVerts;
-	slice_defs::compNumType numComps;
-	
-	// Maps ER IDs to vertex IDs.
-	std::unordered_map<unsigned,unsigned> er_map;
-	
 	slice_base(unsigned nv, slice_defs::compNumType nc);
 	
 	static void permute(unsigned permID, const compNumArray& src,

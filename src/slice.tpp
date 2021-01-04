@@ -1,7 +1,7 @@
 #include "slice.hpp"
 
-template<std::unsigned_integral T, T d1, T ... rest>
-void slice_base<T,d1,rest...>::permute(unsigned permID, const compNumArray& src,
+template<std::unsigned_integral T, T ... dims>
+void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
 {
 	const auto& perm = pset::perms[permID];
@@ -11,8 +11,8 @@ void slice_base<T,d1,rest...>::permute(unsigned permID, const compNumArray& src,
 	}
 }
 
-template<std::unsigned_integral T, T d1, T ... rest>
-std::strong_ordering slice_base<T,d1,rest...>::compareSymmetries
+template<std::unsigned_integral T, T ... dims>
+std::strong_ordering slice_base<T,dims...>::compareSymmetries
 	(const compNumArray& sym1, const compNumArray& sym2)
 {
 	for (unsigned i = 0; i < pset::numVertices; ++i)
@@ -32,8 +32,8 @@ std::strong_ordering slice_base<T,d1,rest...>::compareSymmetries
 	return std::strong_ordering::equal;
 }
 
-template<std::unsigned_integral T, T d1, T ... rest>
-bool slice_base<T,d1,rest...>::succeeds(const compNumArray& afterCN,
+template<std::unsigned_integral T, T ... dims>
+bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 	unsigned afterNumComp, const compNumArray& beforeCN,
 	unsigned beforeERID, unsigned& result)
 {
@@ -91,8 +91,8 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,d1,rest...
 template<std::unsigned_integral T, T ... dims>
 slice_base<T,dims...>::slice_base(bool v) : numVerts(v), numComps(v) {}
 
-template<std::unsigned_integral T, T d1, T ... rest>
-slice_base<T,d1,rest...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
+template<std::unsigned_integral T, T ... dims>
+slice_base<T,dims...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
 	numVerts(nv), numComps(nc) {}
 
 template<std::unsigned_integral T, T ... dims>
@@ -105,18 +105,18 @@ pruned_slice<T,dims...>::pruned_slice(bool v) : slice_base<T,dims...>(v),
 	forms({{{v ? static_cast<slice_defs::compNumType>(0)
 	           : slice_defs::COMPLETELY_EMPTY}}}) {}
 
-template<std::unsigned_integral T, T d1, T ... rest>
-void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
+template<std::unsigned_integral T, T ... dims>
+void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	compNumArray& out)
 {
-	constexpr static T subNV = slice_alias<T,d1,rest...>::sub_slice::pset::numVertices;
+	constexpr static T subNV = slice_alias<T,dims...>::sub_slice::pset::numVertices;
 	
 	// Count the total number of components in all slices. We don't need
 	// to concatenate the exact ERs, just the number of components is needed.
 	unsigned totalComponents = 0;
 	for (unsigned vID : path)
 	{
-		totalComponents += slice_alias<T,d1,rest...>::sub_graph::lookup(vID).numComps;
+		totalComponents += slice_alias<T,dims...>::sub_graph::lookup(vID).numComps;
 	}
 	
 	equivRelation combination(totalComponents);
@@ -125,10 +125,10 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	unsigned base_offset = 0, offset;
 	
 	// Iterate over each pair of adjacent columns
-	for (unsigned i = 0; i < d1 - 1; ++i)
+	for (unsigned i = 0; i < slice_alias<T,dims...>::primary_dim - 1; ++i)
 	{
-		const auto& ss1 = slice_alias<T,d1,rest...>::sub_graph::lookup(path[i]);
-		const auto& ss2 = slice_alias<T,d1,rest...>::sub_graph::lookup(path[i + 1]);
+		const auto& ss1 = slice_alias<T,dims...>::sub_graph::lookup(path[i]);
+		const auto& ss2 = slice_alias<T,dims...>::sub_graph::lookup(path[i + 1]);
 		
 		offset = ss1.numComps;
 		
@@ -157,7 +157,7 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	base_offset = 0;
 	for (unsigned vID : path)
 	{
-		const auto& ss = slice_alias<T,d1,rest...>::sub_graph::lookup(vID);
+		const auto& ss = slice_alias<T,dims...>::sub_graph::lookup(vID);
 		
 		for (unsigned j = 0; j < subNV; ++j)
 		{
@@ -173,7 +173,7 @@ void slice_base<T,d1,rest...>::constructForm(const std::vector<unsigned>& path,
 	// Set any completely empty vertices to empty if they have a vertex
 	// on either side of them. (By induction, they don't have any to the
 	// side of them in any other dimensions)
-	constexpr unsigned subDimSize = pset::numVertices/d1;
+	constexpr unsigned subDimSize = pset::numVertices/slice_alias<T,dims...>::primary_dim;
 	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
 		if (out[i] == slice_defs::COMPLETELY_EMPTY)
@@ -247,13 +247,6 @@ void slice_graph<prune,T,dims...>::enumerate()
 		// There are two different physical forms
 		slices.emplace_back(false);
 		slices.emplace_back(true);
-		
-		addVertex(0, slice_defs::er_store(equivRelation(0)));
-		addVertex(1, slice_defs::er_store(equivRelation(1)));
-		
-		// Both slices can succeed one another.
-		graph[0].adjList = {0, 1};
-		graph[1].adjList = {0, 1};
 	}
 	else
 	{
@@ -267,18 +260,18 @@ void slice_graph<prune,T,dims...>::enumerate()
 			
 			enumerateRecursive(path,nv);
 		}
-		
-		// Create base versions of all vertices
-		for (unsigned i = 0; i < slices.size(); ++i)
-		{
-			addVertex(i,slice_defs::er_store(equivRelation(slices[i].numComps)));
-		}
-		
-		// Fill in all adjacency lists
-		for (unsigned i = 0; i < graph.size(); ++i)
-		{
-			fillVertex(i);
-		}
+	}
+	
+	// Create base versions of all vertices
+	for (unsigned i = 0; i < slices.size(); ++i)
+	{
+		addVertex(i,slice_defs::er_store(equivRelation(slices[i].numComps)));
+	}
+	
+	// Fill in all adjacency lists
+	for (unsigned i = 0; i < graph.size(); ++i)
+	{
+		fillVertex(i);
 	}
 }
 
