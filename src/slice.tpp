@@ -284,39 +284,39 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 					slices.pop_back();
 					return;
 				}
-			}
-			
-			// Otherwise, place it in either:
-			// 1: A new vector in forms, if it is physically distinct from the rest.
-			// 2: In an existing vector in forms, if it physically the same
-			//    as another, but the array itself is different.
-			// 3: Nowhere, if it is exactly the same as another array.
-			for (auto& physForm : s.forms)
-			{
-				// If these are same physically, check further inwards
-				if (slice_base<T,dims...>::compareSymmetries(physForm[0],result) == 0)
+				
+				// Otherwise, place it in either:
+				// 1: A new vector in forms, if it is physically distinct from the rest.
+				// 2: In an existing vector in forms, if it physically the same
+				//    as another, but the array itself is different.
+				// 3: Nowhere, if it is exactly the same as another array.
+				for (auto& physForm : s.forms)
 				{
-					// This rechecks the first index, but this is necessary because
-					// compareSymmetries does a comparison of physical forms, here
-					// we need to check exact values.
-					for (const auto& config : physForm)
+					// If these are same physically, check further inwards
+					if (slice_base<T,dims...>::compareSymmetries(physForm[0],result) == 0)
 					{
-						// If an exact match already exists here, stop. (case 3)
-						// A goto is needed here to break out of two loops
-						if (result == config) goto endloop;
+						// This rechecks the first index, but this is necessary because
+						// compareSymmetries does a comparison of physical forms, here
+						// we need to check exact values.
+						for (const auto& config : physForm)
+						{
+							// If an exact match already exists here, stop. (case 3)
+							// A goto is needed here to break out of two loops
+							if (result == config) goto endloop;
+						}
+						
+						// Otherwise, put cn at the back of this array and stop. (case 2)
+						physForm.emplace_back(result);
+						goto endloop;
 					}
-					
-					// Otherwise, put cn at the back of this array and stop. (case 2)
-					physForm.emplace_back(result);
-					goto endloop;
 				}
+				
+				// If control reaches here, then no place was found for it, so put it in
+				// a new top-level vector. (case 1)
+				s.forms.emplace_back().emplace_back(result);
+				
+				endloop: ;
 			}
-			
-			// If control reaches here, then no place was found for it, so put it in
-			// a new top-level vector. (case 1)
-			s.forms.emplace_back().emplace_back(result);
-			
-			endloop: ;
 		}
 		else
 		{
