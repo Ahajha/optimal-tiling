@@ -156,25 +156,6 @@ struct slice_graph
 	
 	private:
 	
-	static void addVertex(unsigned sliceID, unsigned erID);
-};
-
-template<bool prune, std::unsigned_integral T, T d1, T ... rest>
-struct slice_graph<prune,T,d1,rest...>
-{
-	using slice_t = std::conditional<prune,
-		pruned_slice<T,d1,rest...>, unpruned_slice<T,d1,rest...>>::type;
-	
-	static inline std::vector<slice_defs::vertex> graph{};
-	static inline std::vector<slice_t> slices{};
-	
-	static slice_t& lookup(unsigned vID);
-	
-	// Fills graph and slices.
-	static void enumerate();
-	
-	private:
-	
 	static void enumerateRecursive(std::vector<unsigned>& path, unsigned& nv);
 	
 	static void fillVertex(unsigned vID);
@@ -182,13 +163,18 @@ struct slice_graph<prune,T,d1,rest...>
 	static void addVertex(unsigned sliceID, unsigned erID);
 };
 
-namespace slice_defs
+// Due to a long standing GCC bug, this is a struct rather than
+// part of the slice_defs namespace.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59498
+template<std::unsigned_integral T, T d1, T ... rest>
+struct slice_alias
 {
-	template<std::unsigned_integral T, T, T ... rest>
+	// Subgraphs are never pruned
 	using sub_graph = slice_graph<false,T,rest...>;
 	
-	template<std::unsigned_integral T, T, T ... rest>
 	using sub_slice = slice_base<T,rest...>;
+	
+	constexpr static T primary_dim = d1;
 };
 
 #include "slice.tpp"
