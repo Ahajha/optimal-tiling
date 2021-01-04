@@ -123,15 +123,14 @@ void pruned_slice<T,dims...>::emplace_symmetry(
 	if (auto it = std::find_if(forms.begin(),forms.end(),
 		[&sym](const auto& physForm)
 		{
-			return slice_base<T,dims...>::compareSymmetries (physForm[0],sym) == 0;
+			return slice_base<T,dims...>::compareSymmetries(physForm[0],sym) == 0;
 		});
 		it == forms.end())
 	{
 		// Physical form not found (case 1)
 		forms.emplace_back().emplace_back(sym);
 	}
-	else if (slice_base<T,dims...>::compareSymmetries((*it)[0],sym) == 0
-	      && std::find(it->begin(),it->end(),sym) != it->end())
+	else if (std::find(it->begin(),it->end(),sym) != it->end())
 	{
 		// Physical form found, but this exact symmetry does not exist (case 2)
 		it->emplace_back(sym);
