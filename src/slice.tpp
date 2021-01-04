@@ -252,13 +252,13 @@ void slice_graph<prune,T,dims...>::enumerate()
 	}
 	else
 	{
-		slice_alias<T,dims...>::sub_graph::enumerate();
-		const auto& subslices = slice_alias<T,dims...>::sub_graph::slices;
+		using sub_graph = slice_alias<T,dims...>::sub_graph;
+		sub_graph::enumerate();
 		
-		for (unsigned i = 0; i < subslices.size(); ++i)
+		for (unsigned i = 0; i < sub_graph::slices.size(); ++i)
 		{
 			std::vector<unsigned> path { i };
-			unsigned nv = subslices[i].numVerts;
+			unsigned nv = sub_graph::slices[i].numVerts;
 			
 			enumerateRecursive(path,nv);
 		}
