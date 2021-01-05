@@ -50,9 +50,10 @@ struct slice_base
 	// Maps ER IDs to vertex IDs.
 	std::unordered_map<unsigned,unsigned> er_map;
 	
-	// TODO: enable/disable constructors as needed
-	slice_base(bool v);
-	slice_base(unsigned nv, slice_defs::compNumType nc);
+	slice_base(bool v) : numVerts(v), numComps(v)
+		{ static_assert(sizeof...(dims) == 0); }
+	slice_base(unsigned nv, slice_defs::compNumType nc) : numVerts(nv), numComps(nc)
+		{ static_assert(sizeof...(dims) > 0); }
 	
 	static void permute(unsigned permID, const compNumArray& src,
 		compNumArray& result);
@@ -75,8 +76,15 @@ struct unpruned_slice : public slice_base<T,dims...>
 	friend std::ostream& operator<<(std::ostream&,
 		const unpruned_slice<t,ds...>&);
 	
-	unpruned_slice(bool v);
-	unpruned_slice(const std::vector<unsigned>& path, unsigned nv);
+	unpruned_slice(bool v) : slice_base<T,dims...>(v),
+		form({v ? static_cast<slice_defs::compNumType>(0)
+		        : slice_defs::COMPLETELY_EMPTY}) {}
+	
+	unpruned_slice(const std::vector<unsigned>& path, unsigned nv)
+		: slice_base<T,dims...>(nv,0)
+	{
+		slice_base<T,dims...>::constructForm(path,form);
+	}
 };
 
 template<std::unsigned_integral T, T ... dims>
@@ -96,8 +104,16 @@ struct pruned_slice : public slice_base<T,dims...>
 	void emplace_symmetry(const
 		typename slice_base<T,dims...>::compNumArray& sym);
 	
-	pruned_slice(bool v);
-	pruned_slice(const std::vector<unsigned>& path, unsigned nv);
+	pruned_slice(bool v) : slice_base<T,dims...>(v),
+		forms({{{v ? static_cast<slice_defs::compNumType>(0)
+		        : slice_defs::COMPLETELY_EMPTY}}}) {}
+	
+	pruned_slice(const std::vector<unsigned>& path, unsigned nv)
+		: slice_base<T,dims...>(nv,0)
+	{
+		forms.emplace_back().emplace_back();
+		slice_base<T,dims...>::constructForm(path,forms[0][0]);
+	}
 };
 
 template<bool prune, std::unsigned_integral T, T ... dims>

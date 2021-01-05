@@ -79,38 +79,6 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& 
 }
 
 template<std::unsigned_integral T, T ... dims>
-slice_base<T,dims...>::slice_base(bool v) : numVerts(v), numComps(v) {}
-
-template<std::unsigned_integral T, T ... dims>
-slice_base<T,dims...>::slice_base(unsigned nv, slice_defs::compNumType nc) :
-	numVerts(nv), numComps(nc) {}
-
-template<std::unsigned_integral T, T ... dims>
-unpruned_slice<T,dims...>::unpruned_slice(bool v) : slice_base<T,dims...>(v),
-	form({v ? static_cast<slice_defs::compNumType>(0)
-	        : slice_defs::COMPLETELY_EMPTY}) {}
-
-template<std::unsigned_integral T, T ... dims>
-unpruned_slice<T,dims...>::unpruned_slice (const std::vector<unsigned>& path,
-	unsigned nv) : slice_base<T,dims...>(nv,0)
-{
-	slice_base<T,dims...>::constructForm(path,form);
-}
-
-template<std::unsigned_integral T, T ... dims>
-pruned_slice<T,dims...>::pruned_slice(bool v) : slice_base<T,dims...>(v),
-	forms({{{v ? static_cast<slice_defs::compNumType>(0)
-	           : slice_defs::COMPLETELY_EMPTY}}}) {}
-
-template<std::unsigned_integral T, T ... dims>
-pruned_slice<T,dims...>::pruned_slice (const std::vector<unsigned>& path,
-	unsigned nv) : slice_base<T,dims...>(nv,0)
-{
-	forms.emplace_back().emplace_back();
-	slice_base<T,dims...>::constructForm(path,forms[0][0]);
-}
-
-template<std::unsigned_integral T, T ... dims>
 void pruned_slice<T,dims...>::emplace_symmetry(
 	const typename slice_base<T,dims...>::compNumArray& sym)
 {
@@ -209,16 +177,12 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	constexpr unsigned subDimSize = pset::numVertices/slice_alias<T,dims...>::primary_dim;
 	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
-		if (out[i] == slice_defs::COMPLETELY_EMPTY)
+		if (out[i] == slice_defs::COMPLETELY_EMPTY &&
+			((i >= subDimSize && !slice_defs::empty(out[i - subDimSize])) ||
+			 (i < pset::numVertices - subDimSize && !slice_defs::empty(out[i + subDimSize]))
+			))
 		{
-			if ((i >= subDimSize &&
-			       !slice_defs::empty(out[i - subDimSize])) ||
-			    (i < pset::numVertices - subDimSize &&
-			       !slice_defs::empty(out[i + subDimSize]))
-			   )
-			{
-				out[i] = slice_defs::EMPTY;
-			}
+			out[i] = slice_defs::EMPTY;
 		}
 	}
 }
