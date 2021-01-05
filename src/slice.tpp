@@ -79,6 +79,20 @@ std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& 
 }
 
 template<std::unsigned_integral T, T ... dims>
+std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
+{
+	for (const auto& symmetryClass : s.forms)
+	{
+		for (auto v : symmetryClass.front())
+		{
+			stream << (slice_defs::empty(v) ? '_' : 'X');
+		}
+		stream << '\n';
+	}
+	return stream;
+}
+
+template<std::unsigned_integral T, T ... dims>
 void pruned_slice<T,dims...>::emplace_symmetry(
 	const typename slice_base<T,dims...>::compNumArray& sym)
 {
@@ -185,20 +199,6 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 			out[i] = slice_defs::EMPTY;
 		}
 	}
-}
-
-template<std::unsigned_integral T, T ... dims>
-std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
-{
-	for (const auto& symmetryClass : s.forms)
-	{
-		for (auto v : symmetryClass.front())
-		{
-			stream << (slice_defs::empty(v) ? '_' : 'X');
-		}
-		stream << '\n';
-	}
-	return stream;
 }
 
 template<bool prune, std::unsigned_integral T, T ... dims>
@@ -407,17 +407,4 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 			}
 		}
 	}
-}
-
-template<bool prune, std::unsigned_integral T, T ... dims>
-auto slice_graph<prune,T,dims...>::lookup(unsigned vID) -> slice_t&
-{
-	return slices[graph[vID].sliceNum];
-}
-
-template<bool prune, std::unsigned_integral T, T ... dims>
-void slice_graph<prune,T,dims...>::addVertex(unsigned sliceID, unsigned erID)
-{
-	slices[sliceID].er_map[erID] = graph.size();
-	graph.emplace_back(sliceID,erID);
 }

@@ -125,7 +125,10 @@ struct slice_graph
 	static inline std::vector<slice_defs::vertex> graph{};
 	static inline std::vector<slice_t> slices{};
 	
-	static slice_t& lookup(unsigned vID);
+	static slice_t& lookup(unsigned vID)
+	{
+		return slices[graph[vID].sliceNum];
+	}
 	
 	// Fills graph and slices.
 	static void enumerate();
@@ -136,7 +139,11 @@ struct slice_graph
 	
 	static void fillVertex(unsigned vID);
 	
-	static void addVertex(unsigned sliceID, unsigned erID);
+	static void addVertex(unsigned sliceID, unsigned erID)
+	{
+		slices[sliceID].er_map[erID] = graph.size();
+		graph.emplace_back(sliceID,erID);
+	}
 };
 
 // Due to a long standing GCC bug, this is a struct rather than
