@@ -2,7 +2,6 @@
 #define FRACTION_HPP
 
 #include <iostream>
-#include <compare>
 
 // A positive fraction
 struct fraction
@@ -13,7 +12,7 @@ struct fraction
 	// Defaults to 0/0, can specify either just numerator or both.
 	fraction(unsigned n = 0, unsigned d = 1) : num(n), den(d) {}
 	
-	std::strong_ordering operator<=>(const fraction& other) const
+	auto operator<=>(const fraction& other) const
 	{
 		auto result = (num * other.den) <=> (other.num * den);
 		
