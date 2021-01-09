@@ -9,8 +9,8 @@ struct path_info
 	unsigned num_induced, second_to_last;
 };
 
-// Index [len][end] gives info about the 'len' long path with
-// 'end' as the last vertex.
+// Index [len][end] gives info about the 'len'
+// long path with 'end' as the last vertex.
 using path_info_matrix = std::vector<std::vector<path_info>>;
 
 template<std::unsigned_integral T, T ... dims>

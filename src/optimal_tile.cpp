@@ -3,7 +3,6 @@
 
 // A macro named DIM_SIZES will be compiled in.
 
-// Structures relating to the enumeration algorithm
 struct path_info
 {
 	// Number of induced vertices in this path, the vertex
@@ -11,9 +10,9 @@ struct path_info
 	unsigned num_induced, second_to_last;
 };
 
-// Index [len][end] gives info about the 'len' long path with
-// 'end' as the last vertex.
-typedef std::vector<std::vector<path_info>> path_info_matrix;
+// Index [len][end] gives info about the 'len'
+// long path with 'end' as the last vertex.
+using path_info_matrix = std::vector<std::vector<path_info>>;
 
 template<std::unsigned_integral T, T ... dims>
 struct tile
@@ -48,17 +47,6 @@ std::ostream& operator<<(std::ostream& stream, const tile<T,dims...>& t)
 			<< "\n\n";
 	}
 	return stream;
-}
-
-template<std::unsigned_integral T, T, T ... rest>
-void enumerate(auto start_time)
-{
-	slice_graph<true,T,rest...>::enumerate();
-	
-	std::cout << slice_graph<true,T,rest...>::slices.size()
-		<< " slices generated and adjacency lists "
-		<< "filled in " << (float)(clock()-start_time)/(CLOCKS_PER_SEC)
-		<< " seconds" << std::endl;
 }
 
 /*------------------------------------
