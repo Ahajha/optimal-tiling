@@ -7,16 +7,27 @@
 // A positive fraction
 struct fraction
 {
-	// den == 0 implies num == 0. Not the most intuitive, but makes some other
-	// things here simpler. In the future, will default to 0/1 instead.
+	// Defaults to 0/1
 	unsigned num, den;
 	
-	std::strong_ordering operator<=>(const fraction& other) const;
-	
 	// Defaults to 0/0, can specify either just numerator or both.
-	fraction(unsigned n = 0, unsigned d = 0) : num(n), den(d) {}
+	fraction(unsigned n = 0, unsigned d = 1) : num(n), den(d) {}
+	
+	std::strong_ordering operator<=>(const fraction& other) const
+	{
+		auto result = (num * other.den) <=> (other.num * den);
+		
+		// If they are equal, say the one with the smaller denominator
+		// is smaller. Otherwise, compare normally.
+		return (result == 0) ? other.den <=> den : result;
+	}
+	
+	friend std::ostream& operator<<(std::ostream&, const fraction&)
+	{
+		return stream << f.num << '/' << f.den
+			<< " = " << static_cast<double>(f.num)/f.den;
+	}
 };
 
-std::ostream& operator<<(std::ostream&, const fraction&);
 
 #endif
