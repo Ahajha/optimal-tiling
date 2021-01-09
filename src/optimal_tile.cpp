@@ -85,6 +85,9 @@ void findMaxTilingWithStart(unsigned start, tile<T,dims...>& bestTile)
 		{
 			const unsigned oldNV = paths_info[len - 1][end].num_induced;
 			
+			// Skip over paths that haven't started yet.
+			if (oldNV == 0) continue;
+			
 			// Expand in every possible way
 			for (unsigned adj : slice::graph[end].adjList)
 			{
