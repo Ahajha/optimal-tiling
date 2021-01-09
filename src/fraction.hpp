@@ -22,12 +22,11 @@ struct fraction
 		return (result == 0) ? other.den <=> den : result;
 	}
 	
-	friend std::ostream& operator<<(std::ostream&, const fraction&)
+	friend std::ostream& operator<<(std::ostream& stream, const fraction& f)
 	{
 		return stream << f.num << '/' << f.den
 			<< " = " << static_cast<double>(f.num)/f.den;
 	}
 };
-
 
 #endif
