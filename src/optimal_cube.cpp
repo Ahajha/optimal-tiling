@@ -3,23 +3,6 @@
 
 // A macro named DIM_SIZES will be compiled in.
 
-template<std::unsigned_integral T, T ... dims>
-struct hypercube : slice_path<T,dims...>
-{
-	unsigned num_induced;
-	
-	hypercube(const path_info_matrix& paths_info, unsigned len, unsigned end) :
-		slice_path<T,dims...>(paths_info,len,end),
-		num_induced(paths_info[len][end].num_induced) {}
-};
-
-template<std::unsigned_integral T, T ... dims>
-std::ostream& operator<<(std::ostream& stream, const hypercube<T,dims...>& hc)
-{
-	return stream << static_cast<slice_path<T,dims...>>(hc)
-		<< hc.num_induced;
-}
-
 template<std::unsigned_integral T, T, T ... rest>
 void enumerate(auto start_time)
 {
@@ -89,7 +72,8 @@ void findMaxHypercube()
 		}
 	}
 	
-	std::cout << hypercube<T,rest...>(paths_info,d1,bestEndVertex) << std::endl;
+	std::cout << slice_path<T,rest...>(paths_info,d1,bestEndVertex)
+		<< paths_info[d1][bestEndVertex].num_induced << std::endl;
 }
 
 int main()

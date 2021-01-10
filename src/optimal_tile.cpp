@@ -4,25 +4,6 @@
 
 // A macro named DIM_SIZES will be compiled in.
 
-template<std::unsigned_integral T, T ... dims>
-struct tile : slice_path<T,dims...>
-{
-	fraction density;
-	
-	tile() {}
-	
-	tile(const path_info_matrix& paths_info, unsigned len, unsigned end,
-		fraction dens) : slice_path<T,dims...>(paths_info,len,end),
-		density(dens) {}
-};
-
-template<std::unsigned_integral T, T ... dims>
-std::ostream& operator<<(std::ostream& stream, const tile<T,dims...>& t)
-{
-	return stream << t.density << '\n'
-		<< static_cast<slice_path<T,dims...>>(t);
-}
-
 /*------------------------------------
 Prints the maximum size and density of
 every rectangle sized 1xn through nxn.
@@ -30,7 +11,7 @@ Also, prints the maximum density tile.
 ------------------------------------*/
 
 template<std::unsigned_integral T, T ... dims>
-void findMaxTilingWithStart(unsigned start, tile<T,dims...>& bestTile)
+void findMaxTilingWithStart(unsigned start, auto& bestTile)
 {
 	using slice = slice_graph<true,T,dims...>;
 	
@@ -80,12 +61,15 @@ void findMaxTilingWithStart(unsigned start, tile<T,dims...>& bestTile)
 					{
 						fraction density(oldNV, (len - 1) * num_verts);
 						
-						if (density > bestTile.density)
+						if (density > bestTile.second)
 						{
-							bestTile = tile<T,dims...>(paths_info, len - 1,
-								end, density);
+							bestTile = {
+								slice_path<T,dims...>(paths_info, len - 1, end),
+								density
+							};
 							
-							std::cout << "found: " << bestTile;
+							std::cout << "found: " << density << '\n'
+								<< slice_path<T,dims...>(paths_info, len - 1, end);
 						}
 					}
 				}
@@ -97,7 +81,7 @@ void findMaxTilingWithStart(unsigned start, tile<T,dims...>& bestTile)
 template<std::unsigned_integral T, T ... dims>
 void findMaxTiling()
 {
-	tile<T,dims...> bestTile;
+	std::pair<slice_path<T,dims...>,fraction> bestTile;
 	
 	for (unsigned start = 0; start < slice_graph<true,T,dims...>::slices.size(); ++start)
 	{
