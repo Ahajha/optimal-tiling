@@ -1,52 +1,26 @@
 #include "slice.hpp"
 #include "fraction.hpp"
+#include "slice_algo_base.hpp"
 
 // A macro named DIM_SIZES will be compiled in.
 
-struct path_info
-{
-	// Number of induced vertices in this path, the vertex
-	// that precedes this one in this path.
-	unsigned num_induced, second_to_last;
-};
-
-// Index [len][end] gives info about the 'len'
-// long path with 'end' as the last vertex.
-using path_info_matrix = std::vector<std::vector<path_info>>;
-
 template<std::unsigned_integral T, T ... dims>
-struct tile
+struct tile : slice_path<T,dims...>
 {
-	std::vector<unsigned> slices;
 	fraction density;
 	
 	tile() {}
 	
-	tile(const path_info_matrix& paths_info, unsigned len,
-		unsigned end, fraction dens) : slices(len), density(dens)
-	{
-		unsigned currentVertex = end;
-		for (unsigned length = len; length > 0; length--)
-		{
-			slices[length - 1] = currentVertex;
-			
-			currentVertex = paths_info[length][currentVertex].second_to_last;
-		}
-	}
+	tile(const path_info_matrix& paths_info, unsigned len, unsigned end,
+		fraction dens) : slice_path<T,dims...>(paths_info,len,end),
+		density(dens) {}
 };
 
 template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const tile<T,dims...>& t)
 {
-	stream << t.density << '\n';
-	for (unsigned vertex : t.slices)
-	{
-		stream << slice_graph<true,T,dims...>::lookup(vertex)
-			<< slice_defs::er_store
-				[slice_graph<true,T,dims...>::graph[vertex].erID]
-			<< "\n\n";
-	}
-	return stream;
+	return stream << t.density << '\n'
+		<< static_cast<slice_path<T,dims...>>(t);
 }
 
 /*------------------------------------

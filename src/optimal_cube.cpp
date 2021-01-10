@@ -1,48 +1,23 @@
 #include "slice.hpp"
+#include "slice_algo_base.hpp"
 
 // A macro named DIM_SIZES will be compiled in.
 
-struct path_info
-{
-	// Number of induced vertices in this path, and the vertex
-	// that precedes this one in this path.
-	unsigned num_induced, second_to_last;
-};
-
-// Index [len][end] gives info about the 'len'
-// long path with 'end' as the last vertex.
-using path_info_matrix = std::vector<std::vector<path_info>>;
-
 template<std::unsigned_integral T, T ... dims>
-struct hypercube
+struct hypercube : slice_path<T,dims...>
 {
-	std::vector<unsigned> slices;
 	unsigned num_induced;
 	
-	hypercube(const path_info_matrix& paths_info, unsigned len,
-		unsigned end) : slices(len), num_induced(paths_info[len][end].num_induced)
-	{
-		unsigned currentVertex = end;
-		for (unsigned length = len; length > 0; length--)
-		{
-			slices[length - 1] = currentVertex;
-			
-			currentVertex = paths_info[length][currentVertex].second_to_last;
-		}
-	}
+	hypercube(const path_info_matrix& paths_info, unsigned len, unsigned end) :
+		slice_path<T,dims...>(paths_info,len,end),
+		num_induced(paths_info[len][end].num_induced) {}
 };
 
 template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const hypercube<T,dims...>& hc)
 {
-	for (unsigned vertex : hc.slices)
-	{
-		stream << slice_graph<true,T,dims...>::lookup(vertex)
-			<< slice_defs::er_store
-				[slice_graph<true,T,dims...>::graph[vertex].erID]
-			<< "\n\n";
-	}
-	return stream << hc.num_induced;
+	return stream << static_cast<slice_path<T,dims...>>(hc)
+		<< hc.num_induced;
 }
 
 template<std::unsigned_integral T, T, T ... rest>
