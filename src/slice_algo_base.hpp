@@ -37,10 +37,7 @@ std::ostream& operator<<(std::ostream& stream, const slice_path<T,dims...>& sp)
 {
 	for (unsigned vertex : sp.slices)
 	{
-		stream << slice_graph<true,T,dims...>::lookup(vertex)
-			<< slice_defs::er_store
-				[slice_graph<true,T,dims...>::graph[vertex].erID]
-			<< "\n\n";
+		stream << slice_graph<true,T,dims...>::lookup(vertex) << '\n';
 	}
 	return stream;
 }

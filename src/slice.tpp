@@ -69,25 +69,11 @@ bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 }
 
 template<std::unsigned_integral T, T ... dims>
-std::ostream& operator<<(std::ostream& stream, const unpruned_slice<T,dims...>& s)
-{
-	for (auto v : s.form)
-	{
-		stream << (slice_defs::empty(v) ? '_' : 'X');
-	}
-	return stream;
-}
-
-template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 {
-	for (const auto& symmetryClass : s.forms)
+	for (auto v : s.forms[0][0])
 	{
-		for (auto v : symmetryClass.front())
-		{
-			stream << (slice_defs::empty(v) ? '_' : 'X');
-		}
-		stream << '\n';
+		stream << (slice_defs::empty(v) ? '_' : 'X');
 	}
 	return stream;
 }

@@ -72,10 +72,6 @@ struct unpruned_slice : public slice_base<T,dims...>
 {
 	typename slice_base<T,dims...>::compNumArray form;
 	
-	template<std::unsigned_integral t, t ... ds>
-	friend std::ostream& operator<<(std::ostream&,
-		const unpruned_slice<t,ds...>&);
-	
 	unpruned_slice(bool v) : slice_base<T,dims...>(v),
 		form({v ? static_cast<slice_defs::compNumType>(0)
 		        : slice_defs::COMPLETELY_EMPTY}) {}
