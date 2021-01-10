@@ -112,7 +112,7 @@ void pruned_slice<T,dims...>::emplace_symmetry(
 		// Physical form not found (case 1)
 		forms.emplace_back().emplace_back(sym);
 	}
-	else if (std::find(it->begin(),it->end(),sym) != it->end())
+	else if (std::find(it->begin(),it->end(),sym) == it->end())
 	{
 		// Physical form found, but this exact symmetry does not exist (case 2)
 		it->emplace_back(sym);
