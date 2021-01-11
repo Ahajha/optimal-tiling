@@ -1,6 +1,6 @@
 #include "slice.hpp"
 #include "fraction.hpp"
-#include "slice_algo_base.hpp"
+#include "slice_path.hpp"
 
 // A macro named DIM_SIZES will be compiled in.
 
