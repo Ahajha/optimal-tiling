@@ -131,6 +131,8 @@ struct slice_graph
 	
 	private:
 	
+	static bool fillOrPruneSlice(slice_t& s);
+	
 	static void enumerateRecursive(std::vector<unsigned>& path, unsigned& nv);
 	
 	static void fillVertex(unsigned vID);

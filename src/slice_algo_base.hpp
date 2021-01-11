@@ -23,7 +23,7 @@ struct slice_path
 		slices(len)
 	{
 		unsigned currentVertex = end;
-		for (unsigned length = len; length > 0; length--)
+		for (unsigned length = len; length > 0; --length)
 		{
 			slices[length - 1] = currentVertex;
 			

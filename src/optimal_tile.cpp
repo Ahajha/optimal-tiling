@@ -24,7 +24,7 @@ void findMaxTilingWithStart(unsigned start, auto& bestTile)
 	// have been longer than 10. Perhaps grow slowly, occasionally checking for
 	// duplicate slices.
 	path_info_matrix paths_info(
-		slice::graph.size() + 1, std::vector<path_info>(slice::graph.size(),{0,0})
+		slice::graph.size() + 2, std::vector<path_info>(slice::graph.size(),{0,0})
 	);
 	
 	constexpr unsigned num_verts = (dims * ...);

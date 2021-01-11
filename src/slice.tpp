@@ -187,6 +187,90 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	}
 }
 
+// Returns true
+template<bool prune, std::unsigned_integral T, T ... dims>
+bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
+{
+	static_assert(prune);
+	
+	if constexpr (sizeof...(dims) == 1)
+	{
+		/*-------------------------------------------------
+		For 1 dimension, can implement both pruning methods
+		fairly easily.
+		
+		Can use a DFA for this:
+
+		State 0: 'X' (less than 2 spaces prior)
+		X -> 0, _ -> 1
+
+		State 1: '_' (exactly one space), has an X before
+		  it, but no more than one space behind that)
+		  (start state)
+		X -> 0, _ -> 2
+
+		State 2: '__' (exactly two spaces, X before,
+		  no more than one space behind that)
+		  (accepts if ending in this state)
+		X -> 3, _ -> 5
+
+		State 3: '__X'
+		X -> 0, _ -> 4
+
+		State 4: '__X_' (accepts if ending in this state)
+		X -> 0, _ -> 5
+
+		State 5: Accept (either ___ or __X__ has been seen)
+		-------------------------------------------------*/
+		
+		unsigned state = 1;
+		
+		// Generated from the transitions given above
+		constexpr static unsigned transition[] {0,1,0,2,3,5,0,4,0,5};
+		
+		for (const auto i : s.forms[0][0])
+		{
+			state = transition[(2 * state) + slice_defs::empty(i)];
+			
+			// Short circuit the 'live' state
+			if (state == 5) return true;
+		}
+		
+		// 2 and 4 are the accept states
+		if (state == 2 || state == 4) return true;
+	}
+	else
+	{
+		// Minor todo: this might be faster if this is pruned as we go along
+		if (std::find(s.forms[0][0].begin(), s.forms[0][0].end(),
+			slice_defs::COMPLETELY_EMPTY) != s.forms[0][0].end())
+		{
+			return true;
+		}
+	}
+	
+	typename slice_base<T,dims...>::compNumArray result;
+	
+	// Produce each symmetry. Should one of them be lexicographically smaller
+	// than this one, then remove it. Start at index 1, since 0 is the identity.
+	for (unsigned i = 1; i < permutationSet<T,dims...>::perms.size(); ++i)
+	{
+		slice_base<T,dims...>::permute(i,s.forms[0][0],result);
+		
+		// If this new symmetry is lexicographically smaller
+		// than the original, then we can prune this one.
+		if (slice_base<T,dims...>::compareSymmetries(s.forms[0][0],result) > 0)
+		{
+			return true;
+		}
+		
+		// Otherwise, place it in the slice
+		s.emplace_symmetry(result);
+	}
+	
+	return false;
+}
+
 template<bool prune, std::unsigned_integral T, T ... dims>
 void slice_graph<prune,T,dims...>::enumerate()
 {
@@ -236,36 +320,8 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 	{
 		if constexpr (prune)
 		{
-			auto& s = slices.emplace_back(path,nv);
-			
-			// Minor todo: this might be faster if this is pruned as we go along
-			if (std::find(s.forms[0][0].begin(), s.forms[0][0].end(),
-				slice_defs::COMPLETELY_EMPTY) != s.forms[0][0].end())
-			{
+			if (fillOrPruneSlice(slices.emplace_back(path,nv)))
 				slices.pop_back();
-				return;
-			}
-			
-			// Out param for calls to permute
-			typename slice_base<T,dims...>::compNumArray result;
-			
-			// Produce each symmetry. Should one of them be lexicographically smaller
-			// than this one, then remove it. Start at index 1, since 0 is the identity.
-			for (unsigned i = 1; i < permutationSet<T,dims...>::perms.size(); ++i)
-			{
-				slice_base<T,dims...>::permute(i,s.forms[0][0],result);
-				
-				// If this new symmetry is lexicographically smaller
-				// than the original, then we can prune this one.
-				if (slice_base<T,dims...>::compareSymmetries(s.forms[0][0],result) > 0)
-				{
-					slices.pop_back();
-					return;
-				}
-				
-				// Otherwise, place it in the slice
-				s.emplace_symmetry(result);
-			}
 		}
 		else
 		{
