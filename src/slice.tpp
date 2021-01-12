@@ -12,22 +12,15 @@ void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 }
 
 template<std::unsigned_integral T, T ... dims>
-std::strong_ordering slice_base<T,dims...>::compareSymmetries
-	(const compNumArray& sym1, const compNumArray& sym2)
+std::strong_ordering slice_base<T,dims...>::compNumArray::operator<=>
+	(const compNumArray& other) const
 {
-	for (unsigned i = 0; i < pset::numVertices; ++i)
+	for (unsigned i = 0; i < slice_base<T,dims...>::pset::numVertices; ++i)
 	{
-		// We only compare physical forms, as two physical
-		// forms with different equivalence configurations are
-		// functionally identical. Also, note that each physical form
-		// is produced exactly once, meaning that if something
-		// is equivalent physically to the base configuration,
-		// we can still safely ignore it, as there is no other slice
-		// it would be produced by.
-		bool sym1_induced = slice_defs::empty(sym1[i]);
-		bool sym2_induced = slice_defs::empty(sym2[i]);
-		if (sym1_induced != sym2_induced)
-			return sym1_induced <=> sym2_induced;
+		bool induced1 = slice_defs::empty((*this)[i]);
+		bool induced2 = slice_defs::empty(other[i]);
+		if (induced1 != induced2)
+			return induced1 <=> induced2;
 	}
 	return std::strong_ordering::equal;
 }
@@ -76,21 +69,6 @@ std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 		stream << (slice_defs::empty(v) ? '_' : 'X');
 	}
 	return stream;
-}
-
-template<std::unsigned_integral T, T ... dims>
-void pruned_slice<T,dims...>::emplace_symmetry(
-	const typename slice_base<T,dims...>::compNumArray& sym)
-{
-	// If the physical form is not already in forms,
-	// add it, otherwise ignore it.
-	if (std::find_if(forms.begin(),forms.end(),	[&sym](const auto& physForm)
-		{
-			return slice_base<T,dims...>::compareSymmetries(physForm,sym) == 0;
-		}) == forms.end())
-	{
-		forms.emplace_back(sym);
-	}
 }
 
 template<std::unsigned_integral T, T ... dims>
@@ -246,13 +224,17 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 		
 		// If this new symmetry is lexicographically smaller
 		// than the original, then we can prune this one.
-		if (slice_base<T,dims...>::compareSymmetries(s.forms[0],result) > 0)
+		if (s.forms[0] > result)
 		{
 			return true;
 		}
 		
-		// Otherwise, place it in the slice
-		s.emplace_symmetry(result);
+		// If the physical form is not already in forms,
+		// add it, otherwise ignore it.
+		if (std::find(s.forms.begin(), s.forms.end(), result) == s.forms.end())
+		{
+			s.forms.emplace_back(result);
+		}
 	}
 	
 	return false;

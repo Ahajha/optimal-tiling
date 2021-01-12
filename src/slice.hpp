@@ -42,7 +42,15 @@ template<std::unsigned_integral T, T ... dims>
 struct slice_base
 {
 	using pset = permutationSet<T,dims...>;
-	using compNumArray = std::array<slice_defs::compNumType, pset::numVertices>;
+	struct compNumArray : std::array<slice_defs::compNumType, pset::numVertices>
+	{
+		// Comparisons only consider the physical form, not arrangements
+		// of the components within the array.
+		std::strong_ordering operator<=>(const compNumArray& other) const;
+		
+		bool operator==(const compNumArray& other) const
+			{ return (*this <=> other) == std::strong_ordering::equal; }
+	};
 	
 	unsigned numVerts;
 	slice_defs::compNumType numComps;
@@ -94,9 +102,6 @@ struct pruned_slice : public slice_base<T,dims...>
 	template<std::unsigned_integral t, t ... ds>
 	friend std::ostream& operator<<(std::ostream&,
 		const pruned_slice<t,ds...>&);
-	
-	void emplace_symmetry(const
-		typename slice_base<T,dims...>::compNumArray& sym);
 	
 	pruned_slice(bool v) : slice_base<T,dims...>(v),
 		forms({{v ? static_cast<slice_defs::compNumType>(0)
