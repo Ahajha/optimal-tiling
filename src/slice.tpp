@@ -369,15 +369,18 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 		// and see if it can succeed this configuration.
 		for (unsigned i = 0; i < slices.size(); ++i)
 		{
-			// Go through each symmetry
-			for (const auto& symSet : slices[i].forms)
+			// If the canonical form of the 'after' vertex is always used,
+			// and 'before' is rotated instead, then calls to 'succeeds' will
+			// always produce the same ER, so long as the symmetries are
+			// physically identical. Thus, we only need to look at one version
+			// of each 'before' symmetry.
+			
+			// Go through each symmetry in the 'before'
+			for (const auto& symSet : lookup(vID).forms)
 			{
-				if (slice_base<T,dims...>::succeeds(symSet[0], slices[i].numComps,
-					lookup(vID).forms[0][0], graph[vID].erID, result))
+				if (slice_base<T,dims...>::succeeds(slices[i].forms[0][0],
+					slices[i].numComps, symSet[0], graph[vID].erID, result))
 				{
-					// This is in this block so that multiple configurations of a slice
-					// can be added to the adjacency list.
-					
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
@@ -396,20 +399,6 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 						adjacent = graph.size();
 						
 						addVertex(i,result);
-						
-						// Iterate through all other versions of this
-						// physical symmetry, map any generated configs
-						// to the new vertex.
-						for (unsigned j = 1; j < symSet.size(); ++j)
-						{
-							// No need to check the result, since the
-							// same physical configuration will also work.
-							slice_base<T,dims...>::succeeds(symSet[j],
-								slices[i].numComps, lookup(vID).forms[0][0],
-								graph[vID].erID, result);
-							
-							slices[i].er_map[result] = adjacent;
-						}
 					}
 					
 					if (!adjacentTo[adjacent])
