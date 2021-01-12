@@ -1,7 +1,7 @@
 #include "slice.hpp"
 
 template<std::unsigned_integral T, T ... dims>
-void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
+constexpr void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
 {
 	const auto& perm = pset::perms[permID];
@@ -12,7 +12,7 @@ void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 }
 
 template<std::unsigned_integral T, T ... dims>
-std::strong_ordering slice_base<T,dims...>::compNumArray::operator<=>
+constexpr std::strong_ordering slice_base<T,dims...>::compNumArray::operator<=>
 	(const compNumArray& other) const
 {
 	for (unsigned i = 0; i < slice_base<T,dims...>::pset::numVertices; ++i)
@@ -152,29 +152,24 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 	}
 }
 
-// Returns true
 template<std::unsigned_integral T, T ... dims>
 bool pruned_slice<T,dims...>::fillOrPrune()
 {
 	if constexpr (sizeof...(dims) == 1)
 	{
-		/*-------------------------------------------------
-		For 1 dimension, can implement both pruning methods
-		fairly easily.
-		
-		Can use a DFA for this:
+		/*--------------------------------------------------------------
+		For 1 dimension, can implement both pruning methods using a DFA:
+		If the DFA accepts, then this slice should be pruned.
 
 		State 0: 'X' (less than 2 spaces prior)
 		X -> 0, _ -> 1
 
-		State 1: '_' (exactly one space), has an X before
-		  it, but no more than one space behind that)
-		  (start state)
+		State 1: '_' (exactly one space), has an X before it, but no
+			more than one space behind that) (start state)
 		X -> 0, _ -> 2
 
-		State 2: '__' (exactly two spaces, X before,
-		  no more than one space behind that)
-		  (accepts if ending in this state)
+		State 2: '__' (exactly two spaces, X before, no more than one
+			space behind that) (accepts if ending in this state)
 		X -> 3, _ -> 5
 
 		State 3: '__X'
@@ -184,7 +179,7 @@ bool pruned_slice<T,dims...>::fillOrPrune()
 		X -> 0, _ -> 5
 
 		State 5: Accept (either ___ or __X__ has been seen)
-		-------------------------------------------------*/
+		--------------------------------------------------------------*/
 		
 		unsigned state = 1;
 		

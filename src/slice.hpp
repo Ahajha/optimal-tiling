@@ -46,9 +46,9 @@ struct slice_base
 	{
 		// Comparisons only consider the physical form, not arrangements
 		// of the components within the array.
-		std::strong_ordering operator<=>(const compNumArray& other) const;
+		constexpr std::strong_ordering operator<=>(const compNumArray& other) const;
 		
-		bool operator==(const compNumArray& other) const
+		constexpr bool operator==(const compNumArray& other) const
 			{ return (*this <=> other) == std::strong_ordering::equal; }
 	};
 	
@@ -63,11 +63,8 @@ struct slice_base
 	slice_base(unsigned nv, slice_defs::compNumType nc) : numVerts(nv), numComps(nc)
 		{ static_assert(sizeof...(dims) > 0); }
 	
-	static void permute(unsigned permID, const compNumArray& src,
+	constexpr static void permute(unsigned permID, const compNumArray& src,
 		compNumArray& result);
-	
-	static std::strong_ordering compareSymmetries
-		(const compNumArray& sym1, const compNumArray& sym2);
 	
 	static bool succeeds(const compNumArray& afterCN, unsigned afterNumComp,
 		const compNumArray& beforeCN, unsigned beforeERID, unsigned& result);
@@ -76,11 +73,11 @@ struct slice_base
 };
 
 template<std::unsigned_integral T, T ... dims>
-struct unpruned_slice : public slice_base<T,dims...>
+struct unpruned_slice : slice_base<T,dims...>
 {
 	typename slice_base<T,dims...>::compNumArray form;
 	
-	unpruned_slice(bool v) : slice_base<T,dims...>(v),
+	constexpr unpruned_slice(bool v) : slice_base<T,dims...>(v),
 		form({v ? static_cast<slice_defs::compNumType>(0)
 		        : slice_defs::COMPLETELY_EMPTY}) {}
 	
@@ -92,7 +89,7 @@ struct unpruned_slice : public slice_base<T,dims...>
 };
 
 template<std::unsigned_integral T, T ... dims>
-struct pruned_slice : public slice_base<T,dims...>
+struct pruned_slice : slice_base<T,dims...>
 {
 	// Inner vector contains configs with the same physical form, but different
 	// equivalence relations. Outer vector contains symmetries with different
@@ -107,6 +104,7 @@ struct pruned_slice : public slice_base<T,dims...>
 		forms({{v ? static_cast<slice_defs::compNumType>(0)
 		        : slice_defs::COMPLETELY_EMPTY}}) {}
 	
+	// Returns true iff this slice should be pruned.
 	bool fillOrPrune();
 	
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv)
