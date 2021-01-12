@@ -2,7 +2,45 @@
 #include "fraction.hpp"
 #include "slice_path.hpp"
 
+// What length to start checking for duplicate tiles.
+constexpr unsigned CHECK_START = 10;
+
 // A macro named DIM_SIZES will be compiled in.
+
+// Checks for duplicate tiles in each path of a given length, and resets
+// those that have duplicates. Return true iff there are still paths to
+// explore.
+bool checkForDuplicateTiles(path_info_matrix& paths_info, unsigned len)
+{
+	unsigned numPaths = 0;
+	for (unsigned i = 0; i < paths_info[0].size(); ++i)
+	{
+		// Ignore paths that already do not exist
+		if (paths_info[len][i].num_induced == 0) continue;
+		
+		++numPaths;
+		
+		std::vector<bool> used(paths_info[0].size());
+		
+		unsigned currentVertex = i;
+		used[currentVertex] = true;
+		for (unsigned length = len; length > 0; --length)
+		{
+			currentVertex = paths_info[length][currentVertex].second_to_last;
+			
+			if (used[currentVertex])
+			{
+				paths_info[len][i].num_induced = 0;
+				--numPaths;
+				break;
+			}
+			
+			used[currentVertex] = true;
+		}
+	}
+	
+	return numPaths > 0;
+}
 
 /*------------------------------------
 Prints the maximum size and density of
@@ -20,9 +58,6 @@ void findMaxTilingWithStart(unsigned start, auto& bestTile)
 	// so that when enumerating tiles, all tiles with all slices would technically
 	// be accounted for.
 	
-	// TODO: The outer vector likely can be smaller, experimentally no maximum tiles
-	// have been longer than 10. Perhaps grow slowly, occasionally checking for
-	// duplicate slices.
 	path_info_matrix paths_info(
 		slice::graph.size() + 2, std::vector<path_info>(slice::graph.size(),{0,0})
 	);
@@ -35,6 +70,11 @@ void findMaxTilingWithStart(unsigned start, auto& bestTile)
 	// For each length
 	for (unsigned len = 2; len < paths_info.size(); ++len)
 	{
+		// This is expensive to check, so we will only check at each multiple
+		// of CHECK_START.
+		if (len % CHECK_START == 0 && !checkForDuplicateTiles(paths_info,len - 1))
+			return;
+		
 		// Try to expand each cell that has a valid path
 		for (unsigned end = 0; end < slice::graph.size(); ++end)
 		{
