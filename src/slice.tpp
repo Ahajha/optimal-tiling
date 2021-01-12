@@ -153,11 +153,9 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 }
 
 // Returns true
-template<bool prune, std::unsigned_integral T, T ... dims>
-bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
+template<std::unsigned_integral T, T ... dims>
+bool pruned_slice<T,dims...>::fillOrPrune()
 {
-	static_assert(prune);
-	
 	if constexpr (sizeof...(dims) == 1)
 	{
 		/*-------------------------------------------------
@@ -193,7 +191,7 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 		// Generated from the transitions given above
 		constexpr static unsigned transition[] {0,1,0,2,3,5,0,4,0,5};
 		
-		for (const auto i : s.forms[0])
+		for (const auto i : forms[0])
 		{
 			state = transition[(2 * state) + slice_defs::empty(i)];
 			
@@ -207,8 +205,8 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 	else
 	{
 		// Minor todo: this might be faster if this is pruned as we go along
-		if (std::find(s.forms[0].begin(), s.forms[0].end(),
-			slice_defs::COMPLETELY_EMPTY) != s.forms[0].end())
+		if (std::find(forms[0].begin(), forms[0].end(),
+			slice_defs::COMPLETELY_EMPTY) != forms[0].end())
 		{
 			return true;
 		}
@@ -220,20 +218,20 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 	// than this one, then remove it. Start at index 1, since 0 is the identity.
 	for (unsigned i = 1; i < permutationSet<T,dims...>::perms.size(); ++i)
 	{
-		slice_base<T,dims...>::permute(i,s.forms[0],result);
+		slice_base<T,dims...>::permute(i,forms[0],result);
 		
 		// If this new symmetry is lexicographically smaller
 		// than the original, then we can prune this one.
-		if (s.forms[0] > result)
+		if (forms[0] > result)
 		{
 			return true;
 		}
 		
 		// If the physical form is not already in forms,
 		// add it, otherwise ignore it.
-		if (std::find(s.forms.begin(), s.forms.end(), result) == s.forms.end())
+		if (std::find(forms.begin(), forms.end(), result) == forms.end())
 		{
-			s.forms.emplace_back(result);
+			forms.emplace_back(result);
 		}
 	}
 	
@@ -289,7 +287,7 @@ void slice_graph<prune,T,dims...>::enumerateRecursive
 	{
 		if constexpr (prune)
 		{
-			if (fillOrPruneSlice(slices.emplace_back(path,nv)))
+			if (slices.emplace_back(path,nv).fillOrPrune())
 				slices.pop_back();
 		}
 		else

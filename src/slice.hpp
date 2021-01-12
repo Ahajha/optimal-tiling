@@ -107,6 +107,8 @@ struct pruned_slice : public slice_base<T,dims...>
 		forms({{v ? static_cast<slice_defs::compNumType>(0)
 		        : slice_defs::COMPLETELY_EMPTY}}) {}
 	
+	bool fillOrPrune();
+	
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv)
 		: slice_base<T,dims...>(nv,0)
 	{
@@ -132,8 +134,6 @@ struct slice_graph
 	static void enumerate();
 	
 	private:
-	
-	static bool fillOrPruneSlice(slice_t& s);
 	
 	static void enumerateRecursive(std::vector<unsigned>& path, unsigned& nv);
 	
