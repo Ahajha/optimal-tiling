@@ -71,7 +71,7 @@ bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 template<std::unsigned_integral T, T ... dims>
 std::ostream& operator<<(std::ostream& stream, const pruned_slice<T,dims...>& s)
 {
-	for (auto v : s.forms[0][0])
+	for (auto v : s.forms[0])
 	{
 		stream << (slice_defs::empty(v) ? '_' : 'X');
 	}
@@ -82,28 +82,15 @@ template<std::unsigned_integral T, T ... dims>
 void pruned_slice<T,dims...>::emplace_symmetry(
 	const typename slice_base<T,dims...>::compNumArray& sym)
 {
-	// Place it in either:
-	// 1: A new vector in forms, if it is physically distinct from the rest.
-	// 2: In an existing vector in forms, if it physically the same
-	//    as another, but the array itself is different.
-	// 3: Nowhere, if it is exactly the same as another array.
-	
-	if (auto it = std::find_if(forms.begin(),forms.end(),
-		[&sym](const auto& physForm)
+	// If the physical form is not already in forms,
+	// add it, otherwise ignore it.
+	if (std::find_if(forms.begin(),forms.end(),	[&sym](const auto& physForm)
 		{
-			return slice_base<T,dims...>::compareSymmetries(physForm[0],sym) == 0;
-		});
-		it == forms.end())
+			return slice_base<T,dims...>::compareSymmetries(physForm,sym) == 0;
+		}) == forms.end())
 	{
-		// Physical form not found (case 1)
-		forms.emplace_back().emplace_back(sym);
+		forms.emplace_back(sym);
 	}
-	else if (std::find(it->begin(),it->end(),sym) == it->end())
-	{
-		// Physical form found, but this exact symmetry does not exist (case 2)
-		it->emplace_back(sym);
-	}
-	// Otherwise, this exact symmetry has already been found (case 3)
 }
 
 template<std::unsigned_integral T, T ... dims>
@@ -228,7 +215,7 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 		// Generated from the transitions given above
 		constexpr static unsigned transition[] {0,1,0,2,3,5,0,4,0,5};
 		
-		for (const auto i : s.forms[0][0])
+		for (const auto i : s.forms[0])
 		{
 			state = transition[(2 * state) + slice_defs::empty(i)];
 			
@@ -242,8 +229,8 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 	else
 	{
 		// Minor todo: this might be faster if this is pruned as we go along
-		if (std::find(s.forms[0][0].begin(), s.forms[0][0].end(),
-			slice_defs::COMPLETELY_EMPTY) != s.forms[0][0].end())
+		if (std::find(s.forms[0].begin(), s.forms[0].end(),
+			slice_defs::COMPLETELY_EMPTY) != s.forms[0].end())
 		{
 			return true;
 		}
@@ -255,11 +242,11 @@ bool slice_graph<prune,T,dims...>::fillOrPruneSlice(slice_t& s)
 	// than this one, then remove it. Start at index 1, since 0 is the identity.
 	for (unsigned i = 1; i < permutationSet<T,dims...>::perms.size(); ++i)
 	{
-		slice_base<T,dims...>::permute(i,s.forms[0][0],result);
+		slice_base<T,dims...>::permute(i,s.forms[0],result);
 		
 		// If this new symmetry is lexicographically smaller
 		// than the original, then we can prune this one.
-		if (slice_base<T,dims...>::compareSymmetries(s.forms[0][0],result) > 0)
+		if (slice_base<T,dims...>::compareSymmetries(s.forms[0],result) > 0)
 		{
 			return true;
 		}
@@ -376,10 +363,10 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 			// of each 'before' symmetry.
 			
 			// Go through each symmetry in the 'before'
-			for (const auto& symSet : lookup(vID).forms)
+			for (const auto& form : lookup(vID).forms)
 			{
-				if (slice_base<T,dims...>::succeeds(slices[i].forms[0][0],
-					slices[i].numComps, symSet[0], graph[vID].erID, result))
+				if (slice_base<T,dims...>::succeeds(slices[i].forms[0],
+					slices[i].numComps, form, graph[vID].erID, result))
 				{
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).

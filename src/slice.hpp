@@ -89,9 +89,7 @@ struct pruned_slice : public slice_base<T,dims...>
 	// Inner vector contains configs with the same physical form, but different
 	// equivalence relations. Outer vector contains symmetries with different
 	// physical forms. Possible todo: use unordered_set
-	std::vector<std::vector<
-		typename slice_base<T,dims...>::compNumArray
-	>> forms;
+	std::vector<typename slice_base<T,dims...>::compNumArray> forms;
 	
 	template<std::unsigned_integral t, t ... ds>
 	friend std::ostream& operator<<(std::ostream&,
@@ -101,14 +99,13 @@ struct pruned_slice : public slice_base<T,dims...>
 		typename slice_base<T,dims...>::compNumArray& sym);
 	
 	pruned_slice(bool v) : slice_base<T,dims...>(v),
-		forms({{{v ? static_cast<slice_defs::compNumType>(0)
-		        : slice_defs::COMPLETELY_EMPTY}}}) {}
+		forms({{v ? static_cast<slice_defs::compNumType>(0)
+		        : slice_defs::COMPLETELY_EMPTY}}) {}
 	
 	pruned_slice(const std::vector<unsigned>& path, unsigned nv)
 		: slice_base<T,dims...>(nv,0)
 	{
-		forms.emplace_back().emplace_back();
-		slice_base<T,dims...>::constructForm(path,forms[0][0]);
+		slice_base<T,dims...>::constructForm(path,forms.emplace_back());
 	}
 };
 
