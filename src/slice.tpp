@@ -346,28 +346,13 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 					// TODO: Exclude configs that are 'supersets'
 					// of other configs (and prove this is valid).
 					
-					auto search = slices[i].er_map.find(result);
+					unsigned adj = getVertex(i,result);
 					
-					unsigned adjacent;
-					
-					if (search != slices[i].er_map.end())
+					if (!adjacentTo[adj])
 					{
-						// Found
-						adjacent = search->second;
-					}
-					else
-					{
-						// Not found
-						adjacent = graph.size();
+						adjacentTo[adj] = true;
 						
-						addVertex(i,result);
-					}
-					
-					if (!adjacentTo[adjacent])
-					{
-						adjacentTo[adjacent] = true;
-						
-						graph[vID].adjList.emplace_back(adjacent);
+						graph[vID].adjList.emplace_back(adj);
 					}
 				}
 			}
@@ -382,22 +367,30 @@ void slice_graph<prune,T,dims...>::fillVertex(unsigned vID)
 			if (slice_base<T,dims...>::succeeds(slices[i].form,
 				slices[i].numComps, lookup(vID).form, graph[vID].erID, result))
 			{
-				// See if the configuration found exists already
-				auto search = slices[i].er_map.find(result);
-				
-				if (search != slices[i].er_map.end())
-				{
-					// Found
-					graph[vID].adjList.emplace_back(search->second);
-				}
-				else
-				{
-					// Not found
-					graph[vID].adjList.emplace_back(graph.size());
-					
-					addVertex(i,result);
-				}
+				// This needs to be stored first, since graph may be
+				// reallocated in the call to getVertex.
+				const unsigned adj = getVertex(i,result);
+				graph[vID].adjList.push_back(adj);
 			}
 		}
+	}
+}
+
+template<bool prune, std::unsigned_integral T, T ... dims>
+unsigned slice_graph<prune,T,dims...>::getVertex(unsigned sliceID, unsigned erID)
+{
+	auto search = slices[sliceID].er_map.find(erID);
+	
+	if (search != slices[sliceID].er_map.end())
+	{
+		// Found
+		return search->second;
+	}
+	else
+	{
+		// Not found
+		addVertex(sliceID,erID);
+		
+		return graph.size() - 1;
 	}
 }

@@ -142,6 +142,8 @@ struct slice_graph
 		slices[sliceID].er_map[erID] = graph.size();
 		graph.emplace_back(sliceID,erID);
 	}
+	
+	static unsigned getVertex(unsigned sliceID, unsigned erID);
 };
 
 // Due to a long standing GCC bug, this is a struct rather than
