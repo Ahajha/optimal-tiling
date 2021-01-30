@@ -4,9 +4,8 @@
 #include <array>
 #include <vector>
 #include <iostream>
-#include <unordered_set>
+#include <unordered_map>
 #include "permutation.hpp"
-#include "equivRelation.hpp"
 
 // TODO: Implement tracing, likely with some compiled-in macro
 
@@ -17,7 +16,12 @@ namespace slice_defs
 	// This likely will not need to be expanded, if it does
 	// performance in other areas will probably be more of a concern.
 	// Reserving 2 values, this gives a max of 254 components.
+	// This is also used for the size of equivalence relation elements.
 	using compNumType = uint8_t;
+	
+	// Size of equivalence relation IDs. 16 bits is only enough for all 8 element
+	// equivalence relations, and 32 should be plenty.
+	using er_id_type = uint32_t;
 	
 	// Reserve the largest two values
 	constexpr static compNumType EMPTY =
@@ -34,8 +38,6 @@ namespace slice_defs
 		
 		vertex(unsigned sn, unsigned e) : sliceNum(sn), erID(e) {}
 	};
-	
-	static inline er_storage er_store{};
 };
 
 template<std::unsigned_integral T, T ... dims>

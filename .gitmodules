@@ -1,0 +1,3 @@
+[submodule "cpp-equiv"]
+	path = cpp-equiv
+	url = https://github.com/Ahajha/cpp-equiv

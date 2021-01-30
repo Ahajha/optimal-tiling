@@ -1,5 +1,7 @@
 #include "slice.hpp"
 
+#include <equiv_relation_store>
+
 template<std::unsigned_integral T, T ... dims>
 constexpr void slice_base<T,dims...>::permute(unsigned permID, const compNumArray& src,
 	compNumArray& result)
@@ -30,13 +32,15 @@ bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 	unsigned afterNumComp, const compNumArray& beforeCN,
 	unsigned beforeERID, unsigned& result)
 {
-	const equivRelation& beforeConfig = slice_defs::er_store[beforeERID];
+	const auto& beforeConfig =
+		cpeq::get_er<slice_defs::compNumType, slice_defs::er_id_type>(beforeERID);
 	
 	// The equivalence relation corresponding to 'after' is the first
 	// part of the combined ER, the one corresponding to 'before' is
 	// the second part.
 	
-	equivRelation combination = equivRelation(afterNumComp).append(beforeConfig);
+	cpeq::eq_relation<slice_defs::compNumType> combination(afterNumComp);
+	combination += beforeConfig;
 	
 	for (unsigned i = 0; i < pset::numVertices; ++i)
 	{
@@ -56,7 +60,8 @@ bool slice_base<T,dims...>::succeeds(const compNumArray& afterCN,
 	
 	// Result is acyclic, so produce the ER that should be used
 	// by shaving off the last 'before.numComponents' items.
-	result = slice_defs::er_store(combination.shave(beforeConfig.size()));
+	result = cpeq::get_id//<slice_defs::compNumType, slice_defs::er_id_type>
+		(combination -= beforeConfig.size());
 	
 	return true;
 }
@@ -85,7 +90,7 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 		totalComponents += slice_alias<T,dims...>::sub_graph::lookup(vID).numComps;
 	}
 	
-	equivRelation combination(totalComponents);
+	cpeq::eq_relation<slice_defs::compNumType> combination(totalComponents);
 	
 	// Total offset before both columns, and offset between them.
 	unsigned base_offset = 0, offset;
@@ -113,9 +118,9 @@ void slice_base<T,dims...>::constructForm(const std::vector<unsigned>& path,
 		base_offset += offset;
 	}
 	
-	numComps = combination.numComponents();
+	numComps = combination.n_groups();
 	
-	const auto& cgl = combination.canonicalGroupLabeling();
+	const auto& cgl = combination.canonical_group_labeling();
 	
 	// Fill in componentNums based on the component
 	// numbers and the canonical group labeling.
@@ -263,7 +268,8 @@ void slice_graph<prune,T,dims...>::enumerate()
 	// Create base versions of all vertices
 	for (unsigned i = 0; i < slices.size(); ++i)
 	{
-		addVertex(i,slice_defs::er_store(equivRelation(slices[i].numComps)));
+		addVertex(i,cpeq::get_id//<slice_defs::compNumType,slice_defs::er_id_type>
+			(cpeq::eq_relation<slice_defs::compNumType>(slices[i].numComps)));
 	}
 	
 	// Fill in all adjacency lists
