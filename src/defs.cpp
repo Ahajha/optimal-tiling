@@ -34,18 +34,16 @@ void defs::restore(indexedList<Graph::vertexID, Graph::numVertices>& border,
 		action act = previous_actions.top();
 		previous_actions.pop();
 		
-		if (act.type == stop)
+		switch (act.type)
 		{
-			return;
-		}
-		
-		if (act.type == add)
-		{
-			border.remove(act.v);
-		}
-		else /* act.type == rem */
-		{
-			border.push_front(act.v);
+			case add:
+				border.remove(act.v);
+				break;
+			case rem:
+				border.push_front(act.v);
+				break;
+			case stop:
+				return;
 		}
 	}
 }
