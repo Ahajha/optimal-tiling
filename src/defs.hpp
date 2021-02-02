@@ -40,7 +40,7 @@ namespace defs
 	> lists(NUM_THREADS);
 	
 	// Used to store the number of leaves seen thus far
-	inline std::vector<uintmax_t> numLeaves(NUM_THREADS);
+	inline std::vector<uintmax_t> numLeaves(NUM_THREADS, 0);
 	inline bool lastWasNew = false;
 	
 	// Used for thread safety on any IO actions.
