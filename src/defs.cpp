@@ -56,8 +56,8 @@ float defs::threadSeconds()
 }
 
 void defs::checkCandidate(Subtree S)
-{	
-	IOmutex.lock();
+{
+	std::lock_guard<std::mutex> lock(IOmutex);
 	
 	if (S.numInduced > largestTree)
 	{
@@ -93,6 +93,4 @@ void defs::checkCandidate(Subtree S)
 				threadSeconds() << " thread-seconds" << std::endl;
 		}
 	}
-	
-	IOmutex.unlock();
 }
