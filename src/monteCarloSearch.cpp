@@ -216,7 +216,7 @@ int main(int num_args, char** args)
 		unsigned long long total = 0;
 		for (unsigned i = 0; i < NUM_THREADS; i++) total += numLeaves[i];
 		
-		mutex.lock();
+		std::lock_guard<std::mutex> lock(IOmutex);
 		
 		std::cout << "\r" << threadSeconds() << " thread-seconds elapsed, "
 			<< total << " leaves encountered";
@@ -224,8 +224,6 @@ int main(int num_args, char** args)
 		std::cout.flush();
 		
 		lastWasNew = false;
-		
-		mutex.unlock();
 	}
 	*/
 	

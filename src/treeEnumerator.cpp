@@ -91,14 +91,12 @@ int main(int num_args, char** args)
 		unsigned long long total = 0;
 		for (int i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
 		
-		defs::IOmutex.lock();
+		std::lock_guard<std::mutex> lock(defs::IOmutex);
 		
 		std::clog << "\r" << defs::threadSeconds() << " thread-seconds elapsed, "
 			<< total << " leaves encountered" << std::flush;
 		
 		defs::lastWasNew = false;
-		
-		defs::IOmutex.unlock();
 	}
 	
 	std::clog << std::endl << "Largest size = " << defs::largestTree << std::endl;
