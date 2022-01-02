@@ -17,7 +17,6 @@ void branch(int id, Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>
 		{
 			defs::checkCandidate(S);
 		}
-		++defs::numLeaves[id];
 	}
 	else
 	{
@@ -88,13 +87,9 @@ int main(int num_args, char** args)
 	{
 		std::this_thread::sleep_for (std::chrono::seconds(1));
 		
-		unsigned long long total = 0;
-		for (int i = 0; i < defs::NUM_THREADS; i++) total += defs::numLeaves[i];
-		
 		std::lock_guard<std::mutex> lock(defs::IOmutex);
 		
-		std::clog << "\r" << defs::threadSeconds() << " thread-seconds elapsed, "
-			<< total << " leaves encountered" << std::flush;
+		std::clog << "\r" << defs::threadSeconds() << " thread-seconds elapsed" << std::flush;
 		
 		defs::lastWasNew = false;
 	}
