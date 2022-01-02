@@ -50,7 +50,7 @@ namespace defs
 	float threadSeconds();
 	
 	// Updates the border of S after adding x.
-	void update(Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
+	void update(const Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
 		Graph::vertexID x, std::stack<action>& previous_actions);
 	
 	// Restores the border of S after removing x.
@@ -61,7 +61,7 @@ namespace defs
 	// prints to clog If S does not have enclosed space, updates
 	// largestTree and writes the result to outfile, does neither if S
 	// does have enclosed space.
-	void checkCandidate(Subtree S);
+	void checkCandidate(const Subtree& S);
 }
 
 #endif

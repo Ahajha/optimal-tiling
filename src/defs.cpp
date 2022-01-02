@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void defs::update(Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
+void defs::update(const Subtree& S, indexedList<Graph::vertexID, Graph::numVertices>& border,
 	Graph::vertexID x, std::stack<action>& previous_actions)
 {
 	for (Graph::vertexID y : Graph::vertices[x].neighbors)
@@ -53,7 +53,7 @@ float defs::threadSeconds()
 	return (float)(clock()-start_time)/(CLOCKS_PER_SEC);
 }
 
-void defs::checkCandidate(Subtree S)
+void defs::checkCandidate(const Subtree& S)
 {
 	std::lock_guard<std::mutex> lock(IOmutex);
 	
