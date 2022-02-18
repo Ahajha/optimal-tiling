@@ -2,3 +2,4 @@ obj/*
 bin/*
 perf*
 log*.txt
+results/*
