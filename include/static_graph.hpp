@@ -15,15 +15,15 @@ template<std::size_t... dims>
 	requires sizeof...(dims) >= 1
 class static_hrp_graph
 {
-	static constexpr std::array<std::size_t, sizeof...(dims)> dims_array{ dims };
+	constexpr static std::array<std::size_t, sizeof...(dims)> dims_array{ dims };
 	
 	public:
 	
-	constexpr static auto n_vertices = minFastType<... * dims>::value;
+	constexpr static auto n_vertices = min_fast_type<... * dims>::value;
 	
-	using vertex_id = std::remove_const<decltype(numVertices)>::type;
+	using vertex_id = std::remove_const_t<decltype(n_vertices)>;
 	
-	constexpr static vertex_id no_vertex = std::numeric_limits<vertexID>::max();
+	constexpr static vertex_id no_vertex = std::numeric_limits<vertex_id>::max();
 	
 	struct vertex
 	{
@@ -102,22 +102,22 @@ class static_hrp_graph
 	// d are 0 <= d < dim_array.size()
 	[[nodiscard]] static constexpr vertex_id get_coord (std::size_t d, vertex_id vid)
 	{
-		return (vid / siz_eof_dim(d)) % dim_array[d];
+		return (vid / size_of_dim(d)) % dim_array[d];
 	}
 	
-	// Returns the vertexID of the vertex "forward" in a
+	// Returns the vertex id of the vertex "forward" in a
 	// dimension d from c, if it exists, EMPTY if not.
 	[[nodiscard]] static constexpr vertex_id forward   (std::size_t d, vertex_id vid)
 	{
 		return (get_coord(d,vid) == dim_array[d] - 1)
-			? no_vertex : vid + sizeof_dim(d);
+			? no_vertex : vid + size_of_dim(d);
 	}
 
-	// Returns the vertexID of the vertex "backward" in a
+	// Returns the vertex id of the vertex "backward" in a
 	// dimension d from c, if it exists, EMPTY if not.
 	[[nodiscard]] static constexpr vertex_id backward  (std::size_t d, vertex_id vid)
 	{
 		return (get_coord(d,vid) == 0)
-			? no_vertex : vid - sizeof_dim(d);
+			? no_vertex : vid - size_of_dim(d);
 	}
 };
