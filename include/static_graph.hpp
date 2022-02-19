@@ -12,14 +12,14 @@ HRP = Hyper-Rectangular Prism
 A static hrp graph is a hrp graph whose dimensions are known at compile time.
 */
 template<std::size_t... dims>
-	requires sizeof...(dims) >= 1
+	requires (sizeof...(dims) >= 1)
 class static_hrp_graph
 {
-	constexpr static std::array<std::size_t, sizeof...(dims)> dims_array{ dims };
+	constexpr static std::array<std::size_t, sizeof...(dims)> dims_array{ dims... };
 	
 	public:
 	
-	constexpr static auto n_vertices = min_fast_type<... * dims>::value;
+	constexpr static auto n_vertices = min_fast_type<(dims * ...)>::value;
 	
 	using vertex_id = std::remove_const_t<decltype(n_vertices)>;
 	
@@ -56,7 +56,7 @@ class static_hrp_graph
 				}
 			}
 		}
-	}
+	};
 	
 	// Index of a given vertex is its ID
 	constexpr static auto vertices = []
@@ -74,7 +74,7 @@ class static_hrp_graph
 	// Returns true iff vid is an element on the outer shell of the hypercube.
 	[[nodiscard]] static constexpr bool is_on_outer_shell(vertex_id vid)
 	{
-		return vertices[vid].neighbors.size() != dim_array.size() * 2;
+		return vertices[vid].neighbors.size() != dims_array.size() * 2;
 	}
 	
 	// Returns the number of vertices that would be in the graph if
@@ -82,7 +82,7 @@ class static_hrp_graph
 	// if d == dim_array.size(), this is just the number of vertices.
 	[[nodiscard]] static constexpr std::size_t size_of_dim(std::size_t d)
 	{
-		constexpr static size_table = []
+		constexpr auto size_table = []
 		{
 			std::array<std::size_t, dims_array.size()> table;
 			
@@ -95,21 +95,21 @@ class static_hrp_graph
 			return table;
 		}();
 		
-		return table[d];
+		return size_table[d];
 	}
 	
 	// Gets a specific dimension of the coordinate of c. Valid values of
 	// d are 0 <= d < dim_array.size()
 	[[nodiscard]] static constexpr vertex_id get_coord (std::size_t d, vertex_id vid)
 	{
-		return (vid / size_of_dim(d)) % dim_array[d];
+		return (vid / size_of_dim(d)) % dims_array[d];
 	}
 	
 	// Returns the vertex id of the vertex "forward" in a
 	// dimension d from c, if it exists, EMPTY if not.
 	[[nodiscard]] static constexpr vertex_id forward   (std::size_t d, vertex_id vid)
 	{
-		return (get_coord(d,vid) == dim_array[d] - 1)
+		return (get_coord(d,vid) == dims_array[d] - 1)
 			? no_vertex : vid + size_of_dim(d);
 	}
 
