@@ -12,7 +12,7 @@ HRP = Hyper-Rectangular Prism
 A static hrp graph is a hrp graph whose dimensions are known at compile time.
 */
 template<std::size_t... dims>
-	requires (sizeof...(dims) >= 1)
+	requires (sizeof...(dims) >= 1 && ((dims > 0) && ...))
 class static_hrp_graph
 {
 	constexpr static std::array<std::size_t, sizeof...(dims)> dims_array{ dims... };
