@@ -25,8 +25,6 @@ class static_hrp_graph
 	
 	constexpr static vertex_id no_vertex = std::numeric_limits<vertex_id>::max();
 	
-	std::array<vertex_id, n_vertices> vertices;
-	
 	// Returns the number of vertices that would be in the graph if
 	// it were truncated to a given number of dimensions Note that
 	// if d == dim_array.size(), this is just the number of vertices.
@@ -103,6 +101,8 @@ class static_hrp_graph
 			}
 		}
 	};
+	
+	std::array<vertex, n_vertices> vertices;
 	
 	[[nodiscard]] constexpr static_hrp_graph()
 	{

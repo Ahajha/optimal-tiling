@@ -1,13 +1,21 @@
 #include "static_graph.hpp"
+#include <concepts>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
 
 TEST_CASE("dimensions: {1}")
 {
-	using graph = static_hrp_graph<1>;
+	static_hrp_graph<1> graph;
 	
-	CHECK(graph::n_vertices == 1);
+	CHECK(graph.n_vertices == 1);
+	
+	CHECK(graph.vertices[0].neighbors.size() == 0);
+	
+	CHECK(graph.vertices[0].directions[0] == graph.no_vertex);
+	CHECK(graph.vertices[0].directions[1] == graph.no_vertex);
+	
+	CHECK(std::same_as<decltype(graph)::vertex_id, std::uint8_t>);
 }
 
 TEST_CASE("dimensions: {1,1}")
