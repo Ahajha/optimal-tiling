@@ -8,13 +8,17 @@
 template<class container_t, class graph_t>
 void compare_neighbors(const container_t& neighbors, const graph_t& graph)
 {
-	for (typename graph_t::vertex_id i = 0; i < graph.n_vertices; ++i)
+	CHECK(neighbors.size() == graph.vertices.size());
+	CHECK(neighbors.size() == static_cast<std::size_t>(graph.n_vertices));
+	
+	for (std::size_t i = 0; i < neighbors.size(); ++i)
 	{
 		CHECK(neighbors[i].size() == graph.vertices[i].neighbors.size());
 		
 		for (std::size_t j = 0; j < neighbors[i].size(); ++j)
 		{
-			CHECK(neighbors[i][j] == graph.vertices[i].neighbors[j]);
+			CHECK(neighbors[i][j] ==
+				static_cast<std::size_t>(graph.vertices[i].neighbors[j]));
 		}
 	}
 }
@@ -22,13 +26,17 @@ void compare_neighbors(const container_t& neighbors, const graph_t& graph)
 template<class container_t, class graph_t>
 void compare_directions(const container_t& directions, const graph_t& graph)
 {
-	for (typename graph_t::vertex_id i = 0; i < graph.n_vertices; ++i)
+	CHECK(directions.size() == graph.vertices.size());
+	CHECK(directions.size() == static_cast<std::size_t>(graph.n_vertices));
+	
+	for (std::size_t i = 0; i < directions.size(); ++i)
 	{
 		CHECK(directions[i].size() == graph.vertices[i].directions.size());
 		
 		for (std::size_t j = 0; j < directions[i].size(); ++j)
 		{
-			CHECK(directions[i][j] == graph.vertices[i].directions[j]);
+			CHECK(directions[i][j] ==
+				static_cast<std::size_t>(graph.vertices[i].directions[j]));
 		}
 	}
 }
@@ -40,16 +48,14 @@ TEST_CASE("dimensions: {1}")
 	CHECK(graph.n_vertices == 1);
 	CHECK(std::same_as<decltype(graph)::vertex_id, std::uint8_t>);
 	
-	std::array<std::vector<decltype(graph)::vertex_id>, graph.n_vertices> neighbors
+	std::vector<std::vector<std::size_t>> neighbors
 	{
-		{
-			{}
-		}
+		{}
 	};
 	
 	compare_neighbors(neighbors, graph);
 	
-	std::array<std::array<decltype(graph)::vertex_id, 2>, graph.n_vertices> directions
+	std::vector<std::vector<std::size_t>> directions
 	{
 		{
 			graph.no_vertex,
