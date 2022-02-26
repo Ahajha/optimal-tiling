@@ -4,9 +4,9 @@ project(maximum_induced_subtree LANGUAGES CXX)
 add_library(hrp_lib INTERFACE)
 
 if (MSVC)
-	add_definitions(/W4 /WX)
+	add_compile_options(/W4 /WX)
 else()
-	add_definitions(-Wall -Wextra -Wshadow -Wpedantic -Werror)
+	add_compile_options(-Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror)
 endif()
 
 target_include_directories(hrp_lib INTERFACE include)

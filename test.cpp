@@ -9,7 +9,6 @@ template<class container_t, class graph_t>
 void compare_neighbors(const container_t& neighbors, const graph_t& graph)
 {
 	CHECK(neighbors.size() == graph.vertices.size());
-	CHECK(neighbors.size() == static_cast<std::size_t>(graph.n_vertices));
 	
 	for (std::size_t i = 0; i < neighbors.size(); ++i)
 	{
@@ -27,7 +26,6 @@ template<class container_t, class graph_t>
 void compare_directions(const container_t& directions, const graph_t& graph)
 {
 	CHECK(directions.size() == graph.vertices.size());
-	CHECK(directions.size() == static_cast<std::size_t>(graph.n_vertices));
 	
 	for (std::size_t i = 0; i < directions.size(); ++i)
 	{
@@ -45,7 +43,6 @@ TEST_CASE("dimensions: {1}")
 {
 	static_hrp_graph<1> graph;
 	
-	CHECK(graph.n_vertices == 1);
 	CHECK(std::same_as<decltype(graph)::vertex_id, std::uint8_t>);
 	
 	std::vector<std::vector<std::size_t>> neighbors
@@ -68,56 +65,56 @@ TEST_CASE("dimensions: {1}")
 
 TEST_CASE("dimensions: {1,1}")
 {
-	using graph = static_hrp_graph<1>;
+	static_hrp_graph<1,1> graph;
 	
-	CHECK(graph::n_vertices == 1);
+	CHECK(graph.vertices.size() == 1);
 }
 
 TEST_CASE("dimensions: {1,1,1}")
 {
-	using graph = static_hrp_graph<1,1,1>;
+	static_hrp_graph<1,1,1> graph;
 	
-	CHECK(graph::n_vertices == 1);
+	CHECK(graph.vertices.size() == 1);
 }
 
 TEST_CASE("dimensions: {2}")
 {
-	using graph = static_hrp_graph<2>;
+	static_hrp_graph<2> graph;
 	
-	CHECK(graph::n_vertices == 2);
+	CHECK(graph.vertices.size() == 2);
 }
 
 TEST_CASE("dimensions: {2,2}")
 {
-	using graph = static_hrp_graph<2,2>;
+	static_hrp_graph<2,2> graph;
 	
-	CHECK(graph::n_vertices == 4);
+	CHECK(graph.vertices.size() == 4);
 }
 
 TEST_CASE("dimensions: {2,2,2}")
 {
-	using graph = static_hrp_graph<2,2,2>;
+	static_hrp_graph<2,2,2> graph;
 	
-	CHECK(graph::n_vertices == 8);
+	CHECK(graph.vertices.size() == 8);
 }
 
 TEST_CASE("dimensions: {2,3}")
 {
-	using graph = static_hrp_graph<2,3>;
+	static_hrp_graph<2,3> graph;
 	
-	CHECK(graph::n_vertices == 6);
+	CHECK(graph.vertices.size() == 6);
 }
 
 TEST_CASE("dimensions: {3,2,3}")
 {
-	using graph = static_hrp_graph<3,2,3>;
+	static_hrp_graph<3,2,3> graph;
 	
-	CHECK(graph::n_vertices == 18);
+	CHECK(graph.vertices.size() == 18);
 }
 
 TEST_CASE("dimensions: {4,1,2,3}")
 {
-	using graph = static_hrp_graph<4,1,2,3>;
+	static_hrp_graph<4,1,2,3> graph;
 	
-	CHECK(graph::n_vertices == 24);
+	CHECK(graph.vertices.size() == 24);
 }

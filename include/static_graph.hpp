@@ -15,24 +15,26 @@ template<std::size_t... dims>
 	requires (sizeof...(dims) >= 1 && ((dims > 0) && ...))
 class static_hrp_graph
 {
-	constexpr static std::array<std::size_t, sizeof...(dims)> dims_array{ dims... };
-	
-	public:
-	
 	constexpr static auto n_vertices = min_fast_type<(dims * ...)>::value;
 	
+	public:
 	using vertex_id = std::remove_const_t<decltype(n_vertices)>;
 	
+	private:
+	constexpr static std::array<vertex_id, sizeof...(dims)> dims_array
+		{ static_cast<vertex_id>(dims)... };
+	
+	public:
 	constexpr static vertex_id no_vertex = std::numeric_limits<vertex_id>::max();
 	
 	// Returns the number of vertices that would be in the graph if
 	// it were truncated to a given number of dimensions Note that
 	// if d == dim_array.size(), this is just the number of vertices.
-	[[nodiscard]] constexpr static std::size_t size_of_dim(std::size_t d)
+	[[nodiscard]] constexpr static vertex_id size_of_dim(std::size_t d)
 	{
 		constexpr auto size_table = []
 		{
-			std::array<std::size_t, dims_array.size()> table;
+			std::array<vertex_id, dims_array.size()> table;
 			
 			table.front() = 1;
 			for (std::size_t i = 1; i < table.size(); ++i)
