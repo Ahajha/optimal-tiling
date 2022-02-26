@@ -39,7 +39,7 @@ class static_hrp_graph
 			table.front() = 1;
 			for (std::size_t i = 1; i < table.size(); ++i)
 			{
-				table[i] = table[i - 1] * dims_array[i];
+				table[i] = table[i - 1] * dims_array[i - 1];
 			}
 			
 			return table;
@@ -87,6 +87,8 @@ class static_hrp_graph
 			// The highest dimension has the largest and smallest neighbors.
 			// The second highest dimension has the second largest
 			// and second smallest neighbors, etc.
+			//
+			// Within the same dimension, the larger index is forwards.
 			for (unsigned d = 0; d < dims_array.size(); ++d)
 			{
 				directions[dims_array.size() - d - 1] = backward(d, vid);
