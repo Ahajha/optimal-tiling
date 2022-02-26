@@ -18,13 +18,16 @@ class static_hrp_graph
 	constexpr static auto n_vertices = min_fast_type<(dims * ...)>::value;
 	
 	public:
+	
 	using vertex_id = std::remove_const_t<decltype(n_vertices)>;
 	
 	private:
+	
 	constexpr static std::array<vertex_id, sizeof...(dims)> dims_array
 		{ static_cast<vertex_id>(dims)... };
 	
 	public:
+	
 	constexpr static vertex_id no_vertex = std::numeric_limits<vertex_id>::max();
 	
 	// Returns the number of vertices that would be in the graph if
@@ -82,6 +85,9 @@ class static_hrp_graph
 		std::array<vertex_id, dims_array.size() * 2> directions;
 		
 		constexpr vertex() = default;
+		
+		private:
+		
 		[[nodiscard]] constexpr vertex(vertex_id vid)
 		{
 			// The highest dimension has the largest and smallest neighbors.
@@ -104,6 +110,8 @@ class static_hrp_graph
 				}
 			}
 		}
+		
+		friend class static_hrp_graph;
 	};
 	
 	std::array<vertex, n_vertices> vertices;
