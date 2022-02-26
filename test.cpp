@@ -1,6 +1,7 @@
 #include "static_graph.hpp"
 #include <array>
 #include <vector>
+#include <algorithm>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
@@ -8,11 +9,13 @@
 template<class container_t, class graph_t>
 void compare_neighbors(const container_t& neighbors, const graph_t& graph)
 {
-	CHECK(neighbors.size() == graph.vertices.size());
+	REQUIRE(neighbors.size() == graph.vertices.size());
 	
 	for (std::size_t i = 0; i < neighbors.size(); ++i)
 	{
 		CHECK(neighbors[i].size() == graph.vertices[i].neighbors.size());
+		
+		CHECK(std::ranges::is_sorted(graph.vertices[i].neighbors));
 		
 		for (std::size_t j = 0; j < neighbors[i].size(); ++j)
 		{
@@ -25,7 +28,7 @@ void compare_neighbors(const container_t& neighbors, const graph_t& graph)
 template<class container_t, class graph_t>
 void compare_directions(const container_t& directions, const graph_t& graph)
 {
-	CHECK(directions.size() == graph.vertices.size());
+	REQUIRE(directions.size() == graph.vertices.size());
 	
 	for (std::size_t i = 0; i < directions.size(); ++i)
 	{
@@ -42,8 +45,6 @@ void compare_directions(const container_t& directions, const graph_t& graph)
 TEST_CASE("dimensions: {1}")
 {
 	static_hrp_graph<1> graph;
-	
-	CHECK(std::same_as<decltype(graph)::vertex_id, std::uint8_t>);
 	
 	std::vector<std::vector<std::size_t>> neighbors
 	{
@@ -67,54 +68,250 @@ TEST_CASE("dimensions: {1,1}")
 {
 	static_hrp_graph<1,1> graph;
 	
-	CHECK(graph.vertices.size() == 1);
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{}
+	};
+	
+	compare_neighbors(neighbors, graph);
+	
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
 
 TEST_CASE("dimensions: {1,1,1}")
 {
 	static_hrp_graph<1,1,1> graph;
 	
-	CHECK(graph.vertices.size() == 1);
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{}
+	};
+	
+	compare_neighbors(neighbors, graph);
+	
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
 
 TEST_CASE("dimensions: {2}")
 {
 	static_hrp_graph<2> graph;
 	
-	CHECK(graph.vertices.size() == 2);
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{1},
+		{0}
+	};
+	
+	compare_neighbors(neighbors, graph);
+	
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			1
+		},
+		{
+			0,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
 
 TEST_CASE("dimensions: {2,2}")
 {
 	static_hrp_graph<2,2> graph;
 	
-	CHECK(graph.vertices.size() == 4);
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{1, 2},
+		{0, 3},
+		{0, 3},
+		{1, 2}
+	};
+	
+	compare_neighbors(neighbors, graph);
+	
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			1,
+			2
+		},
+		{
+			graph.no_vertex,
+			0,
+			graph.no_vertex,
+			3
+		},
+		{
+			0,
+			graph.no_vertex,
+			3,
+			graph.no_vertex
+		},
+		{
+			1,
+			2,
+			graph.no_vertex,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
 
-TEST_CASE("dimensions: {2,2,2}")
+TEST_CASE("dimensions: {3,2}")
 {
-	static_hrp_graph<2,2,2> graph;
+	static_hrp_graph<3,2> graph;
 	
-	CHECK(graph.vertices.size() == 8);
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{1, 3},
+		{0, 2, 4},
+		{1, 5},
+		{0, 4},
+		{1, 3, 5},
+		{2, 4}
+	};
+	
+	compare_neighbors(neighbors, graph);
+	
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			1,
+			3
+		},
+		{
+			graph.no_vertex,
+			0,
+			2,
+			4
+		},
+		{
+			graph.no_vertex,
+			1,
+			graph.no_vertex,
+			5
+		},
+		{
+			0,
+			graph.no_vertex,
+			4,
+			graph.no_vertex
+		},
+		{
+			1,
+			3,
+			5,
+			graph.no_vertex
+		},
+		{
+			2,
+			4,
+			graph.no_vertex,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
 
-TEST_CASE("dimensions: {2,3}")
+TEST_CASE("dimensions: {3,2,1}")
 {
-	static_hrp_graph<2,3> graph;
+	static_hrp_graph<3,2,1> graph;
 	
-	CHECK(graph.vertices.size() == 6);
-}
-
-TEST_CASE("dimensions: {3,2,3}")
-{
-	static_hrp_graph<3,2,3> graph;
+	std::vector<std::vector<std::size_t>> neighbors
+	{
+		{1, 3},
+		{0, 2, 4},
+		{1, 5},
+		{0, 4},
+		{1, 3, 5},
+		{2, 4}
+	};
 	
-	CHECK(graph.vertices.size() == 18);
-}
-
-TEST_CASE("dimensions: {4,1,2,3}")
-{
-	static_hrp_graph<4,1,2,3> graph;
+	compare_neighbors(neighbors, graph);
 	
-	CHECK(graph.vertices.size() == 24);
+	std::vector<std::vector<std::size_t>> directions
+	{
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex,
+			1,
+			3,
+			graph.no_vertex
+		},
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			0,
+			2,
+			4,
+			graph.no_vertex
+		},
+		{
+			graph.no_vertex,
+			graph.no_vertex,
+			1,
+			graph.no_vertex,
+			5,
+			graph.no_vertex
+		},
+		{
+			graph.no_vertex,
+			0,
+			graph.no_vertex,
+			4,
+			graph.no_vertex,
+			graph.no_vertex
+		},
+		{
+			graph.no_vertex,
+			1,
+			3,
+			5,
+			graph.no_vertex,
+			graph.no_vertex
+		},
+		{
+			graph.no_vertex,
+			2,
+			4,
+			graph.no_vertex,
+			graph.no_vertex,
+			graph.no_vertex
+		}
+	};
+	
+	compare_directions(directions, graph);
 }
