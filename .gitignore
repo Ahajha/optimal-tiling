@@ -1,5 +1,18 @@
+# Object files (to be removed)
 obj/*
+
+# Binary files (to be removed)
 bin/*
+
+# Perf profiler files
 perf*
+
+# Coz profiler files
+profile.coz
+
+# Log and result files (TBD, may relocate)
 log*.txt
 results/*
+
+# Build directory
+build/*
