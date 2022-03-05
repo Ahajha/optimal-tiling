@@ -117,5 +117,5 @@ class hrp_graph
 	
 	private:
 	// Accumulated size of each dimension
-	const std::vector<vertex_id> dim_sizes;
+	std::vector<vertex_id> dim_sizes;
 };
