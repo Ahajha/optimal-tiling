@@ -23,7 +23,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(doctest)
 
-add_executable(tests test.cpp)
+set(TEST_SOURCE
+	test/test_main.cpp
+	test/test_graph.cpp
+	test/test_subgraph.cpp
+)
+
+add_executable(tests ${TEST_SOURCE})
 
 target_link_libraries(tests PUBLIC hrp_lib doctest)
 

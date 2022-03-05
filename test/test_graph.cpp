@@ -4,7 +4,6 @@
 #include <vector>
 #include <algorithm>
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest/doctest.h"
 
 // Used to unify no_vertex between static and runtime versions
