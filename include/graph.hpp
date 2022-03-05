@@ -112,10 +112,10 @@ class hrp_graph
 	// Vertices
 	std::vector<vertex> vertices;
 
-	private:
-	
 	// Dimension array passed into constructor
-	std::vector<vertex_id> dims_array;
+	const std::vector<vertex_id> dims_array;
+	
+	private:
 	// Accumulated size of each dimension
-	std::vector<vertex_id> dim_sizes;
+	const std::vector<vertex_id> dim_sizes;
 };

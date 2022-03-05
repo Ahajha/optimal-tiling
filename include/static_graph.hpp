@@ -21,15 +21,12 @@ class static_hrp_graph
 	
 	using vertex_id = std::remove_const_t<decltype(n_vertices)>;
 	
-	private:
-	
 	constexpr static std::array<vertex_id, sizeof...(dims)> dims_array
 		{ static_cast<vertex_id>(dims)... };
 	
-	public:
-	
 	constexpr static vertex_id no_vertex = std::numeric_limits<vertex_id>::max();
 	
+	private:
 	// Returns the number of vertices that would be in the graph if
 	// it were truncated to a given number of dimensions Note that
 	// if d == dim_array.size(), this is just the number of vertices.
@@ -51,6 +48,7 @@ class static_hrp_graph
 		return size_table[d];
 	}
 	
+	public:
 	// Gets a specific dimension of the coordinate of c. Valid values of
 	// d are 0 <= d < dim_array.size()
 	[[nodiscard]] constexpr static vertex_id get_coord (std::size_t d, vertex_id vid)
