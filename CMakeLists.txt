@@ -26,7 +26,7 @@ FetchContent_MakeAvailable(doctest)
 set(TEST_SOURCE
 	test/test_main.cpp
 	test/test_graph.cpp
-	test/test_subgraph.cpp
+	test/test_subtree.cpp
 )
 
 add_executable(tests ${TEST_SOURCE})

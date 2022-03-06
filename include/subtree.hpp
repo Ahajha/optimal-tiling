@@ -49,7 +49,10 @@ class subtree : vertices_base<graph_t>
 	
 	subtree(graph_t base, graph_t::vertex_id root_id)
 		: vertices_base<graph_t>(base.vertices.size())
-		, n_induced{0}, root{root_id}, base_graph{std::move(base)} {}
+		, n_induced{0}, root{root_id}, base_graph{std::move(base)}
+	{
+		vertices_base<graph_t>::vertices[root].induced = true;
+	}
 	
 	graph_t::vertex_id cnt (graph_t::vertex_id i) const
 		{ return vertices_base<graph_t>::vertices[i].effective_degree; }
