@@ -86,4 +86,72 @@ TEST_CASE("Subtree") {
     CHECK(snapshot1 == s_subtree);
     CHECK(snapshot1 == r_subtree);
   }
+
+  SECTION("dimensions: {2,2}") {
+    static_hrp_graph<2, 2> s_graph;
+    hrp_graph r_graph{2, 2};
+
+    subtree s_subtree(s_graph, 0);
+    subtree r_subtree(r_graph, 0);
+
+    const subtree_snapshot snapshot1{
+        .cells =
+            {
+                {.count = 0, .has = true},
+                {.count = 1, .has = false},
+                {.count = 1, .has = false},
+                {.count = 0, .has = false},
+            },
+        .n_induced = 1,
+    };
+
+    CHECK(snapshot1 == s_subtree);
+    CHECK(snapshot1 == r_subtree);
+
+    REQUIRE(s_subtree.add(1));
+    REQUIRE(r_subtree.add(1));
+
+    const subtree_snapshot snapshot2{
+        .cells =
+            {
+                {.count = 1, .has = true},
+                {.count = 1, .has = true},
+                {.count = 1, .has = false},
+                {.count = 1, .has = false},
+            },
+        .n_induced = 2,
+    };
+
+    CHECK(snapshot2 == s_subtree);
+    CHECK(snapshot2 == r_subtree);
+
+    REQUIRE(s_subtree.add(2));
+    REQUIRE(r_subtree.add(2));
+
+    const subtree_snapshot snapshot3{
+        .cells =
+            {
+                {.count = 2, .has = true},
+                {.count = 1, .has = true},
+                {.count = 1, .has = true},
+                {.count = 2, .has = false},
+            },
+        .n_induced = 3,
+    };
+
+    CHECK(snapshot3 == s_subtree);
+    CHECK(snapshot3 == r_subtree);
+
+    s_subtree.rem(2);
+    r_subtree.rem(2);
+
+    CHECK(snapshot2 == s_subtree);
+    CHECK(snapshot2 == r_subtree);
+
+    s_subtree.rem(1);
+    r_subtree.rem(1);
+
+    CHECK(snapshot1 == s_subtree);
+    CHECK(snapshot1 == r_subtree);
+  }
 }
