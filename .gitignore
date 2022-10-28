@@ -16,3 +16,6 @@ results/*
 
 # Build directory
 build/*
+
+# VSCode directory
+.vscode
