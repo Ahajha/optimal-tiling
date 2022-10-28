@@ -3,12 +3,6 @@ project(maximum_induced_subtree LANGUAGES CXX)
 
 add_library(hrp_lib INTERFACE)
 
-if (MSVC)
-	add_compile_options(/W4 /WX)
-else()
-	add_compile_options(-Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror)
-endif()
-
 target_include_directories(hrp_lib INTERFACE include)
 
 target_compile_features(hrp_lib INTERFACE cxx_std_20)
@@ -16,22 +10,33 @@ target_compile_features(hrp_lib INTERFACE cxx_std_20)
 include(FetchContent)
 
 FetchContent_Declare(
-	doctest
-	GIT_REPOSITORY "https://github.com/doctest/doctest"
-	GIT_TAG "2.4.7"
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2
+  GIT_TAG        v3.1.1
 )
 
-FetchContent_MakeAvailable(doctest)
+FetchContent_Declare(
+  range-v3
+  GIT_REPOSITORY https://github.com/ericniebler/range-v3
+  GIT_TAG        0.12.0
+)
+
+FetchContent_MakeAvailable(Catch2 range-v3)
+
+if (MSVC)
+	add_compile_options(/W4 /WX)
+else()
+	add_compile_options(-Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror)
+endif()
 
 set(TEST_SOURCE
-	test/test_main.cpp
 	test/test_graph.cpp
 	test/test_subtree.cpp
 )
 
 add_executable(tests ${TEST_SOURCE})
 
-target_link_libraries(tests PUBLIC hrp_lib doctest)
+target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain range-v3::range-v3)
 
 target_compile_features(tests PRIVATE cxx_std_20)
 

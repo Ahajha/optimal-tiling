@@ -1,6 +1,6 @@
 #include "subtree.hpp"
 
-#include "doctest/doctest.h"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("dimensions: {1}") {
   static_hrp_graph<1> s_graph;

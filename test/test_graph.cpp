@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 
-#include "doctest/doctest.h"
+#include <catch2/catch_test_macros.hpp>
 
 // Used to unify no_vertex between static and runtime versions
 constexpr std::size_t global_no_vertex =
