@@ -40,3 +40,6 @@ target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain range-v3::rang
 
 target_compile_features(tests PRIVATE cxx_std_20)
 
+include(CTest)
+
+add_test(NAME tests COMMAND tests)
