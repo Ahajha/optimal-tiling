@@ -51,6 +51,9 @@ public:
       ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
   }
 
+  // Returns the base graph
+  const graph_t &base() const { return base_graph; }
+
   // Returns the number of currently induced neighbors of vertex i.
   graph_t::vertex_id cnt(graph_t::vertex_id i) const {
     return vertices_base<graph_t>::vertices[i].effective_degree;
