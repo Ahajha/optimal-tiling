@@ -34,6 +34,10 @@ set(TEST_SOURCE
 	test/test_subtree.cpp
 )
 
+add_executable(enumerate)
+target_sources(enumerate PRIVATE source/induced_subtree_enumerate.cpp)
+target_link_libraries(enumerate PRIVATE hrp_lib)
+
 add_executable(tests ${TEST_SOURCE})
 
 target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain range-v3::range-v3)
