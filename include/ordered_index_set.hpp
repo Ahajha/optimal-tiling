@@ -3,7 +3,9 @@
 #include <array>
 #include <cassert>
 #include <concepts>
+#include <limits>
 #include <optional>
+#include <ranges>
 #include <vector>
 
 /**
@@ -14,16 +16,16 @@
  * insertion in the middle, for simplicity)
  *
  * @tparam index_type The type of the indexes to use
- * @param static_size Either a size, if the size is known at compile time, or
- * std::nullopt if the size is dynamic.
+ * @param static_size 0 if the size is dynamic, otherwise the size is fixed at
+ * compile time.
  */
-template <std::integral index_type, std::optional<index_type> static_size>
+template <std::integral index_type, index_type static_size = 0>
 class ordered_index_set {
   // The null index is used as a "null" when specifying next/prev fields.
   // It must be an unused index.
   constexpr static index_type null_index =
       std::numeric_limits<index_type>::max();
-  static_assert(!static_size.has_value() || null_index != static_size.value());
+  static_assert(null_index != static_size);
 
   /**
    * @brief The members are stored in a doubly linked list. This structure is
@@ -43,20 +45,18 @@ class ordered_index_set {
   /**
    * @brief The underlying container type to store the nodes.
    */
-  using container_type =
-      std::conditional_t<static_size.has_value(),
-                         std::array<node, static_size.value()>,
-                         std::vector<node>>;
+  using container_type = std::conditional_t<static_size == 0, std::vector<node>,
+                                            std::array<node, static_size>>;
 
 public:
   /**
    * @brief Default construct an ordered index set to an empty state. Only
    * available if the size is known at compile time.
    */
-  constexpr ordered_index_set() requires(static_size.has_value()) = default;
+  constexpr ordered_index_set() requires(static_size != 0) = default;
 
-  constexpr ordered_index_set(index_type size) requires(!size.has_value())
-      : m_list(size) {}
+  constexpr ordered_index_set(index_type size) requires(static_size == 0)
+      : m_list(static_cast<std::size_t>(size)) {}
 
   /**
    * @brief Removes a specified index from the set if it exists.
@@ -93,7 +93,7 @@ public:
    * @param idx the index to insert
    */
   constexpr void push_front(index_type idx) {
-    assert(contains(idx));
+    assert(!contains(idx));
 
     m_list[idx] = {
         .is_member = true,
@@ -118,7 +118,7 @@ public:
    * @param idx the index to insert
    */
   constexpr void push_back(index_type idx) {
-    assert(contains(idx));
+    assert(!contains(idx));
 
     m_list[idx] = {
         .is_member = true,
@@ -193,14 +193,23 @@ public:
    */
   class iterator {
   public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = index_type;
+
+    /**
+     * @brief Default construct an iterator. Only defined to satisfy
+     * ranges::begin/ranges::end.
+     */
+    [[nodiscard]] constexpr iterator() = default;
+
     /**
      * @brief Constructs an ordered index set iterator
      * @param host_list The list to iterate over
      * @param start_index The first index to start iteration
      */
-    [[nodiscard]] constexpr iterator(container_type &host_list,
+    [[nodiscard]] constexpr iterator(const container_type &host_list,
                                      index_type start_index)
-        : m_current_index(start_index), m_host_list(host_list) {}
+        : m_current_index(start_index), m_host_list(&host_list) {}
 
     /**
      * @brief Advances this iterator to the next index in the list.
@@ -208,7 +217,7 @@ public:
      */
     constexpr iterator &operator++() {
       if (m_current_index != null_index)
-        m_current_index = m_host_list[m_current_index].next;
+        m_current_index = (*m_host_list)[m_current_index].next;
       return *this;
     }
 
@@ -243,25 +252,33 @@ public:
     }
 
   private:
-    index_type m_current_index;
-    const container_type &m_host_list;
+    index_type m_current_index{};
+    const container_type *m_host_list{};
   };
+
+  static_assert(std::input_iterator<iterator>);
 
   /**
    * @brief Obtains an iterator to the beginning of this list.
    * @return an iterator to the beginning of this list.
    */
-  [[nodiscard]] constexpr iterator begin() { return {m_list, m_head}; }
+  [[nodiscard]] constexpr iterator begin() const { return {m_list, m_head}; }
 
   /**
    * @brief Obtains an iterator to the end of this list.
    * @return an iterator to the end of this list.
    */
-  [[nodiscard]] constexpr iterator end() { return {m_list, null_index}; }
+  [[nodiscard]] constexpr iterator end() const { return {m_list, null_index}; }
 
 private:
-  container_type m_list;
-  index_type m_size;
-  index_type m_head;
-  index_type m_tail;
+  container_type m_list{};
+  index_type m_size{0};
+  index_type m_head{null_index};
+  index_type m_tail{null_index};
 };
+
+// Ensure ordered_index_set adheres to the input range concept.
+static_assert(std::ranges::input_range<ordered_index_set<int>>);
+static_assert(std::ranges::input_range<const ordered_index_set<int>>);
+static_assert(std::ranges::input_range<ordered_index_set<int, 10>>);
+static_assert(std::ranges::input_range<const ordered_index_set<int, 10>>);

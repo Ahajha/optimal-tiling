@@ -32,6 +32,7 @@ endif()
 set(TEST_SOURCE
 	test/test_graph.cpp
 	test/test_subtree.cpp
+  test/test_ordered_index_set.cpp
 )
 
 add_executable(enumerate)
