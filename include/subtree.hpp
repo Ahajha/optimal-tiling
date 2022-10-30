@@ -5,6 +5,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
+#include <concepts>
 #include <vector>
 
 // Each index is either enabled or disabled, and includes its
@@ -56,16 +58,19 @@ public:
 
   // Returns the number of currently induced neighbors of vertex i.
   graph_t::vertex_id cnt(graph_t::vertex_id i) const {
+    debug_bounds_check(i);
     return vertices_base<graph_t>::vertices[i].effective_degree;
   }
 
   // Returns true iff vertex i is currently induced
   bool has(graph_t::vertex_id i) const {
+    debug_bounds_check(i);
     return vertices_base<graph_t>::vertices[i].induced;
   }
 
   // Returns true iff i is not the empty vertex ID and this graph contains i.
   bool exists(graph_t::vertex_id i) const {
+    debug_bounds_check(i);
     return i != graph_t::no_vertex && has(i);
   }
 
@@ -76,6 +81,7 @@ public:
   // Returns true iff the vertex was added.
   // Currently, does not check for enclosed space.
   bool add(graph_t::vertex_id i) {
+    debug_bounds_check(i);
     // This should have exactly one neighbor, we need to validate it
     const auto sole_neighbor = sole_neighbor_of(i);
 
@@ -97,6 +103,10 @@ public:
   // Assumes i is induced and has exactly one neighbor, is intended to be
   // paired with add().
   void rem(graph_t::vertex_id i) {
+    debug_bounds_check(i);
+    assert(has(i));
+    assert(cnt(i) == 1);
+
     vertices_base<graph_t>::vertices[i].induced = false;
     --n_induced_;
 
@@ -129,6 +139,13 @@ private:
       }
     }
     return true;
+  }
+
+  void debug_bounds_check(graph_t::vertex_id i) const {
+    if constexpr (std::unsigned_integral<typename graph_t::vertex_id>) {
+      assert(0 <= i);
+    }
+    assert(i < base_graph.vertices.size());
   }
 
   // Assuming i has one neighbor, returns the ID of that neighbor.
