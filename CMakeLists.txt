@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
 project(maximum_induced_subtree LANGUAGES CXX)
 
-add_library(hrp_lib INTERFACE)
+add_library(hrp_lib STATIC)
 
-target_include_directories(hrp_lib INTERFACE include)
+target_sources(hrp_lib PRIVATE source/border.cpp)
 
-target_compile_features(hrp_lib INTERFACE cxx_std_20)
+target_include_directories(hrp_lib PUBLIC include)
+
+target_compile_features(hrp_lib PUBLIC cxx_std_20)
 
 include(FetchContent)
 
