@@ -54,8 +54,6 @@ void modified_rec(subtree_type &sub, border_type &border,
 
     sub.add(id);
 
-    history.emplace(action_type::stop, 0);
-
     update(sub, border, id, history);
     modified_rec(sub, border, history);
     restore(border, history);

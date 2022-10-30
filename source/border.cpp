@@ -1,6 +1,6 @@
 #include "border.hpp"
 
-void update(subtree_type &sub, border_type &border, vertex_id id,
+void update(const subtree_type &sub, border_type &border, const vertex_id id,
             history_type &history) {
   /*
   for each neighborhood node y of x do // increasing ordering of y's ID
@@ -14,6 +14,7 @@ void update(subtree_type &sub, border_type &border, vertex_id id,
   end for
   */
 
+  history.emplace(action_type::stop, 0);
   for (const auto neighbor : sub.base().vertices[id].neighbors) {
     if (sub.cnt(neighbor) > 1) {
       if (border.remove(neighbor)) {
