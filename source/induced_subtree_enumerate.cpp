@@ -1,4 +1,5 @@
 #include "graph.hpp"
+#include "ordered_index_set.hpp"
 #include "subtree.hpp"
 
 #include <iostream>
@@ -8,7 +9,7 @@
 using graph_type = hrp_graph;
 using vertex_id = graph_type::vertex_id;
 using subtree_type = subtree<graph_type>;
-using border_type = std::list<vertex_id>;
+using border_type = ordered_index_set<vertex_id>;
 
 enum class action_type { add, rem, stop };
 struct action {
@@ -52,13 +53,15 @@ void update(subtree_type &sub, border_type &border, vertex_id id,
   end for
   */
 
-  /*
   for (const auto neighbor : sub.base().vertices[id].neighbors) {
     if (sub.cnt(neighbor) > 1) {
-        // Removing from an arbitrary point in the list is difficult...
+      border.remove(neighbor);
+      history.emplace(action_type::rem, neighbor);
+    } else if (neighbor > sub.root() && !sub.has(neighbor)) {
+      border.push_front(neighbor);
+      history.emplace(action_type::add, neighbor);
     }
   }
-  */
 }
 
 void restore(border_type &border, history_type &history) {
@@ -111,9 +114,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
   // output the empty set - ignoring this one
 
   for (vertex_id i = 0; i < graph.vertices.size(); ++i) {
-    subtree sub{graph, i};
+    subtree_type sub{graph, i};
 
-    border_type border;
+    border_type border(static_cast<vertex_id>(graph.vertices.size()));
     history_type history;
 
     update(sub, border, i, history);
