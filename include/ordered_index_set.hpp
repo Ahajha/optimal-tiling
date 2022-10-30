@@ -50,11 +50,29 @@ class ordered_index_set {
 
 public:
   /**
-   * @brief Default construct an ordered index set to an empty state. Only
-   * available if the size is known at compile time.
+   * @brief Default construct an ordered index set to an empty state.
+   * Note: This overload is available only if the size is known at compile time.
    */
   constexpr ordered_index_set() requires(static_size != 0) = default;
 
+  /**
+   * @brief Default construct an ordered index set to an empty state.
+   * Note: Assumes that size == static_size.
+   * Note: This overload is available to provide parity with the non-static size
+   * constructor with the same parameters.
+   */
+  constexpr ordered_index_set([[maybe_unused]] index_type size) requires(
+      static_size != 0) {
+    assert(size == static_size);
+  }
+
+  /**
+   * @brief Default construct an ordered index set to an empty state.
+   * @param size One larger than the largest index that this set can hold,
+   * equivalent to the maximum number of indexes that this set can hold.
+   * Note: This overload is only available if the size is not known at compile
+   * time.
+   */
   constexpr ordered_index_set(index_type size) requires(static_size == 0)
       : m_list(static_cast<std::size_t>(size)) {}
 
