@@ -37,17 +37,17 @@ template <std::size_t... dims> struct vertices_base<static_hrp_graph<dims...>> {
 template <class graph_t> class subtree : vertices_base<graph_t> {
   graph_t::vertex_id n_induced_;
 
-  graph_t::vertex_id root;
+  graph_t::vertex_id root_;
 
   const graph_t base_graph;
 
 public:
   subtree(graph_t base, graph_t::vertex_id root_id)
       : vertices_base<graph_t>(base.vertices.size()),
-        n_induced_{1}, root{root_id}, base_graph{std::move(base)} {
-    vertices_base<graph_t>::vertices[root].induced = true;
+        n_induced_{1}, root_{root_id}, base_graph{std::move(base)} {
+    vertices_base<graph_t>::vertices[root_].induced = true;
 
-    for (const auto neighbor : base_graph.vertices[root].neighbors)
+    for (const auto neighbor : base_graph.vertices[root_].neighbors)
       ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
   }
 
@@ -104,6 +104,8 @@ public:
       --vertices_base<graph_t>::vertices[neighbor].effective_degree;
   }
 
+  graph_t::vertex_id root() const { return root_; }
+
 private:
   // Defined only for dimension 3. A vertex is valid
   // if it has at most one axis with both neighbors.
@@ -112,21 +114,21 @@ private:
       // !!!! This should be called when *considering* this vertex
       // to be induced, so this condition is really
       // if (cnt(i) != 4) return cnt(i) < 4;
-      if (cnt(i) != 3)
+      if (cnt(i) != 3) {
         return cnt(i) < 3;
+      }
 
       auto &dirs = base_graph.vertices[i].directions;
 
       // Ensure all axis have at least one neighbor
       for (auto d = 0ul; d < 3ul; ++d) {
         // 5 - d gets the opposite direction
-        if (!exists(dirs[d]) && !exists(dirs[5ul - d]))
+        if (!exists(dirs[d]) && !exists(dirs[5ul - d])) {
           return false;
+        }
       }
-      return true;
-    } else {
-      return true;
     }
+    return true;
   }
 
   // Assuming i has one neighbor, returns the ID of that neighbor.
