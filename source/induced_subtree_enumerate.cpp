@@ -1,27 +1,18 @@
-#include "graph.hpp"
-#include "ordered_index_set.hpp"
-#include "subtree.hpp"
+#include "config.hpp"
 
 #include <iostream>
 #include <list>
 #include <stack>
 
-using graph_type = hrp_graph;
-using vertex_id = graph_type::vertex_id;
-using subtree_type = subtree<graph_type>;
-using border_type = ordered_index_set<vertex_id>;
-
-enum class action_type { add, rem, stop };
-struct action {
-  action_type type;
-  vertex_id id;
-};
-
-using history_type = std::stack<action>;
-
 std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
   const auto &dims = sub.base().dims_array;
-  if (dims.size() == 2) {
+  if (dims.size() == 1) {
+    const vertex_id d1 = dims[0];
+    for (vertex_id i = 0; i < d1; ++i) {
+      stream << (sub.has(i) ? 'X' : '_');
+    }
+    stream << '\n';
+  } else if (dims.size() == 2) {
     const vertex_id d1 = dims[0];
     const vertex_id d2 = dims[1];
 
@@ -55,8 +46,9 @@ void update(subtree_type &sub, border_type &border, vertex_id id,
 
   for (const auto neighbor : sub.base().vertices[id].neighbors) {
     if (sub.cnt(neighbor) > 1) {
-      border.remove(neighbor);
-      history.emplace(action_type::rem, neighbor);
+      if (border.remove(neighbor)) {
+        history.emplace(action_type::rem, neighbor);
+      }
     } else if (neighbor > sub.root() && !sub.has(neighbor)) {
       border.push_front(neighbor);
       history.emplace(action_type::add, neighbor);
@@ -76,6 +68,25 @@ void restore(border_type &border, history_type &history) {
     end if
   end while
   */
+
+  while (true) {
+    const auto [op, id] = history.top();
+    history.pop();
+
+    switch (op) {
+    case action_type::add: {
+      border.push_front(id);
+      break;
+    }
+    case action_type::rem: {
+      border.remove(id);
+      break;
+    }
+    case action_type::stop: {
+      return;
+    }
+    }
+  }
 }
 
 void modified_rec(subtree_type &sub, border_type &border,
@@ -90,10 +101,25 @@ void modified_rec(subtree_type &sub, border_type &border,
     UPDATE(S, B(S), x, H);
     MODIFIEDREC(S, B(S), H);
     RESTORE(B(S), H);
+    S <- P(S)
   end while
   */
 
   std::cout << sub << '\n';
+
+  while (!border.empty()) {
+    auto id = border.pop_front();
+
+    sub.add(id);
+
+    history.emplace(action_type::stop, 0);
+
+    update(sub, border, id, history);
+    modified_rec(sub, border, history);
+    restore(border, history);
+
+    sub.rem(id);
+  }
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
@@ -109,7 +135,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
   end for
   */
 
-  graph_type graph{5, 5};
+  graph_type graph{3};
 
   // output the empty set - ignoring this one
 
