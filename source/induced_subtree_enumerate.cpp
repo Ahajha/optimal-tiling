@@ -49,8 +49,11 @@ void modified_rec(subtree_type &sub, border_type &border,
 
   std::cout << sub << '\n';
 
+  border_type temp(static_cast<vertex_id>(sub.base().vertices.size()));
+
   while (!border.empty()) {
     auto id = border.pop_front();
+    temp.push_back(id);
 
     sub.add(id);
 
@@ -60,6 +63,8 @@ void modified_rec(subtree_type &sub, border_type &border,
 
     sub.rem(id);
   }
+
+  std::swap(temp, border);
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
