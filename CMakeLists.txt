@@ -18,12 +18,12 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-  range-v3
-  GIT_REPOSITORY https://github.com/ericniebler/range-v3
-  GIT_TAG        0.12.0
+  cppcoro
+  GIT_REPOSITORY https://github.com/andreasbuhr/cppcoro
+  GIT_TAG        10bbcdbf2be3ad3aa56febcf4c7662d771460a99
 )
 
-FetchContent_MakeAvailable(Catch2 range-v3)
+FetchContent_MakeAvailable(Catch2 cppcoro)
 
 if (MSVC)
 	add_compile_options(/W4 /WX)
@@ -44,7 +44,7 @@ target_link_libraries(enumerate PRIVATE hrp_lib)
 
 add_executable(tests ${TEST_SOURCE})
 
-target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain range-v3::range-v3)
+target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain)
 
 target_compile_features(tests PRIVATE cxx_std_20)
 
