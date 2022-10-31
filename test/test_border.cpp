@@ -11,7 +11,7 @@ TEST_CASE("Border") {
     subtree_type sub{graph, 0};
     update(sub, border, 0, history);
 
-    CHECK(std::ranges::equal(border, std::array<vertex_id, 0>{}));
+    CHECK(border.empty());
     CHECK(history.size() == 1);
   }
 
@@ -106,16 +106,31 @@ TEST_CASE("Border") {
       CHECK(history.empty());
     }
 
-    // SECTION("Root == 1") {
-    //   subtree_type sub{graph, 1};
-    //   update(sub, border, 1, history);
-    //
-    //  CHECK(border.empty());
-    //  CHECK(history.size() == 1);
-    //
-    //  restore(border, history);
-    //  CHECK(border.empty());
-    //  CHECK(history.empty());
-    //}
+    SECTION("Root == 1") {
+      subtree_type sub{graph, 1};
+      update(sub, border, 1, history);
+
+      CHECK(std::ranges::equal(border, std::array{2}));
+      CHECK(history.size() == 2);
+
+      {
+        CHECK(border.pop_front() == 2);
+        CHECK(border.empty());
+        sub.add(2);
+        update(sub, border, 2, history);
+
+        CHECK(border.empty());
+        CHECK(history.size() == 3);
+
+        restore(border, history);
+        CHECK(border.empty());
+        CHECK(history.size() == 2);
+        sub.rem(2);
+      }
+
+      restore(border, history);
+      CHECK(border.empty());
+      CHECK(history.empty());
+    }
   }
 }

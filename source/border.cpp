@@ -24,7 +24,7 @@ void update(const subtree_type &sub, border_type &border, const vertex_id id,
         history.emplace(action_type::rem, neighbor);
       }
     } else if (neighbor > sub.root() && !sub.has(neighbor)) {
-      border.push_front(neighbor);
+      border.push_back(neighbor);
       history.emplace(action_type::add, neighbor);
     }
   }
