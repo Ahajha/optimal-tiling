@@ -1,4 +1,5 @@
 #include "border.hpp"
+#include <cassert>
 
 void update(const subtree_type &sub, border_type &border, const vertex_id id,
             history_type &history) {
@@ -13,6 +14,8 @@ void update(const subtree_type &sub, border_type &border, const vertex_id id,
     end if
   end for
   */
+
+  assert(sub.has(id));
 
   history.emplace(action_type::stop, 0);
   for (const auto neighbor : sub.base().vertices[id].neighbors) {
@@ -46,11 +49,11 @@ void restore(border_type &border, history_type &history) {
 
     switch (op) {
     case action_type::add: {
-      border.push_front(id);
+      border.remove(id);
       break;
     }
     case action_type::rem: {
-      border.remove(id);
+      border.push_front(id);
       break;
     }
     case action_type::stop: {

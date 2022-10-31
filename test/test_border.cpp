@@ -42,7 +42,7 @@ TEST_CASE("Border") {
       }
 
       restore(border, history);
-      CHECK(std::ranges::equal(border, std::array{1}));
+      CHECK(border.empty());
       CHECK(history.empty());
     }
 
@@ -96,14 +96,13 @@ TEST_CASE("Border") {
         }
 
         restore(border, history);
-        CHECK(std::ranges::equal(border, std::array{2}));
+        CHECK(border.empty());
         CHECK(history.size() == 2);
         sub.rem(1);
       }
 
-      // WHAT??
       restore(border, history);
-      CHECK(std::ranges::equal(border, std::array{1, 2}));
+      CHECK(border.empty());
       CHECK(history.empty());
     }
 

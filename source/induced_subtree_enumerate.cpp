@@ -31,7 +31,7 @@ std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
   return stream;
 }
 
-void modified_rec(subtree_type &sub, border_type &border,
+void modified_rec(subtree_type &sub, border_type border,
                   history_type &history) {
   /*
   Output S;
@@ -49,11 +49,8 @@ void modified_rec(subtree_type &sub, border_type &border,
 
   std::cout << sub << '\n';
 
-  border_type temp(static_cast<vertex_id>(sub.base().vertices.size()));
-
   while (!border.empty()) {
     auto id = border.pop_front();
-    temp.push_back(id);
 
     sub.add(id);
 
@@ -63,8 +60,6 @@ void modified_rec(subtree_type &sub, border_type &border,
 
     sub.rem(id);
   }
-
-  std::swap(temp, border);
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
@@ -80,7 +75,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
   end for
   */
 
-  graph_type graph{3};
+  graph_type graph{2, 2};
 
   // output the empty set - ignoring this one
 
