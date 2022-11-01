@@ -17,6 +17,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2 cppcoro)
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_library(hrp_lib STATIC)
 
 target_sources(hrp_lib PRIVATE
