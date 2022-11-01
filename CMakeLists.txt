@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(maximum_induced_subtree LANGUAGES CXX)
 
-add_library(hrp_lib STATIC)
-
-target_sources(hrp_lib PRIVATE source/border.cpp)
-
-target_include_directories(hrp_lib PUBLIC include)
-
-target_compile_features(hrp_lib PUBLIC cxx_std_20)
-
 include(FetchContent)
 
 FetchContent_Declare(
@@ -24,6 +16,18 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Catch2 cppcoro)
+
+add_library(hrp_lib STATIC)
+
+target_sources(hrp_lib PRIVATE
+    source/border.cpp
+    source/enumerate_subtrees.cpp)
+
+target_include_directories(hrp_lib PUBLIC include)
+
+target_compile_features(hrp_lib PUBLIC cxx_std_20)
+
+target_link_libraries(hrp_lib PUBLIC cppcoro)
 
 if (MSVC)
 	add_compile_options(/W4 /WX)

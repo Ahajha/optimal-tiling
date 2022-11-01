@@ -44,6 +44,16 @@ template <class graph_t> class subtree : vertices_base<graph_t> {
   const graph_t base_graph;
 
 public:
+  /**
+   * @brief Construct a new subtree object with no root. The root is set to an
+   * invalid state, so no operations should be performed on a subtree
+   * constructed this way.
+   * @param base The base graph that this is an induced subtree of
+   */
+  subtree(graph_t base)
+      : vertices_base<graph_t>(base.vertices.size()),
+        n_induced_{0}, root_{graph_t::no_vertex}, base_graph{std::move(base)} {}
+
   subtree(graph_t base, graph_t::vertex_id root_id)
       : vertices_base<graph_t>(base.vertices.size()),
         n_induced_{1}, root_{root_id}, base_graph{std::move(base)} {
