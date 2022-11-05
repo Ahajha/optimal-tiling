@@ -15,7 +15,14 @@ FetchContent_Declare(
   GIT_TAG        10bbcdbf2be3ad3aa56febcf4c7662d771460a99
 )
 
-FetchContent_MakeAvailable(Catch2 cppcoro)
+FetchContent_Declare(
+  range-v3
+  GIT_REPOSITORY https://github.com/ericniebler/range-v3
+  GIT_TAG        0.12.0
+)
+
+set (BUILD_TESTING OFF)
+FetchContent_MakeAvailable(Catch2 cppcoro range-v3)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -42,6 +49,7 @@ set(TEST_SOURCE
     test/test_subtree.cpp
     test/test_ordered_index_set.cpp
     test/test_border.cpp
+    test/test_enumerate.cpp
 )
 
 add_executable(enumerate)
@@ -50,7 +58,9 @@ target_link_libraries(enumerate PRIVATE hrp_lib)
 
 add_executable(tests ${TEST_SOURCE})
 
-target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain)
+target_include_directories(tests PRIVATE test/include)
+
+target_link_libraries(tests PUBLIC hrp_lib Catch2::Catch2WithMain range-v3::range-v3)
 
 target_compile_features(tests PRIVATE cxx_std_20)
 
