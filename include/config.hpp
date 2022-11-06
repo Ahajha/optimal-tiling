@@ -17,4 +17,4 @@ struct action {
   vertex_id id;
 };
 
-using history_type = std::stack<action>;
+using history_type = std::stack<action, std::vector<action>>;
