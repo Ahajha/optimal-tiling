@@ -86,8 +86,8 @@ TEST_CASE("Subtree") {
     CHECK(snapshot1 == s_subtree);
     CHECK(snapshot1 == r_subtree);
 
-    REQUIRE(s_subtree.add(1));
-    REQUIRE(r_subtree.add(1));
+    s_subtree.add(1);
+    r_subtree.add(1);
 
     const subtree_snapshot snapshot2{
         .cells =
@@ -103,8 +103,8 @@ TEST_CASE("Subtree") {
     CHECK(snapshot2 == s_subtree);
     CHECK(snapshot2 == r_subtree);
 
-    REQUIRE(s_subtree.add(2));
-    REQUIRE(r_subtree.add(2));
+    s_subtree.add(2);
+    r_subtree.add(2);
 
     const subtree_snapshot snapshot3{
         .cells =
@@ -189,8 +189,8 @@ TEST_CASE("Subtree") {
     CHECK(snapshot1 == r_subtree);
 
     // Down (to 4)
-    REQUIRE(s_subtree.add(4));
-    REQUIRE(r_subtree.add(4));
+    s_subtree.add(4);
+    r_subtree.add(4);
 
     auto snapshot2 = snapshot1;
     snapshot2.n_induced = 2;
@@ -205,11 +205,11 @@ TEST_CASE("Subtree") {
     CHECK(snapshot2 == r_subtree);
 
     // Out to the sides (3 and 5)
-    REQUIRE(s_subtree.add(3));
-    REQUIRE(r_subtree.add(3));
+    s_subtree.add(3);
+    r_subtree.add(3);
 
-    REQUIRE(s_subtree.add(5));
-    REQUIRE(r_subtree.add(5));
+    s_subtree.add(5);
+    r_subtree.add(5);
 
     auto snapshot3 = snapshot2;
     snapshot3.n_induced = 4;
@@ -227,17 +227,17 @@ TEST_CASE("Subtree") {
     CHECK(snapshot3 == r_subtree);
 
     // Add the 4 corners (0,2,6,8)
-    REQUIRE(s_subtree.add(0));
-    REQUIRE(r_subtree.add(0));
+    s_subtree.add(0);
+    r_subtree.add(0);
 
-    REQUIRE(s_subtree.add(2));
-    REQUIRE(r_subtree.add(2));
+    s_subtree.add(2);
+    r_subtree.add(2);
 
-    REQUIRE(s_subtree.add(6));
-    REQUIRE(r_subtree.add(6));
+    s_subtree.add(6);
+    r_subtree.add(6);
 
-    REQUIRE(s_subtree.add(8));
-    REQUIRE(r_subtree.add(8));
+    s_subtree.add(8);
+    r_subtree.add(8);
 
     auto snapshot4 = snapshot3;
     snapshot4.n_induced = 8;
@@ -258,17 +258,17 @@ TEST_CASE("Subtree") {
     CHECK(snapshot4 == r_subtree);
 
     // Add the 4 corners above the previous (9,11,15,17)
-    REQUIRE(s_subtree.add(9));
-    REQUIRE(r_subtree.add(9));
+    s_subtree.add(9);
+    r_subtree.add(9);
 
-    REQUIRE(s_subtree.add(11));
-    REQUIRE(r_subtree.add(11));
+    s_subtree.add(11);
+    r_subtree.add(11);
 
-    REQUIRE(s_subtree.add(15));
-    REQUIRE(r_subtree.add(15));
+    s_subtree.add(15);
+    r_subtree.add(15);
 
-    REQUIRE(s_subtree.add(17));
-    REQUIRE(r_subtree.add(17));
+    s_subtree.add(17);
+    r_subtree.add(17);
 
     auto snapshot5 = snapshot4;
     snapshot5.n_induced = 12;
@@ -296,11 +296,11 @@ TEST_CASE("Subtree") {
     CHECK(snapshot5 == r_subtree);
 
     // Add 2 opposite corners above the previous (20, 24)
-    REQUIRE(s_subtree.add(20));
-    REQUIRE(r_subtree.add(20));
+    s_subtree.add(20);
+    r_subtree.add(20);
 
-    REQUIRE(s_subtree.add(24));
-    REQUIRE(r_subtree.add(24));
+    s_subtree.add(24);
+    r_subtree.add(24);
 
     auto snapshot6 = snapshot5;
     snapshot6.n_induced = 14;
@@ -319,17 +319,17 @@ TEST_CASE("Subtree") {
     CHECK(snapshot6 == r_subtree);
 
     // Add the last 4 edges next to the previous (19, 21, 23, 25)
-    REQUIRE(s_subtree.add(19));
-    REQUIRE(r_subtree.add(19));
+    s_subtree.add(19);
+    r_subtree.add(19);
 
-    REQUIRE(s_subtree.add(21));
-    REQUIRE(r_subtree.add(21));
+    s_subtree.add(21);
+    r_subtree.add(21);
 
-    REQUIRE(s_subtree.add(23));
-    REQUIRE(r_subtree.add(23));
+    s_subtree.add(23);
+    r_subtree.add(23);
 
-    REQUIRE(s_subtree.add(25));
-    REQUIRE(r_subtree.add(25));
+    s_subtree.add(25);
+    r_subtree.add(25);
 
     auto snapshot7 = snapshot6;
     snapshot7.n_induced = 18;

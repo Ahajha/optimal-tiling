@@ -80,33 +80,27 @@ public:
 
   // Returns true iff i is not the empty vertex ID and this graph contains i.
   bool exists(graph_t::vertex_id i) const {
+    if (i != graph_t::no_vertex) {
+      return false;
+    }
     debug_bounds_check(i);
-    return i != graph_t::no_vertex && has(i);
+    return has(i);
   }
 
   // Returns the number of induced vertices.
   graph_t::vertex_id n_induced() const { return n_induced_; }
 
+  // Adds i to the current subtree.
   // Assumes i is on the border of the current graph.
-  // Returns true iff the vertex was added.
   // Currently, does not check for enclosed space.
-  bool add(graph_t::vertex_id i) {
+  void add(graph_t::vertex_id i) {
     debug_bounds_check(i);
-    // This should have exactly one neighbor, we need to validate it
-    const auto sole_neighbor = sole_neighbor_of(i);
 
-    if (validate(sole_neighbor)) {
-      vertices_base<graph_t>::vertices[i].induced = true;
-      ++n_induced_;
+    vertices_base<graph_t>::vertices[i].induced = true;
+    ++n_induced_;
 
-      for (const auto neighbor : base_graph.vertices[i].neighbors)
-        ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
-
-      return true;
-    } else {
-      // Undo changes made and report that this is invalid
-      vertices_base<graph_t>::vertices[i].induced = false;
-      return false;
+    for (const auto neighbor : base_graph.vertices[i].neighbors) {
+      ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
     }
   }
 
@@ -129,6 +123,7 @@ public:
 private:
   // Defined only for dimension 3. A vertex is valid
   // if it has at most one axis with both neighbors.
+  // TODO This is broken
   bool validate(graph_t::vertex_id i) const {
     if (base_graph.dims_array.size() == 3) {
       // !!!! This should be called when *considering* this vertex
@@ -138,7 +133,7 @@ private:
         return cnt(i) < 3;
       }
 
-      auto &dirs = base_graph.vertices[i].directions;
+      const auto &dirs = base_graph.vertices[i].directions;
 
       // Ensure all axis have at least one neighbor
       for (auto d = 0ul; d < 3ul; ++d) {
