@@ -9,6 +9,7 @@
 #include <iostream>
 #include <ranges>
 #include <set>
+#include <vector>
 
 struct subtree_snapshot {
   struct cell {
@@ -104,16 +105,23 @@ struct subtree_snapshot_compare {
   }
 };
 
-template <class graph_t>
-using subtree_set = std::set<subtree<graph_t>, subtree_compare>;
-
 using subtree_snapshot_set =
     std::set<subtree_snapshot, subtree_snapshot_compare>;
 
 template <class graph_t>
-void check_result(const subtree_set<graph_t> &subs,
-                  const subtree_snapshot_set &snaps) {
-  for (const auto &[sub, snap] : ranges::views::zip(subs, snaps)) {
+void check_result(const graph_t &graph, const subtree_snapshot_set &expected) {
+  auto result = enumerate(graph);
+
+  std::vector<subtree<graph_t>> result_vec(result.begin(), result.end());
+
+  // It is possible that it produces duplicates, which a set will not catch, so
+  // make sure the vector's size is the same as the expected set.
+  CHECK(result_vec.size() == expected.size());
+
+  std::set<subtree<graph_t>, subtree_compare> result_set(result_vec.begin(),
+                                                         result_vec.end());
+
+  for (const auto &[sub, snap] : ranges::views::zip(result_set, expected)) {
     CHECK(sub == snap);
   }
 }

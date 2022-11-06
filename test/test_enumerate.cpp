@@ -7,7 +7,7 @@
 #include <vector>
 
 TEST_CASE("Size = {1}") {
-  graph_type graph{1};
+  const graph_type graph{1};
 
   const subtree_snapshot_set expected_subtrees{
       {.cells =
@@ -22,9 +22,5 @@ TEST_CASE("Size = {1}") {
        .n_induced = 1},
   };
 
-  auto result = enumerate(graph);
-
-  subtree_set<graph_type> actual_subtrees(result.begin(), result.end());
-
-  check_result(actual_subtrees, expected_subtrees);
+  check_result(graph, expected_subtrees);
 }
