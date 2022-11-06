@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(maximum_induced_subtree LANGUAGES CXX)
 
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
 include(FetchContent)
 
 FetchContent_Declare(
