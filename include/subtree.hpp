@@ -146,7 +146,7 @@ private:
     return true;
   }
 
-  void debug_bounds_check(graph_t::vertex_id i) const {
+  void debug_bounds_check([[maybe_unused]] graph_t::vertex_id i) const {
     if constexpr (std::unsigned_integral<typename graph_t::vertex_id>) {
       assert(0 <= i);
     }
