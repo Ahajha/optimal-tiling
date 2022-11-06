@@ -4,8 +4,11 @@
 
 #include <cppcoro/recursive_generator.hpp>
 
+#include <utility>
+
 static cppcoro::recursive_generator<subtree_type>
-modified_rec(subtree_type &sub, border_type border, history_type &history) {
+modified_rec(subtree_type &sub, border_type &border, history_type &history,
+             std::vector<border_type> &border_cache) {
   /*
   Output S;
   while B(S) is not empty do
@@ -22,17 +25,22 @@ modified_rec(subtree_type &sub, border_type border, history_type &history) {
 
   co_yield sub;
 
+  auto &cache = border_cache[sub.n_induced()];
+
   while (!border.empty()) {
     auto id = border.pop_front();
+    cache.push_back(id);
 
     sub.add(id);
 
     update(sub, border, id, history);
-    co_yield modified_rec(sub, border, history);
+    co_yield modified_rec(sub, border, history, border_cache);
     restore(border, history);
 
     sub.rem(id);
   }
+
+  std::swap(cache, border);
 }
 
 cppcoro::recursive_generator<subtree_type> enumerate(graph_type graph) {
@@ -49,6 +57,13 @@ cppcoro::recursive_generator<subtree_type> enumerate(graph_type graph) {
   */
   co_yield subtree_type{graph};
 
+  // Rather than passing by value, as items are removed from the border they are
+  // placed into one of these corresponding with the size of the subtree. It is
+  // then swapped back before returning.
+  std::vector<border_type> border_cache(
+      graph.vertices.size() + 1,
+      border_type{static_cast<vertex_id>(graph.vertices.size())});
+
   for (vertex_id i = 0; i < graph.vertices.size(); ++i) {
     subtree_type sub{graph, i};
 
@@ -56,6 +71,6 @@ cppcoro::recursive_generator<subtree_type> enumerate(graph_type graph) {
     history_type history;
 
     update(sub, border, i, history);
-    co_yield modified_rec(sub, border, history);
+    co_yield modified_rec(sub, border, history, border_cache);
   }
 }
