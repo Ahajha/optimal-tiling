@@ -23,8 +23,16 @@ FetchContent_Declare(
   GIT_TAG        0.12.0
 )
 
+FetchContent_Declare(
+    lmrtfy
+    GIT_REPOSITORY https://github.com/Ahajha/LMRTFY
+    GIT_TAG        v0.2.1
+)
+
 set (BUILD_TESTING OFF)
-FetchContent_MakeAvailable(Catch2 cppcoro range-v3)
+FetchContent_MakeAvailable(Catch2 cppcoro range-v3 lmrtfy)
+
+add_compile_options(-g1 -gdwarf-2)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -38,7 +46,7 @@ target_include_directories(hrp_lib PUBLIC include)
 
 target_compile_features(hrp_lib PUBLIC cxx_std_20)
 
-target_link_libraries(hrp_lib PUBLIC cppcoro)
+target_link_libraries(hrp_lib PUBLIC cppcoro lmrtfy)
 
 if (MSVC)
 	add_compile_options(/W4 /WX)
