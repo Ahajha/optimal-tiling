@@ -2,6 +2,7 @@
 #include "enumerate_subtrees.hpp"
 
 #include <iostream>
+#include <mutex>
 
 std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
   const auto &dims = sub.base().dims_array;
@@ -30,13 +31,22 @@ std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
-  graph_type graph{3, 2, 2};
+  graph_type graph{3, 3};
 
-  vertex_id max_size = 0;
-  for (const auto &sub : enumerate(graph)) {
-    if (sub.n_induced() > max_size) {
-      max_size = sub.n_induced();
-      std::cout << "New max = " << max_size << '\n';
-    }
-  }
+  // vertex_id max_size = 0;
+  // for (const auto &sub : enumerate(graph)) {
+  //   if (sub.n_induced() > max_size) {
+  //     max_size = sub.n_induced();
+  //     std::cout << "New max = " << max_size << '\n';
+  //   }
+  // }
+
+  std::mutex iomut;
+  int count = 0;
+  enumerate_recursive(graph, [&iomut, &count](const subtree_type &sub) {
+    std::scoped_lock lock(iomut);
+    std::cout << sub << '\n';
+    ++count;
+  });
+  std::cout << "Total: " << count << '\n';
 }

@@ -6,9 +6,9 @@
 
 #include <utility>
 
-static cppcoro::recursive_generator<subtree_type>
-modified_rec(subtree_type &sub, border_type &border, history_type &history,
-             std::vector<border_type> &border_cache) {
+static subtree_generator modified_rec(subtree_type &sub, border_type &border,
+                                      history_type &history,
+                                      std::vector<border_type> &border_cache) {
   /*
   Output S;
   while B(S) is not empty do
@@ -43,7 +43,7 @@ modified_rec(subtree_type &sub, border_type &border, history_type &history,
   std::swap(cache, border);
 }
 
-cppcoro::recursive_generator<subtree_type> enumerate(graph_type graph) {
+subtree_generator enumerate(graph_type graph) {
   /*
   Number the nodes of G from 1 to |V| as ID;
   Output {};
