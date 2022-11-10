@@ -60,6 +60,7 @@ set(TEST_SOURCE
     test/test_ordered_index_set.cpp
     test/test_border.cpp
     test/test_enumerate.cpp
+    test/reference_enumerator.cpp
 )
 
 add_executable(enumerate)
