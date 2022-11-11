@@ -1,5 +1,7 @@
 #pragma once
 
+#include "enumerate_subtrees.hpp"
+#include "reference_enumerator.hpp"
 #include "subtree.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -109,14 +111,15 @@ using subtree_snapshot_set =
     std::set<subtree_snapshot, subtree_snapshot_compare>;
 
 template <class graph_t>
-void check_result(const graph_t &graph, const subtree_snapshot_set &expected) {
-  auto result = enumerate(graph);
+void check_result(const graph_t &graph, const subtree_snapshot_set &expected,
+                  const auto &&enumeration_impl) {
+  auto result = enumeration_impl(graph);
 
   std::vector<subtree<graph_t>> result_vec(result.begin(), result.end());
 
   // It is possible that it produces duplicates, which a set will not catch, so
   // make sure the vector's size is the same as the expected set.
-  CHECK(result_vec.size() == expected.size());
+  REQUIRE(result_vec.size() == expected.size());
 
   std::set<subtree<graph_t>, subtree_compare> result_set(result_vec.begin(),
                                                          result_vec.end());

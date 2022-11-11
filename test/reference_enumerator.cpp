@@ -16,7 +16,12 @@ namespace {
  */
 bool is_connected_subtree(const graph_type &graph,
                           const std::size_t vertices_bitset) {
-  // Performs a BFS on the graph. If a vertex has already been visited,
+  if (vertices_bitset == 0) {
+    // This will cause an assertion error later, so we short circuit this case.
+    return true;
+  }
+
+  // Performs a BFS on the graph.
 
   const auto induced = [&vertices_bitset](auto i) {
     return (vertices_bitset & (1ull << i)) != 0;
@@ -26,13 +31,19 @@ bool is_connected_subtree(const graph_type &graph,
   const auto start_id = *std::ranges::find_if(
       std::views::iota(0ull, graph.vertices.size()), induced);
 
+  assert(start_id < graph.vertices.size());
+
+  struct edge {
+    vertex_id to, from;
+  };
+
   // Stores the list of vertices to be searched next
-  std::queue<vertex_id> vertex_queue;
-  vertex_queue.emplace(static_cast<vertex_id>(start_id));
+  std::queue<edge> vertex_queue;
+  vertex_queue.emplace(static_cast<vertex_id>(start_id), -1);
 
   std::size_t vertices_visited_bitset = 0;
   while (!vertex_queue.empty()) {
-    const auto id = vertex_queue.front();
+    const auto [id, from] = vertex_queue.front();
     vertex_queue.pop();
 
     // If this vertex has already been visited, then we have a cycle.
@@ -44,8 +55,8 @@ bool is_connected_subtree(const graph_type &graph,
     vertices_visited_bitset |= (1ull << id);
 
     for (const auto &neighbor : graph.vertices[id].neighbors) {
-      if (induced(neighbor)) {
-        vertex_queue.emplace(neighbor);
+      if (neighbor != from && induced(neighbor)) {
+        vertex_queue.emplace(neighbor, id);
       }
     }
   }
@@ -53,40 +64,32 @@ bool is_connected_subtree(const graph_type &graph,
   return vertices_visited_bitset == vertices_bitset;
 }
 
-subtree_snapshot construct_snapshot(const graph_type &graph,
-                                    const std::size_t vertices_bitset) {
+subtree_type construct_snapshot(const graph_type &graph,
+                                const std::size_t vertices_bitset) {
   const auto n_vertices = graph.vertices.size();
 
-  subtree_snapshot snapshot;
+  subtree_type result{graph};
 
-  snapshot.n_induced = std::popcount(vertices_bitset);
   for (vertex_id id = 0; id < n_vertices; ++id) {
     if (vertices_bitset & (1ull << id)) {
-      snapshot.cells[id].has = true;
-
-      for (const auto &neighbor : graph.vertices[id].neighbors) {
-        ++snapshot.cells[neighbor].count;
-      }
+      result.add(id);
     }
   }
 
-  return snapshot;
+  return result;
 }
 } // namespace
 
 namespace testing {
-std::vector<subtree_snapshot> brute_force_enumerate(const graph_type &graph) {
-  std::vector<subtree_snapshot> result;
+cppcoro::recursive_generator<subtree_type>
+brute_force_enumerate(const graph_type &graph) {
   const auto n_vertices = graph.vertices.size();
 
   // Each iteration represents one potential induced subtree
   for (std::size_t i = 0; i < (1ull << n_vertices); ++i) {
     if (is_connected_subtree(graph, i)) {
-      // Add the result
-      result.push_back(construct_snapshot(graph, i));
+      co_yield construct_snapshot(graph, i);
     }
   }
-
-  return result;
 }
 } // namespace testing

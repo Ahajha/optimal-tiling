@@ -175,7 +175,7 @@ void enumerate_recursive(const graph_type &graph, TAction &&action) requires
     history_type history;
 
     update(sub, border, i, history);
-    pool.push(detail::modified_rec_trampoline_void<TAction>, sub, border,
-              history, action);
+    pool.push(detail::modified_rec_trampoline_void<TAction>, subtree_type(sub),
+              border_type(border), history_type(history), TAction(action));
   }
 }

@@ -1,12 +1,9 @@
-#include "enumerate_subtrees.hpp"
+#include "reference_enumerator.hpp"
 #include "subtree_test_helpers.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <algorithm>
-#include <vector>
-
-TEST_CASE("Size = {1}") {
+TEST_CASE("Reference enumerator, size = {1}") {
   const graph_type graph{1};
 
   const subtree_snapshot_set expected_subtrees{
@@ -22,10 +19,10 @@ TEST_CASE("Size = {1}") {
        .n_induced = 1},
   };
 
-  check_result(graph, expected_subtrees, enumerate);
+  check_result(graph, expected_subtrees, testing::brute_force_enumerate);
 }
 
-TEST_CASE("Size = {2}") {
+TEST_CASE("Reference enumerator, size = {2}") {
   const graph_type graph{2};
 
   const subtree_snapshot_set expected_subtrees{
@@ -51,10 +48,10 @@ TEST_CASE("Size = {2}") {
        .n_induced = 2},
   };
 
-  check_result(graph, expected_subtrees, enumerate);
+  check_result(graph, expected_subtrees, testing::brute_force_enumerate);
 }
 
-TEST_CASE("Size = {2,2}") {
+TEST_CASE("Reference enumerator, size = {2,2}") {
   const graph_type graph{2, 2};
 
   const subtree_snapshot_set expected_subtrees{
@@ -125,5 +122,5 @@ TEST_CASE("Size = {2,2}") {
        .n_induced = 3},
   };
 
-  check_result(graph, expected_subtrees, enumerate);
+  check_result(graph, expected_subtrees, testing::brute_force_enumerate);
 }

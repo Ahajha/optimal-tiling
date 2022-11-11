@@ -61,6 +61,7 @@ set(TEST_SOURCE
     test/test_border.cpp
     test/test_enumerate.cpp
     test/reference_enumerator.cpp
+    test/test_reference_enumerator.cpp
 )
 
 add_executable(enumerate)
