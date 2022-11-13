@@ -40,13 +40,15 @@ add_library(hrp_lib STATIC)
 
 target_sources(hrp_lib PRIVATE
     source/border.cpp
-    source/enumerate_subtrees.cpp)
+    source/enumerate_subtrees.cpp
+    source/permutation.cpp
+)
 
 target_include_directories(hrp_lib PUBLIC include)
 
 target_compile_features(hrp_lib PUBLIC cxx_std_20)
 
-target_link_libraries(hrp_lib PUBLIC cppcoro lmrtfy)
+target_link_libraries(hrp_lib PUBLIC cppcoro lmrtfy PRIVATE range-v3)
 
 if (MSVC)
 	add_compile_options(/W4 /WX)
@@ -62,6 +64,7 @@ set(TEST_SOURCE
     test/test_enumerate.cpp
     test/reference_enumerator.cpp
     test/test_reference_enumerator.cpp
+    test/test_permutation.cpp
 )
 
 add_executable(enumerate)
