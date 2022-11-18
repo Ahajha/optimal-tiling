@@ -4,6 +4,8 @@
 
 permutation_set::permutation_set(
     const std::span<const std::size_t> &dimensions) {
+  m_permutations.reserve(n_permutations(dimensions));
+
   // If all dimensions are 0, then there is a single vertex, which can only
   // be "exchanged" with itself.
   if (dimensions.empty()) {
@@ -39,7 +41,6 @@ permutation_set::permutation_set(
   for (const auto &sub_perm : sub_permutations.perms()) {
     // Create two reference permutations, one where the primary dimension is
     // preserved, and one where it is flipped.
-    m_permutations.reserve(m_permutations.size() + 2);
     auto &forwards = m_permutations.emplace_back(n_vertices);
     auto &backwards = m_permutations.emplace_back(n_vertices);
 
@@ -63,15 +64,15 @@ permutation_set::permutation_set(
         | ranges::view::drop_last(1)
         | ranges::view::enumerate
         | ranges::view::filter([&primary_dimension](const auto &item) {
-          return item.first == primary_dimension;
+          return item.second == primary_dimension;
         })
-        | ranges::views::transform(&ranges::get<1, std::pair<std::size_t, std::size_t>>)
+        | ranges::views::transform(&ranges::get<0, std::pair<std::size_t, std::size_t>>)
         ;
     // clang-format on
 
     const auto primary_dim_size = dimension_sizes.front();
     for (const auto index : equal_dimensions) {
-      const auto indexed_dim_size = dimension_sizes[index];
+      const auto indexed_dim_size = dimension_sizes[index + 1];
       const auto indexed_dim_height = dimensions[index];
 
       const auto create_swapped_perm = [&](const auto &base_perm) {
@@ -96,4 +97,33 @@ permutation_set::permutation_set(
       create_swapped_perm(backwards);
     }
   }
+}
+
+std::size_t permutation_set::n_permutations(
+    const std::span<const std::size_t> &dimensions) {
+
+  std::map<std::size_t, std::size_t> dim_counts;
+
+  for (const auto dim : dimensions) {
+    ++dim_counts[dim];
+  }
+
+  // Naive implementation of factorial
+  constexpr static auto factorial = [](std::size_t n) {
+    std::size_t result = 1;
+    for (std::size_t i = 2; i <= n; ++i) {
+      result *= i;
+    }
+    return result;
+  };
+
+  // Formula is 2^n * k1! * k2! * ...
+  // where k1, k2, etc. are the counts of each unique dimension, and n is the
+  // number of dimensions of size != 1.
+  const auto n_ones = ranges::count(dimensions, 1);
+  std::size_t result = 1 << (dimensions.size() - n_ones);
+  for (const auto [_, count] : dim_counts) {
+    result *= factorial(count);
+  }
+  return result;
 }

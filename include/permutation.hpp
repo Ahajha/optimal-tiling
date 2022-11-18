@@ -14,6 +14,15 @@ class permutation_set {
 public:
   permutation_set(const std::span<const std::size_t> &dimensions);
 
+  /**
+   * @brief Computes the number of permutations that a given list of dimensions
+   * has.
+   * @param dimensions the list of dimensions
+   * @return The number permutations
+   */
+  static std::size_t
+  n_permutations(const std::span<const std::size_t> &dimensions);
+
   const auto &perms() const { return m_permutations; }
 
 private:
