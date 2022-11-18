@@ -28,10 +28,18 @@ permutation_set::permutation_set(
   const auto sub_permutations =
       permutation_set(dimensions.first(dimensions.size() - 1));
 
+  // Ones provide no additional vertices, and cause complications in the
+  // algorithm. We can just omit them entirely.
+  if (primary_dimension == 1) {
+    m_permutations = sub_permutations.m_permutations;
+    return;
+  }
+
   // New permutations are constructed by extending lower dimension ones
   for (const auto &sub_perm : sub_permutations.perms()) {
     // Create two reference permutations, one where the primary dimension is
     // preserved, and one where it is flipped.
+    m_permutations.reserve(m_permutations.size() + 2);
     auto &forwards = m_permutations.emplace_back(n_vertices);
     auto &backwards = m_permutations.emplace_back(n_vertices);
 
