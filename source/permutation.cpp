@@ -14,16 +14,16 @@ permutation_set::permutation_set(
   }
 
   const auto n_vertices = ranges::fold_left(dimensions, 1, std::multiplies{});
-  const auto prev_n_vertices = n_vertices / dimensions.back();
 
-  // index i = the size of the graph after removing (i + 1) dimensions.
-  std::vector<std::size_t> dimension_sizes(dimensions.size());
-  dimension_sizes.back() = 1;
-  for (const auto index :
-       ranges::views::iota(1ull, dimensions.size()) | ranges::views::reverse) {
-    dimension_sizes[index - 1] = dimension_sizes[index] * dimensions[index];
+  // dimension_partial_products[i] = product(0..<i)(dimensions[i])
+  std::vector<std::size_t> dimension_partial_products(dimensions.size());
+  dimension_partial_products.front() = 1;
+  for (const auto index : ranges::views::iota(1ull, dimensions.size())) {
+    dimension_partial_products[index] =
+        dimension_partial_products[index - 1] * dimensions[index - 1];
   }
 
+  const auto prev_n_vertices = dimension_partial_products.back();
   const auto primary_dimension = dimensions.back();
 
   // Otherwise, get the permutation set when the primary dimension is omitted
@@ -70,10 +70,10 @@ permutation_set::permutation_set(
         ;
     // clang-format on
 
-    const auto primary_dim_size = dimension_sizes.front();
     for (const auto index : equal_dimensions) {
-      const auto indexed_dim_size = dimension_sizes[index + 1];
-      const auto indexed_dim_height = dimensions[index];
+      const auto indexed_dim_size = dimension_partial_products[index];
+      const auto indexed_dim = dimensions[index];
+      assert(dimensions[index] == primary_dimension);
 
       const auto create_swapped_perm = [&](const auto &base_perm) {
         // Start with a reference permutation
@@ -82,13 +82,13 @@ permutation_set::permutation_set(
         // For each index, 'remove' each dimension and then re-add them,
         // swapped.
         for (auto &value : new_perm) {
-          const auto primary_dim_value = value / primary_dim_size;
+          const auto primary_dim_value = value / prev_n_vertices;
           const auto indexed_dim_value =
-              (value / indexed_dim_size) % indexed_dim_height;
+              (value / indexed_dim_size) % indexed_dim;
 
-          value -= primary_dim_value * primary_dim_size +
+          value -= primary_dim_value * prev_n_vertices +
                    indexed_dim_value * indexed_dim_size;
-          value += indexed_dim_value * primary_dim_size +
+          value += indexed_dim_value * prev_n_vertices +
                    primary_dim_value * indexed_dim_size;
         }
       };
