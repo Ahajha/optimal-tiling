@@ -2,6 +2,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <range/v3/all.hpp>
+
 #include <set>
 #include <vector>
 
@@ -241,5 +243,38 @@ TEST_CASE("Permutations") {
                           {11, 9, 10, 8, 7, 5, 6, 4, 3, 1, 2, 0},
                           {11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
                       }});
+  }
+
+  SECTION("Large dims") {
+    // This doesn't enumerate the permutations manually, but just checks a few
+    // basic invariants of some larger, more complicated dimension sets.
+
+    // .first = dims, .second = expected number of permutations
+    std::vector<std::pair<std::vector<std::size_t>, std::size_t>> dim_lists{
+        {{4, 3, 4, 3}, 16 * 2 * 2}, {{3, 3, 3}, 8 * 6},
+        {{2, 2, 2, 2}, 16 * 24},    {{2, 2, 2, 2, 2}, 32 * 120},
+        {{2, 2, 2, 3}, 16 * 6},     {{3, 3, 2, 3, 3}, 32 * 24},
+        {{1, 1, 1, 1, 1}, 1},       {{1, 2, 1, 2, 1}, 4 * 2},
+    };
+
+    for (const auto &[dims, expected] : dim_lists) {
+      REQUIRE(permutation_set::n_permutations(dims) == expected);
+
+      const auto n_vertices = ranges::accumulate(dims, 1ull, std::multiplies{});
+
+      const auto perm_vec = permutation_set(dims);
+      REQUIRE(perm_vec.perms().size() == expected);
+
+      const std::set perm_set(perm_vec.perms().begin(), perm_vec.perms().end());
+      REQUIRE(perm_set.size() == expected);
+
+      // Test that all elements are accounted for
+      for (const auto &perm : perm_vec.perms()) {
+        CHECK(perm.size() == n_vertices);
+        auto perm_copy = perm;
+        ranges::sort(perm_copy);
+        CHECK(ranges::equal(perm_copy, ranges::views::iota(0ull, n_vertices)));
+      }
+    }
   }
 }
