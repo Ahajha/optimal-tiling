@@ -122,8 +122,11 @@ std::size_t permutation_set::n_permutations(
   // number of dimensions of size != 1.
   const auto n_ones = ranges::count(dimensions, 1);
   std::size_t result = 1 << (dimensions.size() - n_ones);
-  for (const auto [_, count] : dim_counts) {
-    result *= factorial(count);
+  for (const auto [n, count] : dim_counts) {
+    // Also ignore ones here
+    if (n != 1) {
+      result *= factorial(count);
+    }
   }
   return result;
 }
