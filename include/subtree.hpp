@@ -1,5 +1,6 @@
 #pragma once
 
+#include "concepts.hpp"
 #include "graph.hpp"
 #include "static_graph.hpp"
 
@@ -61,6 +62,18 @@ public:
 
     for (const auto neighbor : base_graph.vertices[root_].neighbors)
       ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
+  }
+
+  subtree(
+      graph_t base,
+      detail::range_of_convertible_to<typename graph_t::vertex_id> auto &&verts)
+      : vertices_base<graph_t>(base.vertices.size()),
+        n_induced_{0}, root_{verts.empty() ? typename graph_t::vertex_id{0}
+                                           : ranges::min(verts)},
+        base_graph{std::move(base)} {
+    for (const auto vert : verts) {
+      add(vert);
+    }
   }
 
   // Returns the base graph

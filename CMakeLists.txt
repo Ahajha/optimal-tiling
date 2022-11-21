@@ -48,7 +48,7 @@ target_include_directories(hrp_lib PUBLIC include)
 
 target_compile_features(hrp_lib PUBLIC cxx_std_20)
 
-target_link_libraries(hrp_lib PUBLIC cppcoro lmrtfy PRIVATE range-v3)
+target_link_libraries(hrp_lib PUBLIC cppcoro lmrtfy range-v3)
 
 if (MSVC)
 	add_compile_options(/W4 /WX)
