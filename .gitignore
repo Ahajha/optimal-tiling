@@ -19,3 +19,6 @@ build/*
 
 # VSCode directory
 .vscode
+
+# Cargo automatic output, this is a library so ignore
+Cargo.lock

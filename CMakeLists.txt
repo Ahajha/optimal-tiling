@@ -32,6 +32,8 @@ FetchContent_Declare(
 set (BUILD_TESTING OFF)
 FetchContent_MakeAvailable(Catch2 cppcoro range-v3 lmrtfy)
 
+add_subdirectory(rust_src)
+
 add_compile_options(-g1 -gdwarf-2)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
