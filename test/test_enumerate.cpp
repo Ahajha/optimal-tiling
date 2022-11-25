@@ -1,4 +1,5 @@
 #include "enumerate_subtrees.hpp"
+#include "permutation.hpp"
 #include "subtree_test_helpers.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -122,4 +123,21 @@ TEST_CASE("Size = {2,2}") {
   };
 
   check_result(graph, expected_subtrees, enumerate);
+}
+
+TEST_CASE("Size = {2,2}, from permutations") {
+  const graph_type graph{2, 2};
+  const std::vector<std::size_t> dims{2, 2};
+  const permutation_set perm_set{dims};
+
+  using u8 = std::uint8_t;
+
+  const subtree_set expected_subtrees{
+      {graph, std::vector<u8>{}},
+      {graph, std::vector<u8>{0}},
+      {graph, std::vector<u8>{0, 1}},
+      {graph, std::vector<u8>{0, 1, 2}},
+  };
+
+  // check_result(graph, expected_subtrees, enumerate);
 }

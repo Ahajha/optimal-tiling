@@ -19,6 +19,9 @@ template <class graph_t> struct subtree_vertex {
   // Effective degree is the number of neighbors that are induced. Note
   // that this vertex being induced has no effect on this number.
   graph_t::vertex_id effective_degree{0};
+
+  [[nodiscard]] constexpr auto
+  operator<=>(const subtree_vertex &) const = default;
 };
 
 // Use the same type of container as was used in graph_t, but with
@@ -28,12 +31,17 @@ template <class graph_t> struct vertices_base {
   std::vector<subtree_vertex<graph_t>> vertices;
 
   vertices_base(std::size_t size) : vertices(size) {}
+
+  [[nodiscard]] auto operator<=>(const vertices_base &) const = default;
 };
 
 template <std::size_t... dims> struct vertices_base<static_hrp_graph<dims...>> {
   std::array<subtree_vertex<static_hrp_graph<dims...>>, (dims * ...)> vertices;
 
   vertices_base(std::size_t) {}
+
+  [[nodiscard]] constexpr auto
+  operator<=>(const vertices_base &) const = default;
 };
 
 // Represents an induced subtree
@@ -132,6 +140,8 @@ public:
   }
 
   graph_t::vertex_id root() const { return root_; }
+
+  [[nodiscard]] auto operator<=>(const subtree &) const = default;
 
 private:
   // Defined only for dimension 3. A vertex is valid

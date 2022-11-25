@@ -110,6 +110,8 @@ struct subtree_snapshot_compare {
 using subtree_snapshot_set =
     std::set<subtree_snapshot, subtree_snapshot_compare>;
 
+using subtree_set = std::set<subtree<graph_type>>;
+
 template <class graph_t>
 void check_result(const graph_t &graph, const subtree_snapshot_set &expected,
                   const auto &&enumeration_impl) {

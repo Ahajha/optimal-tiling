@@ -50,6 +50,8 @@ public:
 
     vertex() = default;
 
+    [[nodiscard]] auto operator<=>(const vertex &) const = default;
+
   private:
     [[nodiscard]] vertex(vertex_id vid, const hrp_graph &host_graph)
         : directions(host_graph.dims_array.size() * 2) {
@@ -99,6 +101,8 @@ public:
 
   // Dimension array passed into constructor
   const std::vector<vertex_id> dims_array;
+
+  [[nodiscard]] auto operator<=>(const hrp_graph &) const = default;
 
 private:
   // Accumulated size of each dimension
