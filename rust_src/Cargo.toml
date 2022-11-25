@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 cxx = "1.0"
+itertools = "0.10"
 
 [build-dependencies]
 cxx-build = "1.0"

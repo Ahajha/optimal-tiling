@@ -2,8 +2,13 @@
 
 #include <range/v3/all.hpp>
 
+#include <hrp/src/lib.rs.h>
+
 permutation_set::permutation_set(
     const std::span<const std::size_t> &dimensions) {
+  [[maybe_unused]] const auto test_call = hrp::get_permutation_set(
+      rust::Slice(dimensions.data(), dimensions.size()));
+
   m_permutations.reserve(n_permutations(dimensions));
 
   // If all dimensions are 0, then there is a single vertex, which can only

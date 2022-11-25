@@ -23,12 +23,12 @@ add_custom_command(
     DEPENDS src/lib.rs Cargo.toml build.rs
 )
 
-add_library(permutations STATIC)
-target_sources(permutations PRIVATE ${RUST_PART_CXX})
-target_include_directories(permutations PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/cxxbridge)
-target_link_libraries(permutations INTERFACE ${RUST_PART_LIB})
+add_library(permutation_impl STATIC)
+target_sources(permutation_impl PRIVATE ${RUST_PART_CXX})
+target_include_directories(permutation_impl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/cxxbridge)
+target_link_libraries(permutation_impl INTERFACE ${RUST_PART_LIB})
 
 if (WIN32)
     # Need to link against extra libraries for the rust stdlib
-    target_link_libraries(permutations INTERFACE ws2_32 userenv bcrypt)
+    target_link_libraries(permutation_impl INTERFACE ws2_32 userenv bcrypt)
 endif()

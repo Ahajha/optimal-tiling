@@ -22,3 +22,6 @@ build/*
 
 # Cargo automatic output, this is a library so ignore
 Cargo.lock
+
+# Cargo output directory
+rust_src/target
