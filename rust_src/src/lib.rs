@@ -41,11 +41,11 @@ fn partial_products(src: &[usize]) -> Vec<usize> {
     result
 }
 
-fn get_permutation_set(dims: &[usize]) -> Vec<Vec<u32>> {
+fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
     // If all dimensions are 0, then there is a single vertex,
     // which can only be "exchanged" with itself.
     if dims.is_empty() {
-        return vec![vec![0]];
+        return vec![ffi::perm { value: vec![0] }];
     }
     // From here, it can be assumed there is at least one dimension
 
@@ -72,8 +72,12 @@ fn get_permutation_set(dims: &[usize]) -> Vec<Vec<u32>> {
 
 #[cxx::bridge(namespace = hrp)]
 mod ffi {
+    struct perm {
+        value: Vec<u32>,
+    }
     extern "Rust" {
-        fn get_permutation_set(dims: &[usize]) -> Vec<u32>;
+
+        fn get_permutation_set(dims: &[usize]) -> Vec<perm>;
 
         fn n_permutations(dims: &[usize]) -> usize;
     }
