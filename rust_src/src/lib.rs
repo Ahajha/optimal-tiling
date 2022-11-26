@@ -42,14 +42,14 @@ fn partial_products(src: &[usize]) -> Vec<usize> {
 }
 
 fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
-    // If all dimensions are 0, then there is a single vertex,
-    // which can only be "exchanged" with itself.
-    if dims.is_empty() {
-        return vec![ffi::perm { value: vec![0] }];
-    }
-    // From here, it can be assumed there is at least one dimension
-
-    let primary_dim = *dims.last().expect("There should be at least one dimension");
+    let primary_dim = match dims.last() {
+        Some(dim) => *dim,
+        // If there are no dimensions, then there is a single
+        // vertex, which can only be "exchanged" with itself.
+        None => {
+            return vec![ffi::perm { value: vec![0] }];
+        }
+    };
 
     let sub_permutations = get_permutation_set(&dims[0..dims.len() - 1]);
 
