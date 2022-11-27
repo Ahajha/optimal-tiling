@@ -49,11 +49,17 @@ fn base_perms(n_vertices: usize, primary_dim: usize, sub_perm: &[u32]) -> (Vec<u
     let mut backwards = Vec::with_capacity(n_vertices);
 
     for height in 0..primary_dim {
-        let add_height = |n: &u32| n + (height * sub_perm.len()) as u32;
+        forwards.extend(
+            sub_perm
+                .iter()
+                .map(|n: &u32| n + (height * sub_perm.len()) as u32),
+        );
 
-        forwards.extend(sub_perm.iter().map(add_height));
-
-        backwards.extend(sub_perm.iter().rev().map(add_height))
+        backwards.extend(
+            sub_perm
+                .iter()
+                .map(|n: &u32| n + ((primary_dim - height - 1) * sub_perm.len()) as u32),
+        )
     }
 
     (forwards, backwards)
