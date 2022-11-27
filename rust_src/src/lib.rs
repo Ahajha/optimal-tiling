@@ -97,6 +97,11 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
         // Create two reference permutations, one where the primary dimension is
         // preserved, and one where it is flipped.
         let (forwards, backwards) = base_perms(n_vertices, primary_dim, &sub_perm.value);
+
+        // TODO dimension swapping
+
+        result.push(ffi::perm { value: forwards });
+        result.push(ffi::perm { value: backwards });
     }
 
     result
