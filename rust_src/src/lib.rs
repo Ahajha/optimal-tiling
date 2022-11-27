@@ -65,6 +65,14 @@ fn base_perms(n_vertices: usize, primary_dim: usize, sub_perm: &[u32]) -> (Vec<u
     (forwards, backwards)
 }
 
+// Returns the coordinate of a dimension in `value` with given height and size.
+// (Height is how tall the dimension itself is, the size is the number of vertices
+//  that would present if all higher dimensions were omitted. For example, if the
+//  dimensions are [2,2,2], all heights are 2 and the sizes are 1, 2, and 4.)
+fn extract_dimension(value: u32, dim_height: usize, dim_size: u32) -> u32 {
+    (value / dim_size) % dim_height as u32
+}
+
 fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
     let primary_dim = match dims.last() {
         Some(&dim) => dim,
@@ -91,6 +99,11 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
         .last()
         .expect("partial_products should return a non-empty vector.");
 
+    let sub_n_vertices = *dim_partial_products
+        .get(dim_partial_products.len() - 2)
+        .expect("partial_products should return a vector of at least size 2.")
+        as u32;
+
     let mut result = Vec::with_capacity(n_perms);
 
     for sub_perm in sub_perms.iter() {
@@ -99,6 +112,35 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
         let (forwards, backwards) = base_perms(n_vertices, primary_dim, &sub_perm.value);
 
         // TODO dimension swapping
+
+        let equal_dims = dims
+            .iter()
+            .dropping_back(1)
+            .zip(dim_partial_products.iter())
+            .filter(|(&dim_height, _)| dim_height == primary_dim);
+
+        for (dim_height, dim_size) in equal_dims {
+            let dim_size = *dim_size as u32;
+            let create_swapped_perm = |base_perm: &[u32]| -> Vec<u32> {
+                base_perm
+                    .iter()
+                    .map(|&value| {
+                        let dim_value = extract_dimension(value, *dim_height, dim_size);
+                        let primary_dim_value = value / sub_n_vertices as u32;
+
+                        value + (dim_value * sub_n_vertices + primary_dim_value * dim_size)
+                            - (primary_dim_value * sub_n_vertices + dim_value * dim_size)
+                    })
+                    .collect()
+            };
+
+            result.push(ffi::perm {
+                value: create_swapped_perm(&forwards),
+            });
+            result.push(ffi::perm {
+                value: create_swapped_perm(&backwards),
+            });
+        }
 
         result.push(ffi::perm { value: forwards });
         result.push(ffi::perm { value: backwards });
@@ -109,6 +151,7 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
 
 #[cxx::bridge(namespace = hrp)]
 mod ffi {
+    #[derive(PartialEq, Eq, Debug)]
     struct perm {
         value: Vec<u32>,
     }
@@ -196,6 +239,57 @@ mod test {
                 vec![3, 1, 2, 0, 7, 5, 6, 4, 11, 9, 10, 8],
                 vec![11, 9, 10, 8, 7, 5, 6, 4, 3, 1, 2, 0]
             )
+        );
+    }
+
+    #[test]
+    fn test_extract_dimension() {
+        assert_eq!(extract_dimension(0, 2, 1), 0);
+        assert_eq!(extract_dimension(1, 2, 1), 1);
+        assert_eq!(extract_dimension(2, 2, 1), 0);
+        assert_eq!(extract_dimension(3, 2, 1), 1);
+        assert_eq!(extract_dimension(4, 2, 1), 0);
+        assert_eq!(extract_dimension(5, 2, 1), 1);
+        assert_eq!(extract_dimension(6, 2, 1), 0);
+        assert_eq!(extract_dimension(7, 2, 1), 1);
+
+        assert_eq!(extract_dimension(0, 2, 2), 0);
+        assert_eq!(extract_dimension(1, 2, 2), 0);
+        assert_eq!(extract_dimension(2, 2, 2), 1);
+        assert_eq!(extract_dimension(3, 2, 2), 1);
+        assert_eq!(extract_dimension(4, 2, 2), 0);
+        assert_eq!(extract_dimension(5, 2, 2), 0);
+        assert_eq!(extract_dimension(6, 2, 2), 1);
+        assert_eq!(extract_dimension(7, 2, 2), 1);
+
+        assert_eq!(extract_dimension(0, 2, 4), 0);
+        assert_eq!(extract_dimension(1, 2, 4), 0);
+        assert_eq!(extract_dimension(2, 2, 4), 0);
+        assert_eq!(extract_dimension(3, 2, 4), 0);
+        assert_eq!(extract_dimension(4, 2, 4), 1);
+        assert_eq!(extract_dimension(5, 2, 4), 1);
+        assert_eq!(extract_dimension(6, 2, 4), 1);
+        assert_eq!(extract_dimension(7, 2, 4), 1);
+    }
+
+    #[test]
+    fn test_get_permutation_set() {
+        assert_eq!(get_permutation_set(&[]), vec![ffi::perm { value: vec![0] }]);
+        assert_eq!(
+            get_permutation_set(&[1]),
+            vec![ffi::perm { value: vec![0] }]
+        );
+        assert_eq!(
+            get_permutation_set(&[1, 1]),
+            vec![ffi::perm { value: vec![0] }]
+        );
+
+        assert_eq!(
+            get_permutation_set(&[2]),
+            vec![
+                ffi::perm { value: vec![0, 1] },
+                ffi::perm { value: vec![1, 0] },
+            ]
         );
     }
 }
