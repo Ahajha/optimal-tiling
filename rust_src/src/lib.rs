@@ -107,3 +107,84 @@ mod ffi {
         fn n_permutations(dims: &[usize]) -> usize;
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_factorial() {
+        assert_eq!(factorial(0), 1);
+        assert_eq!(factorial(1), 1);
+        assert_eq!(factorial(2), 2);
+        assert_eq!(factorial(3), 6);
+        assert_eq!(factorial(4), 24);
+        assert_eq!(factorial(5), 120);
+        assert_eq!(factorial(6), 720);
+    }
+
+    #[test]
+    fn test_n_permutations() {
+        assert_eq!(n_permutations(&[]), 1);
+
+        assert_eq!(n_permutations(&[1]), 1);
+        assert_eq!(n_permutations(&[2]), 2);
+        assert_eq!(n_permutations(&[3]), 2);
+
+        assert_eq!(n_permutations(&[1, 1]), 1);
+        assert_eq!(n_permutations(&[1, 2]), 2);
+        assert_eq!(n_permutations(&[1, 3]), 2);
+        assert_eq!(n_permutations(&[2, 1]), 2);
+        assert_eq!(n_permutations(&[2, 2]), 8);
+        assert_eq!(n_permutations(&[2, 3]), 4);
+        assert_eq!(n_permutations(&[3, 1]), 2);
+        assert_eq!(n_permutations(&[3, 2]), 4);
+        assert_eq!(n_permutations(&[3, 3]), 8);
+
+        assert_eq!(n_permutations(&[1, 2, 1]), 2);
+        assert_eq!(n_permutations(&[1, 2, 2]), 8);
+        assert_eq!(n_permutations(&[1, 3, 2]), 4);
+        assert_eq!(n_permutations(&[2, 1, 2]), 8);
+        assert_eq!(n_permutations(&[2, 2, 2]), 48);
+        assert_eq!(n_permutations(&[3, 2, 2]), 16);
+        assert_eq!(n_permutations(&[2, 3, 2]), 16);
+        assert_eq!(n_permutations(&[2, 2, 3]), 16);
+        assert_eq!(n_permutations(&[3, 3, 1]), 8);
+    }
+
+    #[test]
+    fn test_partial_products() {
+        assert_eq!(partial_products(&[]), vec![1]);
+        assert_eq!(partial_products(&[4]), vec![1, 4]);
+        assert_eq!(partial_products(&[5, 3, 2]), vec![1, 5, 15, 30]);
+        assert_eq!(partial_products(&[1, 1, 1, 1, 1]), vec![1, 1, 1, 1, 1, 1]);
+        assert_eq!(
+            partial_products(&[9, 1, 5, 1, 2, 1, 3]),
+            vec![1, 9, 9, 45, 45, 90, 90, 270]
+        );
+    }
+
+    #[test]
+    fn test_base_perms() {
+        assert_eq!(base_perms(2, 2, &[0]), (vec![0, 1], vec![1, 0]));
+        assert_eq!(
+            base_perms(4, 2, &[0, 1]),
+            (vec![0, 1, 2, 3], vec![2, 3, 0, 1])
+        );
+        assert_eq!(
+            base_perms(6, 3, &[0, 1]),
+            (vec![0, 1, 2, 3, 4, 5], vec![4, 5, 2, 3, 0, 1])
+        );
+        assert_eq!(
+            base_perms(8, 2, &[3, 1, 2, 0]),
+            (vec![3, 1, 2, 0, 7, 5, 6, 4], vec![7, 5, 6, 4, 3, 1, 2, 0])
+        );
+        assert_eq!(
+            base_perms(12, 3, &[3, 1, 2, 0]),
+            (
+                vec![3, 1, 2, 0, 7, 5, 6, 4, 11, 9, 10, 8],
+                vec![11, 9, 10, 8, 7, 5, 6, 4, 3, 1, 2, 0]
+            )
+        );
+    }
+}
