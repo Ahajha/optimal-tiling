@@ -73,17 +73,17 @@ fn extract_dimension(value: u32, dim_height: usize, dim_size: u32) -> u32 {
     (value / dim_size) % dim_height as u32
 }
 
-fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
+fn get_permutation_set_impl(dims: &[usize]) -> Vec<Vec<u32>> {
     let primary_dim = match dims.last() {
         Some(&dim) => dim,
         // If there are no dimensions, then there is a single
         // vertex, which can only be "exchanged" with itself.
         None => {
-            return vec![ffi::perm { value: vec![0] }];
+            return vec![vec![0]];
         }
     };
 
-    let sub_perms = get_permutation_set(&dims[0..dims.len() - 1]);
+    let sub_perms = get_permutation_set_impl(&dims[0..dims.len() - 1]);
 
     // Ones provide no additional vertices, and cause complications in the
     // algorithm. We can just omit them entirely.
@@ -109,10 +109,11 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
     for sub_perm in sub_perms.iter() {
         // Create two reference permutations, one where the primary dimension is
         // preserved, and one where it is flipped.
-        let (forwards, backwards) = base_perms(n_vertices, primary_dim, &sub_perm.value);
+        let (forwards, backwards) = base_perms(n_vertices, primary_dim, &sub_perm);
 
-        // TODO dimension swapping
-
+        // Then, for each dimension with the same length as the primary dimension
+        // (other than the primary dimension itself), create a new permutation that
+        // swaps that dimension with the primary.
         let equal_dims = dims
             .iter()
             .dropping_back(1)
@@ -134,19 +135,24 @@ fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
                     .collect()
             };
 
-            result.push(ffi::perm {
-                value: create_swapped_perm(&forwards),
-            });
-            result.push(ffi::perm {
-                value: create_swapped_perm(&backwards),
-            });
+            result.push(create_swapped_perm(&forwards));
+            result.push(create_swapped_perm(&backwards));
         }
 
-        result.push(ffi::perm { value: forwards });
-        result.push(ffi::perm { value: backwards });
+        result.push(forwards);
+        result.push(backwards);
     }
 
     result
+}
+
+// Due to limitations with cxx, we cannot return Vec<Vec<u32>> directly.
+// To get around this, we wrap the inner Vec in a single-member struct.
+fn get_permutation_set(dims: &[usize]) -> Vec<ffi::perm> {
+    get_permutation_set_impl(dims)
+        .into_iter()
+        .map(|value| ffi::perm { value })
+        .collect()
 }
 
 #[cxx::bridge(namespace = hrp)]
@@ -164,6 +170,8 @@ mod ffi {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -272,24 +280,116 @@ mod test {
         assert_eq!(extract_dimension(7, 2, 4), 1);
     }
 
+    fn as_set(v: Vec<Vec<u32>>) -> HashSet<Vec<u32>> {
+        v.into_iter().collect()
+    }
+
     #[test]
     fn test_get_permutation_set() {
-        assert_eq!(get_permutation_set(&[]), vec![ffi::perm { value: vec![0] }]);
+        assert_eq!(get_permutation_set_impl(&[]), vec![vec![0]]);
+        assert_eq!(get_permutation_set_impl(&[1]), vec![vec![0]]);
+        assert_eq!(get_permutation_set_impl(&[1, 1]), vec![vec![0]]);
+
+        assert_eq!(get_permutation_set_impl(&[2]), vec![vec![0, 1], vec![1, 0]]);
         assert_eq!(
-            get_permutation_set(&[1]),
-            vec![ffi::perm { value: vec![0] }]
+            get_permutation_set_impl(&[2, 1]),
+            vec![vec![0, 1], vec![1, 0]]
         );
         assert_eq!(
-            get_permutation_set(&[1, 1]),
-            vec![ffi::perm { value: vec![0] }]
+            get_permutation_set_impl(&[1, 2]),
+            vec![vec![0, 1], vec![1, 0]]
+        );
+        assert_eq!(
+            get_permutation_set_impl(&[1, 2, 1]),
+            vec![vec![0, 1], vec![1, 0]]
         );
 
         assert_eq!(
-            get_permutation_set(&[2]),
-            vec![
-                ffi::perm { value: vec![0, 1] },
-                ffi::perm { value: vec![1, 0] },
-            ]
+            as_set(get_permutation_set_impl(&[2, 2])),
+            as_set(vec![
+                vec![0, 1, 2, 3],
+                vec![0, 2, 1, 3],
+                vec![1, 0, 3, 2],
+                vec![2, 0, 3, 1],
+                vec![1, 3, 0, 2],
+                vec![2, 3, 0, 1],
+                vec![3, 1, 2, 0],
+                vec![3, 2, 1, 0],
+            ])
+        );
+
+        assert_eq!(
+            as_set(get_permutation_set_impl(&[3, 2])),
+            as_set(vec![
+                vec![0, 1, 2, 3, 4, 5],
+                vec![3, 4, 5, 0, 1, 2],
+                vec![2, 1, 0, 5, 4, 3],
+                vec![5, 4, 3, 2, 1, 0],
+            ])
+        );
+
+        assert_eq!(
+            as_set(get_permutation_set_impl(&[2, 3])),
+            as_set(vec![
+                vec![0, 1, 2, 3, 4, 5],
+                vec![4, 5, 2, 3, 0, 1],
+                vec![1, 0, 3, 2, 5, 4],
+                vec![5, 4, 3, 2, 1, 0],
+            ])
+        );
+
+        assert_eq!(
+            as_set(get_permutation_set_impl(&[2, 2, 2])),
+            as_set(vec![
+                vec![0, 1, 2, 3, 4, 5, 6, 7], // Base
+                vec![0, 1, 4, 5, 2, 3, 6, 7], //
+                vec![0, 2, 1, 3, 4, 6, 5, 7], //
+                vec![0, 2, 4, 6, 1, 3, 5, 7], //
+                vec![0, 4, 1, 5, 2, 6, 3, 7], //
+                vec![0, 4, 2, 6, 1, 5, 3, 7], //
+                vec![1, 0, 3, 2, 5, 4, 7, 6], // Reverse dim 0
+                vec![1, 0, 5, 4, 3, 2, 7, 6], //
+                vec![1, 3, 0, 2, 5, 7, 4, 6], //
+                vec![1, 3, 5, 7, 0, 2, 4, 6], //
+                vec![1, 5, 0, 4, 3, 7, 2, 6], //
+                vec![1, 5, 3, 7, 0, 4, 2, 6], //
+                vec![2, 0, 3, 1, 6, 4, 7, 5], //
+                vec![2, 0, 6, 4, 3, 1, 7, 5], //
+                vec![2, 3, 0, 1, 6, 7, 4, 5], // Reverse dim 1
+                vec![2, 3, 6, 7, 0, 1, 4, 5], //
+                vec![2, 6, 0, 4, 3, 7, 1, 5], //
+                vec![2, 6, 3, 7, 0, 4, 1, 5], //
+                vec![3, 1, 2, 0, 7, 5, 6, 4], //
+                vec![3, 1, 7, 5, 2, 0, 6, 4], //
+                vec![3, 2, 1, 0, 7, 6, 5, 4], // Reverse dim 0, 1
+                vec![3, 2, 7, 6, 1, 0, 5, 4], //
+                vec![3, 7, 1, 5, 2, 6, 0, 4], //
+                vec![3, 7, 2, 6, 1, 5, 0, 4], //
+                vec![4, 0, 5, 1, 6, 2, 7, 3], //
+                vec![4, 0, 6, 2, 5, 1, 7, 3], //
+                vec![4, 5, 0, 1, 6, 7, 2, 3], //
+                vec![4, 5, 6, 7, 0, 1, 2, 3], // Reverse dim 2
+                vec![4, 6, 0, 2, 5, 7, 1, 3], //
+                vec![4, 6, 5, 7, 0, 2, 1, 3], //
+                vec![5, 1, 4, 0, 7, 3, 6, 2], //
+                vec![5, 1, 7, 3, 4, 0, 6, 2], //
+                vec![5, 4, 1, 0, 7, 6, 3, 2], //
+                vec![5, 4, 7, 6, 1, 0, 3, 2], // Reverse dim 0, 1
+                vec![5, 7, 1, 3, 4, 6, 0, 2], //
+                vec![5, 7, 4, 6, 1, 3, 0, 2], //
+                vec![6, 2, 4, 0, 7, 3, 5, 1], //
+                vec![6, 2, 7, 3, 4, 0, 5, 1], //
+                vec![6, 4, 2, 0, 7, 5, 3, 1], //
+                vec![6, 4, 7, 5, 2, 0, 3, 1], //
+                vec![6, 7, 2, 3, 4, 5, 0, 1], //
+                vec![6, 7, 4, 5, 2, 3, 0, 1], // Reverse dim 0, 2
+                vec![7, 3, 5, 1, 6, 2, 4, 0], //
+                vec![7, 3, 6, 2, 5, 1, 4, 0], //
+                vec![7, 5, 3, 1, 6, 4, 2, 0], //
+                vec![7, 5, 6, 4, 3, 1, 2, 0], //
+                vec![7, 6, 3, 2, 5, 4, 1, 0], //
+                vec![7, 6, 5, 4, 3, 2, 1, 0], // Reverse dim 0, 1, 2
+            ])
         );
     }
 }
