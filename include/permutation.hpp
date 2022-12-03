@@ -1,7 +1,6 @@
 #pragma once
 
-#include "config.hpp"
-
+#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -27,5 +26,6 @@ public:
 
 private:
   // TODO: MDspan + Single contiguous vector?
-  std::vector<std::vector<vertex_id>> m_permutations;
+  // TODO: Need to avoid a circular reference with subgraph
+  std::vector<std::vector<std::uint32_t>> m_permutations;
 };

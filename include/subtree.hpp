@@ -2,12 +2,14 @@
 
 #include "concepts.hpp"
 #include "graph.hpp"
+#include "permutation.hpp"
 #include "static_graph.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <concepts>
+#include <span>
 #include <vector>
 
 // Each index is either enabled or disabled, and includes its
@@ -45,7 +47,7 @@ template <std::size_t... dims> struct vertices_base<static_hrp_graph<dims...>> {
 };
 
 // Represents an induced subtree
-template <class graph_t> class subtree : vertices_base<graph_t> {
+template <class graph_t> class subtree : public vertices_base<graph_t> {
   graph_t::vertex_id n_induced_;
 
   graph_t::vertex_id root_;
@@ -141,7 +143,19 @@ public:
 
   graph_t::vertex_id root() const { return root_; }
 
-  [[nodiscard]] auto operator<=>(const subtree &) const = default;
+  [[nodiscard]] auto operator<=>(const subtree &other) const {
+    return this->vertices <=> other.vertices;
+  }
+
+  subtree apply_permutation(
+      const std::span<const typename graph_t::vertex_id> perm) const {
+    subtree result{base_graph};
+    result.n_induced_ = n_induced_;
+    for (std::size_t i = 0; i < this->vertices.size(); ++i) {
+      result.vertices[perm[i]] = this->vertices[i];
+    }
+    return result;
+  }
 
 private:
   // Defined only for dimension 3. A vertex is valid

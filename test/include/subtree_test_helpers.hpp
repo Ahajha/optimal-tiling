@@ -130,3 +130,21 @@ void check_result(const graph_t &graph, const subtree_snapshot_set &expected,
     CHECK(sub == snap);
   }
 }
+
+template <class graph_t>
+void check_result(const graph_t &graph, const subtree_set &expected,
+                  const auto &&enumeration_impl) {
+  auto result = enumeration_impl(graph);
+
+  std::vector<subtree<graph_t>> result_vec(result.begin(), result.end());
+
+  // It is possible that it produces duplicates, which a set will not catch, so
+  // make sure the vector's size is the same as the expected set.
+  REQUIRE(result_vec.size() == expected.size());
+
+  subtree_set result_set(result_vec.begin(), result_vec.end());
+
+  for (const auto &[sub, snap] : ranges::views::zip(result_set, expected)) {
+    CHECK(sub == snap);
+  }
+}

@@ -132,12 +132,20 @@ TEST_CASE("Size = {2,2}, from permutations") {
 
   using u8 = std::uint8_t;
 
-  const subtree_set expected_subtrees{
+  const subtree_set expected_subtree_bases{
       {graph, std::vector<u8>{}},
       {graph, std::vector<u8>{0}},
       {graph, std::vector<u8>{0, 1}},
       {graph, std::vector<u8>{0, 1, 2}},
   };
 
-  // check_result(graph, expected_subtrees, enumerate);
+  subtree_set expected_subtrees;
+
+  for (const auto &base : expected_subtree_bases) {
+    for (const auto &perm : perm_set.perms()) {
+      expected_subtrees.emplace(base.apply_permutation(perm));
+    }
+  }
+
+  check_result(graph, expected_subtrees, enumerate);
 }
