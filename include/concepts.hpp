@@ -1,7 +1,7 @@
 #pragma once
 
 #include <concepts>
-#include <range/v3/all.hpp>
+#include <range/v3/range.hpp>
 
 namespace detail {
 template <class Range, class Item>

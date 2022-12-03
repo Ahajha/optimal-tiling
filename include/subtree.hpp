@@ -5,6 +5,8 @@
 #include "permutation.hpp"
 #include "static_graph.hpp"
 
+#include <range/v3/algorithm/min.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
