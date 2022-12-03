@@ -1,7 +1,10 @@
 #pragma once
 
+#include "concepts.hpp"
+
 #include <cstdint>
 #include <numeric>
+#include <span>
 #include <vector>
 
 /*
@@ -78,7 +81,8 @@ public:
     friend class hrp_graph;
   };
 
-  [[nodiscard]] hrp_graph(std::initializer_list<vertex_id> dims)
+  [[nodiscard]] hrp_graph(
+      const detail::range_of_convertible_to<vertex_id> auto &dims)
       : dims_array(dims.begin(), dims.end()), dim_sizes(dims_array.size() + 1) {
     dim_sizes.front() = 1;
     for (std::size_t i = 1; i < dim_sizes.size(); ++i) {
@@ -91,7 +95,11 @@ public:
     }
   }
 
-  // Returns true iff vid is an element on the outer shell of the hypercube.
+  [[nodiscard]] hrp_graph(std::initializer_list<vertex_id> dims)
+      : hrp_graph{std::span{dims.begin(), dims.end()}} {}
+
+  // Returns true iff vid is an element on the outer shell of the
+  // hypercube.
   [[nodiscard]] bool is_on_outer_shell(vertex_id vid) const {
     return vertices[vid].neighbors.size() != dims_array.size() * 2;
   }
