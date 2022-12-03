@@ -62,7 +62,7 @@ void modified_rec_parallel_void(std::vector<border_type> &border_cache,
     sub.add(id);
 
     update(sub, border, id, history);
-    if (pool.n_idle() < pool.size()) {
+    if (pool.n_idle() > 0) {
       // Thread is available
       // Border cache and pool will be passed by the thread dispatcher.
       // Not sure about ownership here... Might need to work on LMRTFY. For now,
