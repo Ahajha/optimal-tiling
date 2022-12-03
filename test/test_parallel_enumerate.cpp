@@ -18,7 +18,7 @@ using vertex_list_list = std::vector<std::vector<std::uint8_t>>;
  * permutations are considered equivalent.
  */
 void check_parallel_result(const std::span<const std::size_t> dims,
-                           const vertex_list &expected_subtree_bases) {
+                           const vertex_list_list &expected_subtree_bases) {
   const graph_type graph{dims};
   const permutation_set perm_set{dims};
 
@@ -63,6 +63,67 @@ TEST_CASE("Size = {2,2}, parallel") {
       {0},
       {0, 1},
       {0, 1, 2},
+  };
+
+  check_parallel_result(dims, expected_subtree_bases);
+}
+
+TEST_CASE("Size = {2,3}, parallel") {
+  const std::vector<std::size_t> dims{2, 3};
+
+  const vertex_list_list expected_subtree_bases{
+      {},
+      {0},
+      {2},
+      {0, 1},
+      {0, 2},
+      {2, 3},
+      {0, 1, 2},
+      {0, 2, 3},
+      {0, 2, 4},
+      {0, 1, 2, 4},
+      {0, 2, 3, 4},
+      {0, 2, 3, 5},
+      {0, 1, 2, 4, 5},
+  };
+
+  check_parallel_result(dims, expected_subtree_bases);
+}
+
+TEST_CASE("Size = {3,3}, parallel") {
+  const std::vector<std::size_t> dims{3, 3};
+
+  const vertex_list_list expected_subtree_bases{
+      {},
+      {0},
+      {1},
+      {4},
+      {0, 1},
+      {1, 4},
+      {0, 1, 2},
+      {0, 1, 3},
+      {0, 1, 4},
+      {1, 3, 4},
+      {1, 4, 7},
+      {0, 1, 2, 3},
+      {0, 1, 2, 4},
+      {0, 1, 4, 5},
+      {0, 1, 4, 7},
+      {1, 3, 4, 5},
+      {0, 1, 2, 3, 5},
+      {0, 1, 2, 3, 6},
+      {0, 1, 2, 4, 7},
+      {0, 1, 4, 5, 7},
+      {0, 1, 4, 5, 8},
+      {0, 1, 4, 7, 8},
+      {0, 2, 3, 4, 5},
+      {1, 3, 4, 5, 7},
+      {0, 1, 2, 3, 6, 7},
+      {0, 1, 2, 4, 6, 7},
+      {0, 1, 4, 5, 6, 7},
+      {0, 1, 2, 3, 5, 6, 7},
+      {0, 1, 2, 3, 5, 6, 8},
+      {0, 1, 2, 4, 6, 7, 8},
   };
 
   check_parallel_result(dims, expected_subtree_bases);
