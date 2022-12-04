@@ -125,112 +125,114 @@ TEST_CASE("Size = {2,2}") {
   check_result(graph, expected_subtrees, enumerate);
 }
 
-TEST_CASE("Size = {2,2}, from permutations") {
-  const graph_type graph{2, 2};
-  const std::vector<std::size_t> dims{2, 2};
+using vertex_list_list = std::vector<std::vector<std::uint8_t>>;
+
+void check_result(const std::span<const std::size_t> dims,
+                  const vertex_list_list &expected_subtree_bases) {
+  const graph_type graph{dims};
   const permutation_set perm_set{dims};
 
-  using u8 = std::uint8_t;
-
-  const subtree_set expected_subtree_bases{
-      {graph, std::vector<u8>{}},
-      {graph, std::vector<u8>{0}},
-      {graph, std::vector<u8>{0, 1}},
-      {graph, std::vector<u8>{0, 1, 2}},
-  };
-
-  subtree_set expected_subtrees;
+  subtree_set expected;
 
   for (const auto &base : expected_subtree_bases) {
+    const subtree_type base_sub{graph, base};
     for (const auto &perm : perm_set.perms()) {
-      expected_subtrees.emplace(base.apply_permutation(perm));
+      expected.emplace(base_sub.apply_permutation(perm));
     }
   }
 
-  check_result(graph, expected_subtrees, enumerate);
+  subtree_set result;
+  for (const auto &sub : enumerate(graph)) {
+    result.emplace(sub);
+  }
+
+  CHECK(expected.size() == result.size());
+
+  std::vector<subtree_type> res_min_exp, exp_min_res;
+  ranges::set_difference(result, expected, std::back_inserter(res_min_exp));
+  ranges::set_difference(expected, result, std::back_inserter(res_min_exp));
+
+  for (const auto &sub : res_min_exp) {
+    UNSCOPED_INFO(sub);
+  }
+  CHECK(res_min_exp.empty());
+
+  for (const auto &sub : exp_min_res) {
+    UNSCOPED_INFO(sub);
+  }
+  CHECK(exp_min_res.empty());
+}
+
+TEST_CASE("Size = {2,2}, from permutations") {
+  const std::vector<std::size_t> dims{2, 2};
+
+  const vertex_list_list expected_subtree_bases{
+      {},
+      {0},
+      {0, 1},
+      {0, 1, 2},
+  };
+
+  check_result(dims, expected_subtree_bases);
 }
 
 TEST_CASE("Size = {2,3}, from permutations") {
-  const graph_type graph{2, 3};
   const std::vector<std::size_t> dims{2, 3};
-  const permutation_set perm_set{dims};
 
-  using u8 = std::uint8_t;
-
-  const subtree_set expected_subtree_bases{
-      {graph, std::vector<u8>{}},
-      {graph, std::vector<u8>{0}},
-      {graph, std::vector<u8>{2}},
-      {graph, std::vector<u8>{0, 1}},
-      {graph, std::vector<u8>{0, 2}},
-      {graph, std::vector<u8>{2, 3}},
-      {graph, std::vector<u8>{0, 1, 2}},
-      {graph, std::vector<u8>{0, 2, 3}},
-      {graph, std::vector<u8>{0, 2, 4}},
-      {graph, std::vector<u8>{0, 1, 2, 4}},
-      {graph, std::vector<u8>{0, 2, 3, 4}},
-      {graph, std::vector<u8>{0, 2, 3, 5}},
-      {graph, std::vector<u8>{0, 1, 2, 4, 5}},
+  const vertex_list_list expected_subtree_bases{
+      {},
+      {0},
+      {2},
+      {0, 1},
+      {0, 2},
+      {2, 3},
+      {0, 1, 2},
+      {0, 2, 3},
+      {0, 2, 4},
+      {0, 1, 2, 4},
+      {0, 2, 3, 4},
+      {0, 2, 3, 5},
+      {0, 1, 2, 4, 5},
   };
 
-  subtree_set expected_subtrees;
-
-  for (const auto &base : expected_subtree_bases) {
-    for (const auto &perm : perm_set.perms()) {
-      expected_subtrees.emplace(base.apply_permutation(perm));
-    }
-  }
-
-  check_result(graph, expected_subtrees, enumerate);
+  check_result(dims, expected_subtree_bases);
 }
 
 TEST_CASE("Size = {3,3}, from permutations") {
-  const graph_type graph{3, 3};
   const std::vector<std::size_t> dims{3, 3};
-  const permutation_set perm_set{dims};
 
-  using u8 = std::uint8_t;
-
-  const subtree_set expected_subtree_bases{
-      {graph, std::vector<u8>{}},
-      {graph, std::vector<u8>{0}},
-      {graph, std::vector<u8>{1}},
-      {graph, std::vector<u8>{4}},
-      {graph, std::vector<u8>{0, 1}},
-      {graph, std::vector<u8>{1, 4}},
-      {graph, std::vector<u8>{0, 1, 2}},
-      {graph, std::vector<u8>{0, 1, 3}},
-      {graph, std::vector<u8>{0, 1, 4}},
-      {graph, std::vector<u8>{1, 3, 4}},
-      {graph, std::vector<u8>{1, 4, 7}},
-      {graph, std::vector<u8>{0, 1, 2, 3}},
-      {graph, std::vector<u8>{0, 1, 2, 4}},
-      {graph, std::vector<u8>{0, 1, 4, 5}},
-      {graph, std::vector<u8>{0, 1, 4, 7}},
-      {graph, std::vector<u8>{1, 3, 4, 5}},
-      {graph, std::vector<u8>{0, 1, 2, 3, 5}},
-      {graph, std::vector<u8>{0, 1, 2, 3, 6}},
-      {graph, std::vector<u8>{0, 1, 2, 4, 7}},
-      {graph, std::vector<u8>{0, 1, 4, 5, 7}},
-      {graph, std::vector<u8>{0, 1, 4, 5, 8}},
-      {graph, std::vector<u8>{0, 1, 4, 7, 8}},
-      {graph, std::vector<u8>{0, 2, 3, 4, 5}},
-      {graph, std::vector<u8>{1, 3, 4, 5, 7}},
-      {graph, std::vector<u8>{0, 1, 2, 3, 6, 7}},
-      {graph, std::vector<u8>{0, 1, 2, 4, 6, 7}},
-      {graph, std::vector<u8>{0, 1, 4, 5, 6, 7}},
-      {graph, std::vector<u8>{0, 1, 2, 3, 5, 6, 7}},
-      {graph, std::vector<u8>{0, 1, 2, 3, 5, 6, 8}},
-      {graph, std::vector<u8>{0, 1, 2, 4, 6, 7, 8}},
+  const vertex_list_list expected_subtree_bases{
+      {},
+      {0},
+      {1},
+      {4},
+      {0, 1},
+      {1, 4},
+      {0, 1, 2},
+      {0, 1, 3},
+      {0, 1, 4},
+      {1, 3, 4},
+      {1, 4, 7},
+      {0, 1, 2, 3},
+      {0, 1, 2, 4},
+      {0, 1, 4, 5},
+      {0, 1, 4, 7},
+      {1, 3, 4, 5},
+      {0, 1, 2, 3, 5},
+      {0, 1, 2, 3, 6},
+      {0, 1, 2, 4, 7},
+      {0, 1, 4, 5, 7},
+      {0, 1, 4, 5, 8},
+      {0, 1, 4, 7, 8},
+      {0, 2, 3, 4, 5},
+      {1, 3, 4, 5, 7},
+      {0, 1, 2, 3, 6, 7},
+      {0, 1, 2, 4, 6, 7},
+      {0, 1, 4, 5, 6, 7},
+      {0, 1, 2, 3, 5, 6, 7},
+      {0, 1, 2, 3, 5, 6, 8},
+      {0, 1, 2, 4, 6, 7, 8},
   };
 
-  subtree_set expected_subtrees;
-
-  for (const auto &base : expected_subtree_bases) {
-    for (const auto &perm : perm_set.perms()) {
-      expected_subtrees.emplace(base.apply_permutation(perm));
-    }
-  }
-
-  check_result(graph, expected_subtrees, enumerate);
+  check_result(dims, expected_subtree_bases);
 }
