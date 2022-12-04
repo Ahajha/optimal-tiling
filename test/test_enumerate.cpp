@@ -314,4 +314,14 @@ TEST_CASE("Enumeration") {
 
     check_result(dims, expected_subtree_bases);
   }
+
+  SECTION("Dims = {2,2,2}") {
+    const std::vector<std::size_t> dims{2, 2, 2};
+
+    const vertex_list_list expected_subtree_bases{
+        {}, {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 4}, {0, 1, 2, 5}, {0, 1, 2, 5, 6},
+    };
+
+    check_result(dims, expected_subtree_bases);
+  }
 }
