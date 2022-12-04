@@ -16,14 +16,6 @@ using thread_pool_type =
     lmrtfy::thread_pool<lmrtfy::per_thread<std::vector<border_type>>,
                         lmrtfy::pool_ref>;
 
-// subtree_generator
-// modified_rec_parallel(std::vector<border_type> &border_cache,
-//                       thread_pool_type &pool, subtree_type &sub,
-//                       border_type &border, history_type &history,
-//                       std::invocable<subtree_type> auto &action) {
-//   //
-// }
-
 /*
 Modified rec needs:
 border cache& (for normal operation) (from thread pool)
@@ -115,44 +107,166 @@ void modified_rec_trampoline_void(std::vector<border_type> &border_cache,
   modified_rec_parallel_void(border_cache, pool, sub, border, history, action);
 }
 
+////////////////////// NONVOID /////////////////////////
+
+template <class TAction>
+using futures_container_type =
+    std::vector<std::future<std::invoke_result_t<TAction, subtree_generator>>>;
+
+// Forward declaration - the trampoline and the implementation are mutually
+// recursive
+template <std::invocable<subtree_generator> TAction>
+auto modified_rec_trampoline_nonvoid(
+    std::vector<border_type> &border_cache, thread_pool_type &pool,
+    subtree_type sub, border_type border, history_type history, TAction action,
+    futures_container_type<TAction> &intermediate_futures,
+    std::mutex &futures_mut)
+    -> std::invoke_result_t<TAction, subtree_generator>;
+
+template <std::invocable<subtree_generator> TAction>
+subtree_generator modified_rec_parallel_nonvoid(
+    std::vector<border_type> &border_cache, thread_pool_type &pool,
+    subtree_type &sub, border_type &border, history_type &history,
+    TAction &action, futures_container_type<TAction> &intermediate_futures,
+    std::mutex &futures_mut) {
+  co_yield sub;
+
+  auto &cache = border_cache[sub.n_induced()];
+
+  while (!border.empty()) {
+    auto id = border.pop_front();
+    cache.push_back(id);
+
+    sub.add(id);
+
+    update(sub, border, id, history);
+    if (pool.n_idle() > 0) {
+      // Thread is available
+      // Border cache and pool will be passed by the thread dispatcher.
+      // Not sure about ownership here... Might need to work on LMRTFY. For now,
+      // make the copies verbose. // TODO
+      auto fut =
+          pool.push(modified_rec_trampoline_nonvoid<TAction>, subtree_type(sub),
+                    border_type(border), history_type(history), TAction(action),
+                    std::ref(intermediate_futures), std::ref(futures_mut));
+
+      std::scoped_lock lock{futures_mut};
+      intermediate_futures.push_back(std::move(fut));
+    } else {
+      // Continue on this thread
+      co_yield modified_rec_parallel_nonvoid(border_cache, pool, sub, border,
+                                             history, action,
+                                             intermediate_futures, futures_mut);
+    }
+    restore(border, history);
+
+    sub.rem(id);
+  }
+
+  std::swap(cache, border);
+}
+
+template <std::invocable<subtree_generator> TAction>
+auto modified_rec_trampoline_nonvoid(
+    std::vector<border_type> &border_cache, thread_pool_type &pool,
+    subtree_type sub, border_type border, history_type history, TAction action,
+    futures_container_type<TAction> &intermediate_futures,
+    std::mutex &futures_mut)
+    -> std::invoke_result_t<TAction, subtree_generator> {
+  // The first time this cache is used, it will be empty. In that case, set it
+  // up, otherwise leave it as is.
+  if (border_cache.empty()) {
+    const auto n_vertices = sub.base_verts().size();
+    border_cache.resize(n_vertices + 1,
+                        border_type{static_cast<vertex_id>(n_vertices)});
+  }
+
+  // Maintain a clean copy for future branches
+  const auto actioncopy = action;
+
+  return action(modified_rec_parallel_nonvoid(border_cache, pool, sub, border,
+                                              history, actioncopy));
+}
+
+// A first pass action needs to be invoked on a subtree_generator, as well as
+// copied to other threads.
+template <class T>
+concept valid_first_pass_action =
+    std::invocable<T, subtree_generator> && std::copyable<T>;
+
 } // namespace detail
 
 /**
- * @brief Enumerates all induced subtrees of a graph and applies an action on
- * the range it produces, in parallel.
+ * @brief Enumerates all induced subtrees of a graph and applies two passes of
+ * actions on the range it produces, in parallel.
  * @param graph The graph to enumerate over.
- * @param action The action to perfom on the range of induced subtrees. Should
- * either be stateless or thread-safe.
- * @return The result of applying action to all the induced subtrees of graph.
+ * @param first_pass_action The action to perfom on the range of induced
+ * subtrees produced by each thread. A copy of the original will be passed to
+ * each thread and will be invoked in a thread-safe manner.
+ * @param second_pass_action The action to perform on the range of objects
+ * produced by running the first pass action on each thread. Will be invoked in
+ * a thread-safe manner.
+ * @return The result of the second pass action
  */
-/*
-subtree_type
-enumerate_recursive(const graph_type &graph,
-                    std::invocable<subtree_generator> auto &&action) requires
-    std::same_as<std::invoke_result_t<decltype(action), subtree_generator>,
-                 subtree_type> {
-  // lmrtfy::thread_pool pool;
-  //
-  // co_yield subtree_type{graph};
-  //
-  //// Rather than passing by value, as items are removed from the border they
-  /// are / placed into one of these corresponding with the size of the subtree.
-  /// It is / then swapped back before returning.
-  // std::vector<border_type> border_cache(
-  //     graph.vertices.size() + 1,
-  //     border_type{static_cast<vertex_id>(graph.vertices.size())});
-  //
-  // for (vertex_id i = 0; i < graph.vertices.size(); ++i) {
-  //  subtree_type sub{graph, i};
-  //
-  //  border_type border(static_cast<vertex_id>(graph.vertices.size()));
-  //  history_type history;
-  //
-  //  update(sub, border, i, history);
-  //  co_yield modified_rec(sub, border, history, border_cache);
-  //}
+template <detail::valid_first_pass_action TFirstPassAction,
+          std::invocable<std::vector<
+              std::invoke_result_t<TFirstPassAction, subtree_generator>>>
+              TSecondPassAction>
+auto enumerate_recursive(const graph_type &graph, TFirstPassAction action1,
+                         TSecondPassAction action2)
+    -> std::invoke_result_t<std::vector<
+        std::invoke_result_t<TFirstPassAction, subtree_generator>>> {
+  const auto action1copy = action1;
+
+  using intermediate_result_type =
+      std::invoke_result_t<TFirstPassAction, subtree_generator>;
+
+  detail::futures_container_type<TFirstPassAction> intermediate_futures;
+
+  {
+    std::mutex futures_mut;
+
+    lmrtfy::thread_pool pool;
+
+    // Rather than passing by value, as items are removed from the border they
+    // are placed into one of these corresponding with the size of the subtree.
+    // It is then swapped back before returning.
+    std::vector<border_type> border_cache(
+        graph.vertices.size() + 1,
+        border_type{static_cast<vertex_id>(graph.vertices.size())});
+
+    for (vertex_id i = 0; i < graph.vertices.size(); ++i) {
+      subtree_type sub{graph, i};
+
+      border_type border(static_cast<vertex_id>(graph.vertices.size()));
+      history_type history;
+
+      update(sub, border, i, history);
+      auto fut =
+          pool.push(detail::modified_rec_trampoline_nonvoid<TFirstPassAction>,
+                    subtree_type(sub), border_type(border),
+                    history_type(history), TFirstPassAction(action1copy),
+                    std::ref(intermediate_futures), std::ref(futures_mut));
+
+      std::scoped_lock lock{futures_mut};
+      intermediate_futures.push_back(std::move(fut));
+    }
+
+    // Wait for all threads to finish.
+  }
+  // At this point, it is safe to access the container of futures.
+
+  // Await all futures and return the result of the second pass
+  std::vector<intermediate_result_type> intermediate_results{
+      action1(subtree_type{graph}),
+  };
+
+  for (const auto &fut : intermediate_futures) {
+    intermediate_results.push_back(fut.get());
+  }
+
+  return action2(intermediate_results);
 }
-*/
 
 /**
  * @brief Enumerates all induced subtrees of a graph and applies an action on
