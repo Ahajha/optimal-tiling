@@ -64,9 +64,7 @@ set(TEST_SOURCE
     test/test_ordered_index_set.cpp
     test/test_border.cpp
     test/test_enumerate.cpp
-    test/test_parallel_enumerate.cpp
     test/reference_enumerator.cpp
-    test/test_reference_enumerator.cpp
     test/test_permutation.cpp
 )
 

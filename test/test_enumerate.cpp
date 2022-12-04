@@ -1,5 +1,6 @@
 #include "enumerate_subtrees.hpp"
 #include "permutation.hpp"
+#include "reference_enumerator.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <range/v3/all.hpp>
@@ -68,11 +69,31 @@ void compare_subtree_sets(const subtree_set &result,
  */
 void test_all_enumeration_algorithms(const graph_type &graph,
                                      const subtree_set &expected) {
+  SECTION("Reference (brute force) enumeration algorithm") {
+    subtree_set result;
+    for (const auto &sub : testing::brute_force_enumerate(graph)) {
+      result.emplace(sub);
+    }
+
+    compare_subtree_sets(result, expected);
+  }
+
   SECTION("Single threaded enumeration algorithm") {
     subtree_set result;
     for (const auto &sub : enumerate(graph)) {
       result.emplace(sub);
     }
+
+    compare_subtree_sets(result, expected);
+  }
+
+  SECTION("Parallel enumeration algorithm") {
+    subtree_set result;
+    std::mutex m;
+    enumerate_recursive(graph, [&m, &result](const subtree_type &sub) {
+      std::scoped_lock lock{m};
+      result.emplace(sub);
+    });
 
     compare_subtree_sets(result, expected);
   }
