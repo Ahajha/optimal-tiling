@@ -24,7 +24,7 @@ template <class graph_t>
 std::ostream &operator<<(std::ostream &stream, const subtree<graph_t> &sub) {
   stream << "n_induced = " << static_cast<int>(sub.n_induced()) << '\n';
   stream << "cells:\n" << std::boolalpha;
-  for (std::size_t i = 0; i < sub.base().vertices.size(); ++i) {
+  for (std::size_t i = 0; i < sub.base_verts().size(); ++i) {
     stream << "Vertex " << i
            << ", has = " << sub.has(static_cast<graph_t::vertex_id>(i))
            << ", count = "

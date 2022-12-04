@@ -4,8 +4,10 @@
 #include <iostream>
 #include <mutex>
 
+namespace detail {
+constexpr std::array<std::size_t, 3> dims{2, 3, 7};
+
 std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
-  const auto &dims = sub.base().dims_array;
   if (dims.size() == 1) {
     const vertex_id d1 = dims[0];
     for (vertex_id i = 0; i < d1; ++i) {
@@ -30,8 +32,10 @@ std::ostream &operator<<(std::ostream &stream, const subtree_type &sub) {
   return stream;
 }
 
+} // namespace detail
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
-  graph_type graph{3, 3};
+  graph_type graph{detail::dims};
 
   // vertex_id max_size = 0;
   // for (const auto &sub : enumerate(graph)) {
@@ -41,12 +45,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) {
   //   }
   // }
 
-  std::mutex iomut;
-  int count = 0;
-  enumerate_recursive(graph, [&iomut, &count](const subtree_type &sub) {
-    std::scoped_lock lock(iomut);
-    std::cout << sub << '\n';
-    ++count;
+  // std::mutex iomut;
+  std::atomic_int count = 0;
+  enumerate_recursive(graph, [&count](const subtree_type &) {
+    // std::scoped_lock lock(iomut);
+    // std::cout << sub << '\n';
+    //++count;
   });
   std::cout << "Total: " << count << '\n';
 }

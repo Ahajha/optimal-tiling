@@ -54,7 +54,7 @@ template <class graph_t> class subtree : public vertices_base<graph_t> {
 
   graph_t::vertex_id root_;
 
-  const graph_t base_graph;
+  const std::span<const typename graph_t::vertex> base_graph_verts;
 
 public:
   /**
@@ -63,33 +63,40 @@ public:
    * constructed this way.
    * @param base The base graph that this is an induced subtree of
    */
-  subtree(graph_t base)
-      : vertices_base<graph_t>(base.vertices.size()),
-        n_induced_{0}, root_{graph_t::no_vertex}, base_graph{std::move(base)} {}
+  subtree(const graph_t &base)
+      : vertices_base<graph_t>(base.vertices.size()), n_induced_{0},
+        root_{graph_t::no_vertex}, base_graph_verts{base.vertices} {}
 
-  subtree(graph_t base, graph_t::vertex_id root_id)
+  subtree(const std::span<const typename graph_t::vertex> base_verts)
+      : vertices_base<graph_t>(base_verts.size()),
+        n_induced_{0}, root_{graph_t::no_vertex}, base_graph_verts{base_verts} {
+  }
+
+  subtree(const graph_t &base, graph_t::vertex_id root_id)
       : vertices_base<graph_t>(base.vertices.size()),
-        n_induced_{1}, root_{root_id}, base_graph{std::move(base)} {
+        n_induced_{1}, root_{root_id}, base_graph_verts{base.vertices} {
     vertices_base<graph_t>::vertices[root_].induced = true;
 
-    for (const auto neighbor : base_graph.vertices[root_].neighbors)
+    for (const auto neighbor : base_graph_verts[root_].neighbors)
       ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
   }
 
   subtree(
-      graph_t base,
+      const graph_t &base,
       detail::range_of_convertible_to<typename graph_t::vertex_id> auto &&verts)
       : vertices_base<graph_t>(base.vertices.size()),
         n_induced_{0}, root_{verts.empty() ? typename graph_t::vertex_id{0}
                                            : ranges::min(verts)},
-        base_graph{std::move(base)} {
+        base_graph_verts{base.vertices} {
     for (const auto vert : verts) {
       add(vert);
     }
   }
 
   // Returns the base graph
-  const graph_t &base() const { return base_graph; }
+  const std::span<const typename graph_t::vertex> base_verts() const {
+    return base_graph_verts;
+  }
 
   // Returns the number of currently induced neighbors of vertex i.
   graph_t::vertex_id cnt(graph_t::vertex_id i) const {
@@ -124,7 +131,7 @@ public:
     vertices_base<graph_t>::vertices[i].induced = true;
     ++n_induced_;
 
-    for (const auto neighbor : base_graph.vertices[i].neighbors) {
+    for (const auto neighbor : base_graph_verts[i].neighbors) {
       ++vertices_base<graph_t>::vertices[neighbor].effective_degree;
     }
   }
@@ -139,7 +146,7 @@ public:
     vertices_base<graph_t>::vertices[i].induced = false;
     --n_induced_;
 
-    for (const auto neighbor : base_graph.vertices[i].neighbors)
+    for (const auto neighbor : base_graph_verts[i].neighbors)
       --vertices_base<graph_t>::vertices[neighbor].effective_degree;
   }
 
@@ -151,7 +158,7 @@ public:
 
   subtree apply_permutation(
       const std::span<const typename graph_t::vertex_id> perm) const {
-    subtree result{base_graph};
+    subtree result{base_graph_verts};
     result.n_induced_ = n_induced_;
     for (std::size_t i = 0; i < this->vertices.size(); ++i) {
       result.vertices[perm[i]] = this->vertices[i];
@@ -164,24 +171,24 @@ private:
   // if it has at most one axis with both neighbors.
   // TODO This is broken
   bool validate(graph_t::vertex_id i) const {
-    if (base_graph.dims_array.size() == 3) {
-      // !!!! This should be called when *considering* this vertex
-      // to be induced, so this condition is really
-      // if (cnt(i) != 4) return cnt(i) < 4;
-      if (cnt(i) != 3) {
-        return cnt(i) < 3;
-      }
-
-      const auto &dirs = base_graph.vertices[i].directions;
-
-      // Ensure all axis have at least one neighbor
-      for (auto d = 0ul; d < 3ul; ++d) {
-        // 5 - d gets the opposite direction
-        if (!exists(dirs[d]) && !exists(dirs[5ul - d])) {
-          return false;
-        }
-      }
-    }
+    // if (base_graph.dims_array.size() == 3) {
+    //   // !!!! This should be called when *considering* this vertex
+    //   // to be induced, so this condition is really
+    //   // if (cnt(i) != 4) return cnt(i) < 4;
+    //   if (cnt(i) != 3) {
+    //     return cnt(i) < 3;
+    //   }
+    //
+    //  const auto &dirs = base_graph.vertices[i].directions;
+    //
+    //  // Ensure all axis have at least one neighbor
+    //  for (auto d = 0ul; d < 3ul; ++d) {
+    //    // 5 - d gets the opposite direction
+    //    if (!exists(dirs[d]) && !exists(dirs[5ul - d])) {
+    //      return false;
+    //    }
+    //  }
+    //}
     return true;
   }
 
@@ -194,7 +201,7 @@ private:
 
   // Assuming i has one neighbor, returns the ID of that neighbor.
   graph_t::vertex_id sole_neighbor_of(graph_t::vertex_id i) {
-    return *std::ranges::find_if(base_graph.vertices[i].neighbors,
+    return *std::ranges::find_if(base_graph_verts[i].neighbors,
                                  [this](auto vid) { return has(vid); });
   }
 

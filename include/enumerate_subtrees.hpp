@@ -100,7 +100,7 @@ void modified_rec_trampoline_void(std::vector<border_type> &border_cache,
   // The first time this cache is used, it will be empty. In that case, set it
   // up, otherwise leave it as is.
   if (border_cache.empty()) {
-    const auto n_vertices = sub.base().vertices.size();
+    const auto n_vertices = sub.base_verts().size();
     border_cache.resize(n_vertices + 1,
                         border_type{static_cast<vertex_id>(n_vertices)});
   }

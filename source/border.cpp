@@ -18,7 +18,7 @@ void update(const subtree_type &sub, border_type &border, const vertex_id id,
   assert(sub.has(id));
 
   history.emplace(action_type::stop, 0);
-  for (const auto neighbor : sub.base().vertices[id].neighbors) {
+  for (const auto neighbor : sub.base_verts()[id].neighbors) {
     if (sub.cnt(neighbor) > 1) {
       if (border.remove(neighbor)) {
         history.emplace(action_type::rem, neighbor);
