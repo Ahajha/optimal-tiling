@@ -141,124 +141,126 @@ void check_result(const std::span<const std::size_t> dims,
   test_all_enumeration_algorithms(graph, expected);
 }
 
-TEST_CASE("Size = {1}") {
-  const std::vector<std::size_t> dims{1};
+TEST_CASE("Enumeration") {
+  SECTION("Dims = {1}") {
+    const std::vector<std::size_t> dims{1};
 
-  const vertex_list_list expected_subtrees{
-      {},
-      {0},
-  };
+    const vertex_list_list expected_subtrees{
+        {},
+        {0},
+    };
 
-  check_exact_result(dims, expected_subtrees);
-}
+    check_exact_result(dims, expected_subtrees);
+  }
 
-TEST_CASE("Size = {2}") {
-  const std::vector<std::size_t> dims{2};
+  SECTION("Dims = {2}") {
+    const std::vector<std::size_t> dims{2};
 
-  const vertex_list_list expected_subtrees{
-      {},
-      {0},
-      {1},
-      {0, 1},
-  };
+    const vertex_list_list expected_subtrees{
+        {},
+        {0},
+        {1},
+        {0, 1},
+    };
 
-  check_exact_result(dims, expected_subtrees);
-}
+    check_exact_result(dims, expected_subtrees);
+  }
 
-TEST_CASE("Size = {2,2}") {
-  const std::vector<std::size_t> dims{2, 2};
+  SECTION("Dims = {2,2}") {
+    const std::vector<std::size_t> dims{2, 2};
 
-  // clang-format off
-  const vertex_list_list expected_subtrees{
-      {},
-      {0},
-      {1},
-      {2},
-      {3},
-      {0, 1},
-      {0, 2},
-      {1, 3},
-      {2, 3},
-      {0, 1, 2},
-      {0, 1, 3},
-      {0, 2, 3},
-      {1, 2, 3},
-  };
-  // clang-format on
+    // clang-format off
+    const vertex_list_list expected_subtrees{
+        {},
+        {0},
+        {1},
+        {2},
+        {3},
+        {0, 1},
+        {0, 2},
+        {1, 3},
+        {2, 3},
+        {0, 1, 2},
+        {0, 1, 3},
+        {0, 2, 3},
+        {1, 2, 3},
+    };
+    // clang-format on
 
-  check_exact_result(dims, expected_subtrees);
-}
+    check_exact_result(dims, expected_subtrees);
+  }
 
-TEST_CASE("Size = {2,2}, from permutations") {
-  const std::vector<std::size_t> dims{2, 2};
+  SECTION("Dims = {2,2}, from permutations") {
+    const std::vector<std::size_t> dims{2, 2};
 
-  const vertex_list_list expected_subtree_bases{
-      {},
-      {0},
-      {0, 1},
-      {0, 1, 2},
-  };
+    const vertex_list_list expected_subtree_bases{
+        {},
+        {0},
+        {0, 1},
+        {0, 1, 2},
+    };
 
-  check_result(dims, expected_subtree_bases);
-}
+    check_result(dims, expected_subtree_bases);
+  }
 
-TEST_CASE("Size = {2,3}, from permutations") {
-  const std::vector<std::size_t> dims{2, 3};
+  SECTION("Dims = {2,3}, from permutations") {
+    const std::vector<std::size_t> dims{2, 3};
 
-  const vertex_list_list expected_subtree_bases{
-      {},
-      {0},
-      {2},
-      {0, 1},
-      {0, 2},
-      {2, 3},
-      {0, 1, 2},
-      {0, 2, 3},
-      {0, 2, 4},
-      {0, 1, 2, 4},
-      {0, 2, 3, 4},
-      {0, 2, 3, 5},
-      {0, 1, 2, 4, 5},
-  };
+    const vertex_list_list expected_subtree_bases{
+        {},
+        {0},
+        {2},
+        {0, 1},
+        {0, 2},
+        {2, 3},
+        {0, 1, 2},
+        {0, 2, 3},
+        {0, 2, 4},
+        {0, 1, 2, 4},
+        {0, 2, 3, 4},
+        {0, 2, 3, 5},
+        {0, 1, 2, 4, 5},
+    };
 
-  check_result(dims, expected_subtree_bases);
-}
+    check_result(dims, expected_subtree_bases);
+  }
 
-TEST_CASE("Size = {3,3}, from permutations") {
-  const std::vector<std::size_t> dims{3, 3};
+  SECTION("Dims = {3,3}, from permutations") {
+    const std::vector<std::size_t> dims{3, 3};
 
-  const vertex_list_list expected_subtree_bases{
-      {},
-      {0},
-      {1},
-      {4},
-      {0, 1},
-      {1, 4},
-      {0, 1, 2},
-      {0, 1, 3},
-      {0, 1, 4},
-      {1, 3, 4},
-      {1, 4, 7},
-      {0, 1, 2, 3},
-      {0, 1, 2, 4},
-      {0, 1, 4, 5},
-      {0, 1, 4, 7},
-      {1, 3, 4, 5},
-      {0, 1, 2, 3, 5},
-      {0, 1, 2, 3, 6},
-      {0, 1, 2, 4, 7},
-      {0, 1, 4, 5, 7},
-      {0, 1, 4, 5, 8},
-      {0, 1, 4, 7, 8},
-      {0, 2, 3, 4, 5},
-      {1, 3, 4, 5, 7},
-      {0, 1, 2, 3, 6, 7},
-      {0, 1, 2, 4, 6, 7},
-      {0, 1, 4, 5, 6, 7},
-      {0, 1, 2, 3, 5, 6, 7},
-      {0, 1, 2, 3, 5, 6, 8},
-      {0, 1, 2, 4, 6, 7, 8},
-  };
+    const vertex_list_list expected_subtree_bases{
+        {},
+        {0},
+        {1},
+        {4},
+        {0, 1},
+        {1, 4},
+        {0, 1, 2},
+        {0, 1, 3},
+        {0, 1, 4},
+        {1, 3, 4},
+        {1, 4, 7},
+        {0, 1, 2, 3},
+        {0, 1, 2, 4},
+        {0, 1, 4, 5},
+        {0, 1, 4, 7},
+        {1, 3, 4, 5},
+        {0, 1, 2, 3, 5},
+        {0, 1, 2, 3, 6},
+        {0, 1, 2, 4, 7},
+        {0, 1, 4, 5, 7},
+        {0, 1, 4, 5, 8},
+        {0, 1, 4, 7, 8},
+        {0, 2, 3, 4, 5},
+        {1, 3, 4, 5, 7},
+        {0, 1, 2, 3, 6, 7},
+        {0, 1, 2, 4, 6, 7},
+        {0, 1, 4, 5, 6, 7},
+        {0, 1, 2, 3, 5, 6, 7},
+        {0, 1, 2, 3, 5, 6, 8},
+        {0, 1, 2, 4, 6, 7, 8},
+    };
 
-  check_result(dims, expected_subtree_bases);
+    check_result(dims, expected_subtree_bases);
+  }
 }
