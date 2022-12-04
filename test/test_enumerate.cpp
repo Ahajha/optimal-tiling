@@ -142,6 +142,17 @@ void check_result(const std::span<const std::size_t> dims,
 }
 
 TEST_CASE("Enumeration") {
+  SECTION("Dims = {}") {
+    const std::vector<std::size_t> dims{};
+
+    const vertex_list_list expected_subtrees{
+        {},
+        {0},
+    };
+
+    check_exact_result(dims, expected_subtrees);
+  }
+
   SECTION("Dims = {1}") {
     const std::vector<std::size_t> dims{1};
 
@@ -190,7 +201,7 @@ TEST_CASE("Enumeration") {
     check_exact_result(dims, expected_subtrees);
   }
 
-  SECTION("Dims = {2,2}, from permutations") {
+  SECTION("Dims = {2,2} (from permutations)") {
     const std::vector<std::size_t> dims{2, 2};
 
     const vertex_list_list expected_subtree_bases{
@@ -203,7 +214,7 @@ TEST_CASE("Enumeration") {
     check_result(dims, expected_subtree_bases);
   }
 
-  SECTION("Dims = {2,3}, from permutations") {
+  SECTION("Dims = {2,3}") {
     const std::vector<std::size_t> dims{2, 3};
 
     const vertex_list_list expected_subtree_bases{
@@ -225,7 +236,7 @@ TEST_CASE("Enumeration") {
     check_result(dims, expected_subtree_bases);
   }
 
-  SECTION("Dims = {3,3}, from permutations") {
+  SECTION("Dims = {3,3}") {
     const std::vector<std::size_t> dims{3, 3};
 
     const vertex_list_list expected_subtree_bases{
@@ -259,6 +270,46 @@ TEST_CASE("Enumeration") {
         {0, 1, 2, 3, 5, 6, 7},
         {0, 1, 2, 3, 5, 6, 8},
         {0, 1, 2, 4, 6, 7, 8},
+    };
+
+    check_result(dims, expected_subtree_bases);
+  }
+
+  SECTION("Dims = {10}") {
+    const std::vector<std::size_t> dims{10};
+
+    const vertex_list_list expected_subtree_bases{
+        {},
+        {0},
+        {1},
+        {2},
+        {3},
+        {4},
+        {0, 1},
+        {1, 2},
+        {2, 3},
+        {3, 4},
+        {4, 5},
+        {0, 1, 2},
+        {1, 2, 3},
+        {2, 3, 4},
+        {3, 4, 5},
+        {0, 1, 2, 3},
+        {1, 2, 3, 4},
+        {2, 3, 4, 5},
+        {3, 4, 5, 6},
+        {0, 1, 2, 3, 4},
+        {1, 2, 3, 4, 5},
+        {2, 3, 4, 5, 6},
+        {0, 1, 2, 3, 4, 5},
+        {1, 2, 3, 4, 5, 6},
+        {2, 3, 4, 5, 6, 7},
+        {0, 1, 2, 3, 4, 5, 6},
+        {1, 2, 3, 4, 5, 6, 7},
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {1, 2, 3, 4, 5, 6, 7, 8},
+        {0, 1, 2, 3, 4, 5, 6, 7, 8},
+        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
     };
 
     check_result(dims, expected_subtree_bases);
