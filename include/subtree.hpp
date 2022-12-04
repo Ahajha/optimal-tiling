@@ -54,7 +54,7 @@ template <class graph_t> class subtree : public vertices_base<graph_t> {
 
   graph_t::vertex_id root_;
 
-  const std::span<const typename graph_t::vertex> base_graph_verts;
+  std::span<const typename graph_t::vertex> base_graph_verts;
 
 public:
   /**

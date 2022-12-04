@@ -72,6 +72,10 @@ add_executable(enumerate)
 target_sources(enumerate PRIVATE source/induced_subtree_enumerate.cpp)
 target_link_libraries(enumerate PRIVATE hrp_lib)
 
+add_executable(max_subtree)
+target_sources(max_subtree PRIVATE source/maximum_subtree.cpp)
+target_link_libraries(max_subtree PRIVATE hrp_lib)
+
 add_executable(tests ${TEST_SOURCE})
 
 target_include_directories(tests PRIVATE test/include)

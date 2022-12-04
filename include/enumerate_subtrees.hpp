@@ -194,7 +194,7 @@ auto modified_rec_trampoline_nonvoid(
 // copied to other threads.
 template <class T>
 concept valid_first_pass_action =
-    std::invocable<T, subtree_generator &> && std::copyable<T>;
+    std::invocable<T, subtree_generator &> && std::copy_constructible<T>;
 
 } // namespace detail
 
