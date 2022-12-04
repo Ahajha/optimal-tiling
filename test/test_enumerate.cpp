@@ -87,13 +87,36 @@ void test_all_enumeration_algorithms(const graph_type &graph,
     compare_subtree_sets(result, expected);
   }
 
-  SECTION("Parallel enumeration algorithm") {
+  SECTION("Parallel enumeration single-pass algorithm") {
     subtree_set result;
     std::mutex m;
     enumerate_recursive(graph, [&m, &result](const subtree_type &sub) {
       std::scoped_lock lock{m};
       result.emplace(sub);
     });
+
+    compare_subtree_sets(result, expected);
+  }
+
+  SECTION("Parallel enumeration two-pass algorithm") {
+    subtree_set result = enumerate_recursive(
+        graph,
+        [](subtree_generator &subs) {
+          std::vector<subtree_type> res;
+          for (const auto &sub : subs) {
+            res.emplace_back(sub);
+          }
+          return res;
+        },
+        [](const std::vector<std::vector<subtree_type>> &subs) {
+          subtree_set res;
+          for (const auto &subvec : subs) {
+            for (const auto &sub : subvec) {
+              res.emplace(sub);
+            }
+          }
+          return res;
+        });
 
     compare_subtree_sets(result, expected);
   }

@@ -110,20 +110,20 @@ void modified_rec_trampoline_void(std::vector<border_type> &border_cache,
 ////////////////////// NONVOID /////////////////////////
 
 template <class TAction>
-using futures_container_type =
-    std::vector<std::future<std::invoke_result_t<TAction, subtree_generator>>>;
+using futures_container_type = std::vector<
+    std::future<std::invoke_result_t<TAction, subtree_generator &>>>;
 
 // Forward declaration - the trampoline and the implementation are mutually
 // recursive
-template <std::invocable<subtree_generator> TAction>
+template <std::invocable<subtree_generator &> TAction>
 auto modified_rec_trampoline_nonvoid(
     std::vector<border_type> &border_cache, thread_pool_type &pool,
     subtree_type sub, border_type border, history_type history, TAction action,
     futures_container_type<TAction> &intermediate_futures,
     std::mutex &futures_mut)
-    -> std::invoke_result_t<TAction, subtree_generator>;
+    -> std::invoke_result_t<TAction, subtree_generator &>;
 
-template <std::invocable<subtree_generator> TAction>
+template <std::invocable<subtree_generator &> TAction>
 subtree_generator modified_rec_parallel_nonvoid(
     std::vector<border_type> &border_cache, thread_pool_type &pool,
     subtree_type &sub, border_type &border, history_type &history,
@@ -166,13 +166,13 @@ subtree_generator modified_rec_parallel_nonvoid(
   std::swap(cache, border);
 }
 
-template <std::invocable<subtree_generator> TAction>
+template <std::invocable<subtree_generator &> TAction>
 auto modified_rec_trampoline_nonvoid(
     std::vector<border_type> &border_cache, thread_pool_type &pool,
     subtree_type sub, border_type border, history_type history, TAction action,
     futures_container_type<TAction> &intermediate_futures,
     std::mutex &futures_mut)
-    -> std::invoke_result_t<TAction, subtree_generator> {
+    -> std::invoke_result_t<TAction, subtree_generator &> {
   // The first time this cache is used, it will be empty. In that case, set it
   // up, otherwise leave it as is.
   if (border_cache.empty()) {
@@ -184,15 +184,17 @@ auto modified_rec_trampoline_nonvoid(
   // Maintain a clean copy for future branches
   const auto actioncopy = action;
 
-  return action(modified_rec_parallel_nonvoid(border_cache, pool, sub, border,
-                                              history, actioncopy));
+  auto gen = modified_rec_parallel_nonvoid(border_cache, pool, sub, border,
+                                           history, actioncopy,
+                                           intermediate_futures, futures_mut);
+  return action(gen);
 }
 
 // A first pass action needs to be invoked on a subtree_generator, as well as
 // copied to other threads.
 template <class T>
 concept valid_first_pass_action =
-    std::invocable<T, subtree_generator> && std::copyable<T>;
+    std::invocable<T, subtree_generator &> && std::copyable<T>;
 
 } // namespace detail
 
@@ -210,23 +212,24 @@ concept valid_first_pass_action =
  */
 template <detail::valid_first_pass_action TFirstPassAction,
           std::invocable<std::vector<
-              std::invoke_result_t<TFirstPassAction, subtree_generator>>>
+              std::invoke_result_t<TFirstPassAction, subtree_generator &>> &>
               TSecondPassAction>
 auto enumerate_recursive(const graph_type &graph, TFirstPassAction action1,
                          TSecondPassAction action2)
-    -> std::invoke_result_t<std::vector<
-        std::invoke_result_t<TFirstPassAction, subtree_generator>>> {
+    -> std::invoke_result_t<TSecondPassAction,
+                            std::vector<std::invoke_result_t<
+                                TFirstPassAction, subtree_generator &>>> {
   const auto action1copy = action1;
 
   using intermediate_result_type =
-      std::invoke_result_t<TFirstPassAction, subtree_generator>;
+      std::invoke_result_t<TFirstPassAction, subtree_generator &>;
 
   detail::futures_container_type<TFirstPassAction> intermediate_futures;
 
   {
     std::mutex futures_mut;
 
-    lmrtfy::thread_pool pool;
+    detail::thread_pool_type pool;
 
     // Rather than passing by value, as items are removed from the border they
     // are placed into one of these corresponding with the size of the subtree.
@@ -256,12 +259,20 @@ auto enumerate_recursive(const graph_type &graph, TFirstPassAction action1,
   }
   // At this point, it is safe to access the container of futures.
 
-  // Await all futures and return the result of the second pass
-  std::vector<intermediate_result_type> intermediate_results{
-      action1(subtree_type{graph}),
+  // Make a simple generator to convert the empty subtree to a coroutine with a
+  // single element.
+  auto empty_subtree_generator = [&graph]() -> subtree_generator {
+    co_yield subtree_type{graph};
   };
 
-  for (const auto &fut : intermediate_futures) {
+  auto gen = empty_subtree_generator();
+
+  // Await all futures and return the result of the second pass
+  std::vector<intermediate_result_type> intermediate_results{
+      action1(gen),
+  };
+
+  for (auto &fut : intermediate_futures) {
     intermediate_results.push_back(fut.get());
   }
 
